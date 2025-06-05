@@ -24,7 +24,7 @@ export interface IEstate {
   beds: number;
   minimumNights: number;
   maximumNights: number;
-  price: number;
+  pricePerNight: number;
   amenities?: Amenities[];
   images?: string[];
   estateType: EstateType;
@@ -36,13 +36,16 @@ export interface IEstate {
   petAllowance?: boolean;
   host: Types.ObjectId | IUser;
   address: IAddress;
-  availability?: {
-    available30?: number;
-    available60?: number;
-    available90?: number;
-    available365?: number;
-  };
+  // availability?: {
+  //   available30?: number;
+  //   available60?: number;
+  //   available90?: number;
+  //   available365?: number;
+  // };
   reviews?: (Types.ObjectId | IReview)[]; // ili (Types.ObjectId | IReview)[]
+  isLongTerm: boolean; // Optional field to indicate if the estate is for long-term rental
+  unitsAvailable?: number; // Optional field to indicate the number of units available for long-term rental
+  pricePerMonth?: number; // Optional field for long-term rental price per month
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -91,7 +94,7 @@ const estateSchema = new Schema<IEstate>(
       type: Number,
       required: true,
     },
-    price: {
+    pricePerNight: {
       type: Number,
       required: true,
     },
@@ -133,15 +136,7 @@ const estateSchema = new Schema<IEstate>(
       type: AddressSchema,
       required: true,
     },
-    availability: {
-      type: {
-        available30: Number,
-        available60: Number,
-        available90: Number,
-        available365: Number,
-      },
-      required: false,
-    },
+
     reviews: [
       {
         type: Types.ObjectId,
@@ -149,6 +144,20 @@ const estateSchema = new Schema<IEstate>(
         ref: "Review",
       },
     ],
+    isLongTerm: {
+      type: Boolean,
+      default: false, // Default to false, indicating it's not a long-term rental
+    },
+    unitsAvailable: {
+      type: Number,
+      required: false, // Optional field to indicate the number of units available for long-term rental
+    },
+    pricePerMonth: {
+      type: Number,
+      required: function (this: IEstate) {
+        return this.isLongTerm; // Only required if isLongTerm is true
+      },
+    },
   },
   { timestamps: true }
 );

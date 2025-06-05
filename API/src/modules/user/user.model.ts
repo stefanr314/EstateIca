@@ -3,6 +3,7 @@ import { Role } from "../../shared/types/role.enum";
 import { hash } from "bcryptjs";
 import { isStrongPassword } from "../../shared/utils/isStrongPassword";
 import { IWishlist } from "../wishlist/wishlist.model";
+import { HostType } from "../../shared/types/hostType.enum";
 
 export interface IUser {
   firstName: string;
@@ -12,6 +13,7 @@ export interface IUser {
   phoneNumber?: string;
   profilePictureUrl?: string;
   role: Role;
+  hostType?: HostType; // Optional, can be added later
   isSuperhost: boolean;
   wishlist?: mongoose.Types.ObjectId | IWishlist;
   pushTokens?: string[];
@@ -40,6 +42,11 @@ const userSchema = new mongoose.Schema<IUser>(
     phoneNumber: { type: String, required: false },
     profilePictureUrl: { type: String, required: false },
     role: { type: String, enum: Object.values(Role), default: Role.GUEST },
+    hostType: {
+      type: String,
+      enum: Object.values(HostType),
+      required: false,
+    },
     isSuperhost: { type: Boolean, default: false },
     wishlist: {
       type: mongoose.Schema.Types.ObjectId,
