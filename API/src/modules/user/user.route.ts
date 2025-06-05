@@ -14,15 +14,7 @@ import { getAllUsersQueryDto } from "./dtos/getAllUsers.dto";
 
 const router = Router();
 
-router.get("/users", validate(getAllUsersQueryDto), getAllUsers);
-router.get("/:userId", validate(userIdParamsDto, "params"), getUserById);
-router.put(
-  "/:userId",
-  validate(userIdParamsDto, "params"),
-  validate(updateUserDto, "body"),
-  isAuth,
-  updateUser
-);
+router.get("/users", validate(getAllUsersQueryDto, "query"), getAllUsers);
 router.patch(
   "/toggle-activity/:userId",
   validate(userIdParamsDto, "params"),
@@ -32,5 +24,13 @@ router.patch(
   "/deactivate/:userId",
   validate(userIdParamsDto, "params"),
   deleteUser
+);
+router.get("/:userId", validate(userIdParamsDto, "params"), getUserById);
+router.put(
+  "/:userId",
+  validate(userIdParamsDto, "params"),
+  validate(updateUserDto, "body"),
+  isAuth,
+  updateUser
 );
 export default router;

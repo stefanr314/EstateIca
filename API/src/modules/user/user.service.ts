@@ -33,6 +33,7 @@ export class UserService {
       joined: user.createdAt,
     };
   }
+
   async updateUser(dtoUserId: UserIdParamsDto, userData: UpdateUserDto) {
     const user = await User.findById(dtoUserId.userId);
     if (!user) {
@@ -53,6 +54,7 @@ export class UserService {
       userId: user._id.toString(),
     };
   }
+
   async deleteUser(dto: UserIdParamsDto) {
     const user = await User.findById(dto.userId);
     if (!user) {
@@ -68,6 +70,7 @@ export class UserService {
       userId: user._id.toString(),
     };
   }
+
   async getAllUsers(dto: GetAllUsersQueryDto) {
     const { page = 1, limit = 10, isVerified, isActive, sortBy, search } = dto;
     const skip = (page - 1) * limit;
@@ -101,7 +104,7 @@ export class UserService {
     if (!users || users.length === 0) {
       throw new NotFoundError("No users found");
     }
-    logging.log(users);
+
     return users.map((user) => ({
       id: user._id.toString(),
       email: user.email,
@@ -113,6 +116,7 @@ export class UserService {
       joined: user.createdAt,
     }));
   }
+
   async toggleActivity(dto: UserIdParamsDto) {
     const user = await User.findById(dto.userId);
     if (!user) {

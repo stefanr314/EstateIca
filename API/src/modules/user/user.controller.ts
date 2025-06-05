@@ -1,4 +1,4 @@
-import { UnauthorizedError } from "../../shared/errors";
+import { ForbiddenError, UnauthorizedError } from "../../shared/errors";
 import { Role } from "../../shared/types/role.enum";
 import { GetAllUsersQueryDto } from "./dtos/getAllUsers.dto";
 import { UpdateUserDto } from "./dtos/updateUser.dto";
@@ -48,7 +48,7 @@ export const updateUser = async (
     !req.user ||
     (dto.userId !== req.user.id && req.user.role !== Role.ADMIN)
   ) {
-    throw new UnauthorizedError("You are not authorized to update this user.");
+    throw new ForbiddenError("You are not authorized to update this user.");
   }
   try {
     const result = await userService.updateUser(dto, userData);
@@ -91,7 +91,7 @@ export const getAllUsers = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
-  const dto = req.query as GetAllUsersQueryDto; // Adjust this type based on your query DTO
+  const dto = req.validated?.query as unknown as GetAllUsersQueryDto;
   try {
     const users = await userService.getAllUsers(dto);
     res.status(200).json(users);

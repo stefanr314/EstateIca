@@ -7,6 +7,8 @@ import { ACCESS_TOKEN_SECRET } from "../../config/config";
 interface JwtPayload {
   id: string;
   role: string;
+  isVerified: boolean;
+  isActive: boolean;
 }
 
 declare module "express-serve-static-core" {
@@ -14,6 +16,8 @@ declare module "express-serve-static-core" {
     user?: {
       id: string;
       role: string;
+      isVerified: boolean;
+      isActive: boolean;
     };
   }
 }
@@ -32,6 +36,8 @@ export const isAuth = (req: Request, res: Response, next: NextFunction) => {
     req.user = {
       id: decoded.id,
       role: decoded.role,
+      isVerified: decoded.isVerified,
+      isActive: decoded.isActive,
     };
 
     next();

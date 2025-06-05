@@ -1,7 +1,9 @@
 export enum EstateType {
   APARTMENT = "Apartment",
   HOUSE = "House",
-  HOTEL_ROOM = "Hotel Room",
+  ROOM = "Room",
+  BUSINESS_SPACE = "Business Space",
+  MULTI_UNIT = "Multi Unit",
   VILLA = "Villa",
   STUDIO = "Studio",
   CABIN = "Cabin",

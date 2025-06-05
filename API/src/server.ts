@@ -14,6 +14,7 @@ import { routeNotFound } from "./shared/middlewares/routeNotFound";
 
 import authRoutes from "./modules/auth/auth.route";
 import userRoutes from "./modules/user/user.route";
+import hostRequestRoutes from "./modules/hostRequest/hostRequest.route";
 
 import connectDB from "./shared/utils/db";
 import { errorHandler } from "./shared/middlewares/errorHandler";
@@ -47,6 +48,7 @@ export const Main = () => {
 
   app.use("/auth", authRoutes);
   app.use("/user", userRoutes);
+  app.use("/host-request", hostRequestRoutes);
 
   app.use(routeNotFound);
   app.use(errorHandler);
