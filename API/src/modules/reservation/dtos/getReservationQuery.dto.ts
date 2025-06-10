@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v4";
 import { Status } from "../../../shared/types/status.enum";
 
 export const getReservationQueryDto = z
@@ -18,13 +18,18 @@ export const getReservationQueryDto = z
         message: "Invalid 'endDate' date",
       })
       .optional(),
-    status: z.nativeEnum(Status).optional(),
+    status: z.enum(Status).optional(),
   })
-  .superRefine((data, ctx) => {
-    if (data.startDate && data.endDate && data.startDate > data.endDate) {
-      ctx.addIssue({
+  .check((ctx) => {
+    if (
+      ctx.value.startDate &&
+      ctx.value.endDate &&
+      ctx.value.startDate > ctx.value.endDate
+    ) {
+      ctx.issues.push({
+        input: ctx.value.endDate,
         path: ["endDate"],
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "'End date' date must be after 'start date' date",
       });
     }

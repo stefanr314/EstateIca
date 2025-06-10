@@ -1,9 +1,9 @@
-import { z } from "zod";
-import { RequestedHostType } from "../../../shared/types/hostRequest.enum";
+import { z } from "zod/v4";
+
 import { HostType } from "../../../shared/types/hostType.enum";
 
 export const createHostRequestDto = z.object({
-  requestedType: z.nativeEnum(HostType),
+  requestedType: z.enum(HostType),
   reason: z.string().optional(),
   businessName: z.string().optional(),
   businessIdNumber: z.string().optional(),

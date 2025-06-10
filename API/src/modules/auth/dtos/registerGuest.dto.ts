@@ -1,17 +1,17 @@
-import z from "zod";
+import { z } from "zod/v4";
 
 export const registerGuestDto = z
   .object({
-    firstName: z.string().min(1, { message: "First name is required" }),
-    lastName: z.string().min(1, { message: "Last name is required" }),
-    email: z.string().email({ message: "Invalid email address" }),
+    firstName: z.string().min(1, { error: "First name is required" }),
+    lastName: z.string().min(1, { error: "Last name is required" }),
+    email: z.email({ error: "Invalid email address" }),
     password: z
       .string()
-      .min(8, { message: "Password must be at least 8 characters long" })
+      .min(8, { error: "Password must be at least 8 characters long" })
       .regex(
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#+])[A-Za-z\d@$!%*?&#+]{8,}$/,
         {
-          message:
+          error:
             "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&#+)",
         }
       ),
@@ -20,7 +20,7 @@ export const registerGuestDto = z
     profilePictureUrl: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
+    error: "Passwords do not match",
     path: ["confirmPassword"],
   });
 
