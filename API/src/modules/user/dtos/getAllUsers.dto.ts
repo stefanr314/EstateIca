@@ -1,19 +1,17 @@
-import z from "zod";
+import { z } from "zod/v4";
 
 export const getAllUsersQueryDto = z.object({
-  page: z
-    .preprocess((val) => parseInt(val as string), z.number().int().min(1))
-    .default(1),
-  limit: z
-    .preprocess((val) => parseInt(val as string), z.number().int().min(1))
-    .default(10),
-  isActive: z.preprocess((val) => val === "true", z.boolean()).optional(),
-  isVerified: z.preprocess((val) => val === "true", z.boolean()).optional(),
+  page: z.coerce.number().int().default(1),
+  limit: z.coerce.number().int().default(10),
+  isActive: z.stringbool().optional(),
+  isVerified: z.stringbool().optional(),
   search: z.string().optional(),
   // Regex for sortBy: "field:asc,field2:desc"
   sortBy: z
     .string()
-    .regex(/^(\w+(:asc|:desc)?)(,\w+(:asc|:desc)?)*$/)
+    .regex(/^(\w+(:asc|:desc)?)(,\w+(:asc|:desc)?)*$/, {
+      message: "Invalid sortBy format. Use 'field:asc,field2:desc' format.",
+    })
     .optional(),
 });
 export type GetAllUsersQueryDto = z.infer<typeof getAllUsersQueryDto>;

@@ -1,14 +1,14 @@
-import { z } from "zod";
+import { z } from "zod/v4";
 
 export const resetPasswordDto = z
   .object({
     password: z
       .string()
-      .min(8, { message: "Password must be at least 8 characters long" })
+      .min(8, { error: "Password must be at least 8 characters long" })
       .regex(
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#+])[A-Za-z\d@$!%*?&#+]{8,}$/,
         {
-          message:
+          error:
             "Password must contain uppercase, lowercase, number, and special character",
         }
       ),
@@ -16,10 +16,10 @@ export const resetPasswordDto = z
     resetToken: z
       .string()
       .length(128)
-      .regex(/^[a-f0-9]{128}$/, { message: "Invalid token format" }),
+      .regex(/^[a-f0-9]{128}$/, { error: "Invalid token format" }),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
+    error: "Passwords do not match",
     path: ["confirmPassword"],
   });
 

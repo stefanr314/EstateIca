@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { ZodError } from "zod";
+import { ZodError, z } from "zod/v4";
 import { CustomError } from "../errors";
 
 export function errorHandler(
@@ -14,10 +14,13 @@ export function errorHandler(
   }
 
   if (err instanceof ZodError) {
-    const formatted = err.errors.map((e) => ({
+    const formatted = err.issues.map((e) => ({
       path: e.path.join("."),
       message: e.message,
     }));
+
+    logging.error(z.prettifyError(err));
+    // Log the error in a structured way
 
     res.status(400).json({
       status: "Failed",

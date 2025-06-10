@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v4";
 import { baseReservationDto } from "./createReservation.dto";
 import { Status } from "../../../shared/types/status.enum";
 
@@ -8,7 +8,7 @@ const updateReservationDto = baseReservationDto
     endDate: true,
     totalPrice: true,
   })
-  .extend({ status: z.nativeEnum(Status) })
+  .extend({ status: z.enum(Status) })
   .partial();
 
 export type UpdateReservationDto = z.infer<typeof updateReservationDto>;

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import z from "zod/v4";
 import { ResidentialType } from "../../../shared/types/residentialType.enum";
 import { RoomType } from "../../../shared/types/roomType.enum";
 import { Amenities } from "../../../shared/types/amenities.enum";

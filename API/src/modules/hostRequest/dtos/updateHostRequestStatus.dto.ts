@@ -1,8 +1,8 @@
-import z from "zod";
+import { z } from "zod/v4";
 import { HostRequestStatus } from "../../../shared/types/hostRequest.enum";
 
 export const updateHostRequestStatusDto = z.object({
-  status: z.nativeEnum(HostRequestStatus),
+  status: z.enum(HostRequestStatus),
   adminComment: z.string().optional(),
 });
 

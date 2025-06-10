@@ -1,6 +1,6 @@
-import { ZodSchema } from "zod";
+import { ZodType } from "zod/v4";
 import { Request, Response, NextFunction } from "express";
-import { BadRequestError } from "../errors";
+
 declare module "express-serve-static-core" {
   interface Request {
     validated?: {
@@ -9,7 +9,10 @@ declare module "express-serve-static-core" {
   }
 }
 export const validate =
-  (schema: ZodSchema, target: "body" | "query" | "params" = "body") =>
+  (
+    schema: ZodType<any, any, any>,
+    target: "body" | "query" | "params" = "body"
+  ) =>
   (req: Request, res: Response, next: NextFunction) => {
     const result = schema.safeParse(req[target]);
 

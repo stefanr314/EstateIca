@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v4";
 import { createReviewDto } from "./createReview.dto";
 
 export const updateReviewDto = createReviewDto.partial();
