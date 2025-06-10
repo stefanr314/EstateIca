@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { EstateType } from "../../../shared/types/estateType.enum";
+import { ResidentialType } from "../../../shared/types/residentialType.enum";
 import { RoomType } from "../../../shared/types/roomType.enum";
 import { Amenities } from "../../../shared/types/amenities.enum";
 
@@ -12,7 +12,7 @@ export const getEstatesQueryDto = z.object({
   maxPrice: z.coerce.number().min(0).optional(),
   minBeds: z.coerce.number().min(0).optional(),
   maxBeds: z.coerce.number().min(0).optional(),
-  estateType: z.nativeEnum(EstateType).optional(),
+  residentialType: z.nativeEnum(ResidentialType).optional(),
   roomType: z.nativeEnum(RoomType).optional(),
   amenities: z.array(z.nativeEnum(Amenities)).optional(),
   petAllowed: z.boolean().optional(),

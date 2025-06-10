@@ -1,8 +1,7 @@
-export enum EstateType {
+export enum ResidentialType {
   APARTMENT = "Apartment",
   HOUSE = "House",
   ROOM = "Room",
-  BUSINESS_SPACE = "Business Space",
   MULTI_UNIT = "Multi Unit",
   VILLA = "Villa",
   STUDIO = "Studio",

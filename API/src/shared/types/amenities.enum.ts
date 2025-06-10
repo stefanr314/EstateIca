@@ -21,4 +21,10 @@ export enum Amenities {
   Dishwasher = "Dishwasher",
   Microwave = "Microwave",
   ParkingSpace = "Parking space",
+  KITCHENETTE = "KITCHENETTE",
+  SECURITY = "SECURITY",
+  CCTV = "CCTV",
+  RECEPTION = "RECEPTION",
+  ELEVATOR = "ELEVATOR",
+  WHEELCHAIR_ACCESS = "WHEELCHAIR_ACCESS",
 }

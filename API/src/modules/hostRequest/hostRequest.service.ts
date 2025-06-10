@@ -11,14 +11,6 @@ import { sendEmail } from "../../shared/utils/sendMail";
 import { GetAllHostRequestsDto } from "./dtos/getAllHostRequests.dto";
 
 export class HostRequestService {
-  // Add methods for handling host requests here
-  // For example:
-  // - createHostRequest -- this method is already implemented
-  // - getHostRequestById -- this method is already implemented
-  // - updateHostRequestStatus -- this method is already implemented
-  // - getHostRequestsByUserId
-  // - deleteHostRequest -- this method is already implemented
-  // - listHostRequests
   async getHostRequestById(
     dto: HostRequestIdParamsDto
   ): Promise<HydratedDocument<IHostRequest>> {
