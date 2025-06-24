@@ -1,11 +1,12 @@
 import { Schema, model, Types } from "mongoose";
-import { IUser } from "../user/user.model";
-import { IEstate } from "../estate/estate.model";
+import { UserDocument } from "../user/user.model";
+import { BaseEstateDocument } from "../estate/estate.model";
+import { ReservationDocument } from "../reservation/reservation.model";
 
 export interface IReview {
-  user: Types.ObjectId | IUser;
-  estate: Types.ObjectId | IEstate;
-  reservation?: Types.ObjectId | any;
+  user: Types.ObjectId | UserDocument;
+  estate: Types.ObjectId | BaseEstateDocument;
+  reservation?: Types.ObjectId | ReservationDocument;
   userName: string; // ime korisnika koji je ostavio recenziju
   rating: number; // npr. od 1 do 5
   comment?: string | null; // komentar korisnika

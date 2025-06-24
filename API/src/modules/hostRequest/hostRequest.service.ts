@@ -2,7 +2,7 @@ import { HydratedDocument } from "mongoose";
 import { ConflictError, NotFoundError } from "../../shared/errors";
 import { HostRequestStatus } from "../../shared/types/hostRequest.enum";
 import { Role } from "../../shared/types/role.enum";
-import { IUser, User } from "../user/user.model";
+import { IUser, User, UserDocument } from "../user/user.model";
 import { CreateHostRequestDto } from "./dtos/createHostRequest.dto";
 import { HostRequest, IHostRequest } from "./hostRequest.model";
 import { HostRequestIdParamsDto } from "./dtos/hostRequestIdParams.dto";
@@ -112,7 +112,7 @@ export class HostRequestService {
     updateData: UpdateHostRequestStatusDto
   ): Promise<HydratedDocument<IHostRequest>> {
     const hostRequest = await HostRequest.findById(dto.requestId).populate<{
-      user: HydratedDocument<IUser>;
+      user: UserDocument;
     }>("user");
 
     if (!hostRequest) {

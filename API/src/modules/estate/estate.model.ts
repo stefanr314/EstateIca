@@ -1,5 +1,5 @@
-import mongoose, { Schema, Types } from "mongoose";
-import { IUser } from "../user/user.model";
+import mongoose, { Schema, Types, HydratedDocument } from "mongoose";
+import { UserDocument } from "../user/user.model";
 import { IReview } from "../review/reviews.model";
 
 import { AddressSchema, IAddress } from "../../shared/schema/adress.schema";
@@ -26,9 +26,10 @@ export interface IBaseEstate {
 
   securityDeposit?: number;
 
-  host: Types.ObjectId | IUser;
+  host: Types.ObjectId | UserDocument;
   address: IAddress;
 
+  estateType: "ResidentialEstate" | "BusinessEstate"; //estateType field through discriminator key option
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -110,10 +111,7 @@ const baseEstateSchema = new Schema<IBaseEstate>(
       required: true,
       ref: "User",
     },
-    address: {
-      type: AddressSchema,
-      required: true,
-    },
+    address: AddressSchema,
   },
   {
     timestamps: true,
@@ -148,7 +146,9 @@ const residentialEstateSchema = new Schema<IResidentialEstate>({
   },
   pricePerNight: {
     type: Number,
-    required: false, // Optional for residential estates
+    required: function (this: IResidentialEstate) {
+      return this.rentalType === RentalType.SHORT_TERM; // Only required if rentalType is SHORT_TERM
+    },
   },
   pricePerMonth: {
     type: Number,
@@ -268,6 +268,12 @@ businessEstateSchema.pre("validate", function (next) {
   doc.rentalType = RentalType.LONG_TERM;
   next();
 });
+
+export type ResidentialEstateDocument = HydratedDocument<IResidentialEstate>;
+export type BusinessEstateDocument = HydratedDocument<IBusinessEstate>;
+export type BaseEstateDocument =
+  | ResidentialEstateDocument
+  | BusinessEstateDocument;
 
 export const BaseEstate = mongoose.model<IBaseEstate>(
   "BaseEstate",

@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { IUser } from "../user/user.model";
+import { UserDocument } from "../user/user.model";
 import {
   HostRequestStatus,
   RequestedHostType,
@@ -7,7 +7,7 @@ import {
 import { HostType } from "../../shared/types/hostType.enum";
 
 export interface IHostRequest {
-  user: mongoose.Types.ObjectId | IUser;
+  user: mongoose.Types.ObjectId | UserDocument;
   requestedType: HostType;
   status: HostRequestStatus;
   archived: boolean; // Optional field to track if the request has been archived

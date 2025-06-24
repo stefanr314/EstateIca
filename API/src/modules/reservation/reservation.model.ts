@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
-import { IEstate } from "../estate/estate.model";
-import { IUser } from "../user/user.model";
+import mongoose, { HydratedDocument } from "mongoose";
+import { BaseEstateDocument } from "../estate/estate.model";
+import { UserDocument } from "../user/user.model";
 import { Status } from "../../shared/types/status.enum";
 import { RentalType } from "../../shared/types/rentalType.enum";
 
@@ -9,8 +9,8 @@ export interface IReservation {
   endDate: Date;
   totalPrice: number;
   guestCount: number;
-  estateReserved: mongoose.Types.ObjectId | IEstate;
-  userOfReservation: mongoose.Types.ObjectId | IUser;
+  estateReserved: mongoose.Types.ObjectId | BaseEstateDocument;
+  userOfReservation: mongoose.Types.ObjectId | UserDocument;
   status: Status;
   rentalType: RentalType;
   unitCount?: number; // Optional field for long-term rental unit count
@@ -19,6 +19,7 @@ export interface IReservation {
   createdAt?: Date;
   updatedAt?: Date;
 }
+export type ReservationDocument = HydratedDocument<IReservation>;
 
 const reservationSchema = new mongoose.Schema<IReservation>(
   {

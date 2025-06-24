@@ -101,9 +101,9 @@ export class UserService {
       query.sort(sortObject);
     }
     const users = await query.skip(skip).limit(limit).exec();
-    if (!users || users.length === 0) {
-      throw new NotFoundError("No users found");
-    }
+    // if (!users || users.length === 0) {
+    //   throw new NotFoundError("No users found");
+    // }
 
     return users.map((user) => ({
       id: user._id.toString(),
