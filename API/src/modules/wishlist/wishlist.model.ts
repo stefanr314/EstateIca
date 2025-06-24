@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
-import { IEstate } from "../estate/estate.model";
-import { IUser } from "../user/user.model";
+import { UserDocument } from "../user/user.model";
+import { BaseEstateDocument } from "../estate/estate.model";
 
 export interface IWishlist {
-  user: mongoose.Types.ObjectId | IUser;
-  estates: [mongoose.Types.ObjectId | IEstate];
+  user: mongoose.Types.ObjectId | UserDocument;
+  estates: [mongoose.Types.ObjectId | BaseEstateDocument];
   createdAt?: Date;
   updatedAt?: Date;
 }

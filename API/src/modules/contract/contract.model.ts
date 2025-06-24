@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { IReservation } from "../reservation/reservation.model";
+import { ReservationDocument } from "../reservation/reservation.model";
 
 export enum ContractStatus {
   DRAFT = "draft",
@@ -9,7 +9,7 @@ export enum ContractStatus {
 }
 
 export interface IContract {
-  reservationId: mongoose.Types.ObjectId | IReservation;
+  reservationId: mongoose.Types.ObjectId | ReservationDocument;
   contractFileUrl: string;
   validFrom: Date;
   validTo: Date;

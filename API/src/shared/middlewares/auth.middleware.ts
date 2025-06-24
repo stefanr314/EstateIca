@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { ForbiddenError, UnauthorizedError } from "../errors";
 
-import jwt from "jsonwebtoken";
+import jwt, { Jwt } from "jsonwebtoken";
 import { ACCESS_TOKEN_SECRET } from "../../config/config";
 
 interface JwtPayload {
@@ -47,38 +47,24 @@ export const isAuth = (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-// const authenticate = (req, res, next) => {
-//   const accessToken = req.headers["authorization"];
-//   const refreshToken = req.cookies["refreshToken"];
+export const optionalAuth = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const authHeader = req.headers.authorization;
 
-//   if (!accessToken && !refreshToken) {
-//     return res.status(401).send("Access Denied. No token provided.");
-//   }
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.split(" ")[1];
 
-//   try {
-//     const decoded = jwt.verify(accessToken, secretKey);
-//     req.user = decoded.user;
-//     next();
-//   } catch (error) {
-//     if (!refreshToken) {
-//       return res.status(401).send("Access Denied. No refresh token provided.");
-//     }
+    try {
+      const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET!) as JwtPayload;
+      req.user = decoded;
+    } catch (err) {
+      // ako token postoji ali je nevažeći → ignoriši
+      req.user = undefined;
+    }
+  }
 
-//     try {
-//       const decoded = jwt.verify(refreshToken, secretKey);
-//       const accessToken = jwt.sign({ user: decoded.user }, secretKey, {
-//         expiresIn: "1h",
-//       });
-
-//       res
-//         .cookie("refreshToken", refreshToken, {
-//           httpOnly: true,
-//           sameSite: "strict",
-//         })
-//         .header("Authorization", accessToken)
-//         .send(decoded.user);
-//     } catch (error) {
-//       return res.status(400).send("Invalid Token.");
-//     }
-//   }
-// };
+  next();
+};

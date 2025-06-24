@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { HydratedDocument } from "mongoose";
 import { Role } from "../../shared/types/role.enum";
 import { hash } from "bcryptjs";
 import { isStrongPassword } from "../../shared/utils/isStrongPassword";
@@ -15,7 +15,7 @@ export interface IUser {
   role: Role;
   hostType?: HostType; // Optional, can be added later
   isSuperhost: boolean;
-  wishlist?: mongoose.Types.ObjectId | IWishlist;
+  wishlist?: mongoose.Types.ObjectId | HydratedDocument<IWishlist>;
   pushTokens?: string[];
   isVerified: boolean;
   isActive: boolean;
@@ -27,6 +27,7 @@ export interface IUser {
   createdAt?: Date;
   updatedAt?: Date;
 }
+export type UserDocument = HydratedDocument<IUser>;
 
 const userSchema = new mongoose.Schema<IUser>(
   {
