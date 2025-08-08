@@ -2,7 +2,7 @@ import React from "react";
 import { Box, Typography, IconButton, SxProps, Theme } from "@mui/material";
 import RemoveIcon from "@mui/icons-material/Remove";
 import AddIcon from "@mui/icons-material/Add";
-import { mainTheme } from "../ui/theme";
+import { useTheme } from "@mui/material/styles";
 
 type SizeType = "small" | "medium" | "large";
 
@@ -44,6 +44,7 @@ const GuestsCounter: React.FC<GuestsCounterProps> = ({
   size = "medium",
   sx,
 }) => {
+  const mainTheme = useTheme();
   const config = sizes[size];
 
   return (

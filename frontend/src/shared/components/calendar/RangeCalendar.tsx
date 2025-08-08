@@ -11,6 +11,7 @@ import {
 } from "date-fns";
 import { sr } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
+import { mint, green } from "@/shared/ui/theme";
 
 type RangeCalendarProps = {
   startDate: Date | null;
@@ -97,6 +98,8 @@ const RangeCalendar: React.FC<RangeCalendarProps> = ({
     ".MuiPickersArrowSwitcher-root": {
       display: "none",
     },
+    bgcolor: "background.paper",
+    color: "text.primary",
   };
 
   const renderCalendar = (month: Date) => (
@@ -120,15 +123,22 @@ const RangeCalendar: React.FC<RangeCalendarProps> = ({
               sx={{
                 ...(isStartOrEndDate(day) && {
                   backgroundColor: theme.palette.primary.main,
-                  color: "white",
+                  color: theme.palette.getContrastText(
+                    theme.palette.primary.main
+                  ),
                 }),
                 ...(isInRange(day) && {
-                  backgroundColor: theme.palette.primary.light,
-                  color: "white",
+                  backgroundColor: theme.palette.primary.main,
+                  color: theme.palette.getContrastText(
+                    theme.palette.primary.main
+                  ),
                 }),
                 "&:hover": {
-                  backgroundColor: theme.palette.mint?.light || "#c8f3e1",
-                  color: "black",
+                  backgroundColor:
+                    theme.palette.mode === "dark" ? mint[900] : mint[100],
+                  color: theme.palette.getContrastText(
+                    theme.palette.mode === "dark" ? mint[900] : mint[100]
+                  ),
                 },
               }}
             />
@@ -140,7 +150,7 @@ const RangeCalendar: React.FC<RangeCalendarProps> = ({
   );
 
   return (
-    <Box>
+    <Box sx={{ bgcolor: "background.paper", color: "text.primary" }}>
       <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
         {currentMonth > new Date() && (
           <IconButton onClick={() => handleMonthChange("prev")}>

@@ -5,83 +5,92 @@ import {
   Typography,
   Button,
   Grid,
-  Card,
-  CardActions,
-  CardContent,
-  CardMedia,
   Container,
+  Box,
 } from "@mui/material";
-import { makeStyles } from "@mui/styles";
-import CameraIcon from "@mui/icons-material/PhotoCamera";
-import { Theme } from "@mui/material/styles";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import WovenImageList from "../components/imageLists/WovenImageList";
+import { useNavigate } from "react-router-dom";
+import ScrollToTopFab from "../components/ScrollToTopFab";
 
-const useStyles = makeStyles((theme: Theme) => ({
-  appBar: {
-    position: "relative",
+const itemData = [
+  {
+    img: "https://images.unsplash.com/photo-1549388604-817d15aa0110",
+    title: "Bed",
   },
-  icon: {
-    marginRight: theme.spacing(2),
+  {
+    img: "https://unsplash.com/photos/a-large-building-with-a-clock-on-the-top-of-it-SjNe0bwcuyw?utm_content=creditShareLink&utm_medium=referral&utm_source=unsplash",
+    title: "Clock Tower",
   },
-  heroUnit: {
-    backgroundColor: theme.palette.background.paper,
+  {
+    img: "https://images.unsplash.com/photo-1563298723-dcfebaa392e3",
+    title: "Kitchen",
   },
-  heroContent: {
-    maxWidth: 600,
-    margin: "0 auto",
-    padding: `${theme.spacing(8)}px 0 ${theme.spacing(6)}px`,
+  {
+    img: "https://images.unsplash.com/photo-1523413651479-597eb2da0ad6",
+    title: "Sink",
   },
-  heroButtons: {
-    marginTop: theme.spacing(4),
+  {
+    img: "https://images.unsplash.com/photo-1525097487452-6278ff080c31",
+    title: "Books",
   },
-  layout: {
-    width: "auto",
-    marginLeft: theme.spacing(3),
-    marginRight: theme.spacing(3),
-    [theme.breakpoints.up(1100 + Number(theme.spacing(3)) * 2)]: {
-      width: 1100,
-      marginLeft: "auto",
-      marginRight: "auto",
-    },
+  {
+    img: "https://images.unsplash.com/photo-1574180045827-681f8a1a9622",
+    title: "Chairs",
   },
-  cardGrid: {
-    padding: `${theme.spacing(8)}px 0`,
+  {
+    img: "https://images.unsplash.com/photo-1597262975002-c5c3b14bbd62",
+    title: "Candle",
   },
-  card: {
-    height: "100%",
-    display: "flex",
-    flexDirection: "column",
+  {
+    img: "https://images.unsplash.com/photo-1530731141654-5993c3016c77",
+    title: "Laptop",
   },
-  cardMedia: {
-    paddingTop: "56.25%", // 16:9
+  {
+    img: "https://images.unsplash.com/photo-1481277542470-605612bd2d61",
+    title: "Doors",
   },
-  cardContent: {
-    flexGrow: 1,
+  {
+    img: "https://images.unsplash.com/photo-1517487881594-2787fef5ebf7",
+    title: "Coffee",
   },
-  footer: {
-    backgroundColor: theme.palette.background.paper,
-    padding: theme.spacing(6),
+  {
+    img: "https://images.unsplash.com/photo-1516455207990-7a41ce80f7ee",
+    title: "Storage",
   },
-}));
-
-const cards = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+  {
+    img: "https://images.unsplash.com/photo-1519710164239-da123dc03ef4",
+    title: "Coffee table",
+  },
+  {
+    img: "https://images.unsplash.com/photo-1588436706487-9d55d73a39e3",
+    title: "Blinds",
+  },
+];
 
 const Album: React.FC = () => {
-  const classes = useStyles();
-
+  const navigate = useNavigate();
   return (
     <React.Fragment>
-      <AppBar position="static" className={classes.appBar}>
+      <AppBar
+        position="fixed"
+        elevation={2}
+        sx={{ bgcolor: "background.default" }}
+      >
         <Toolbar>
-          <CameraIcon className={classes.icon} />
-          <Typography variant="h6" color="inherit" noWrap>
-            Album layout
+          <ArrowBackIcon
+            sx={{ mr: 2, color: "text.primary", cursor: "pointer" }}
+            onClick={() => navigate(-1)}
+          />
+          <Typography variant="h6" color="text.primary" noWrap>
+            Album
           </Typography>
         </Toolbar>
       </AppBar>
       <main>
         {/* Hero unit */}
-        <div className={classes.heroUnit}>
-          <div className={classes.heroContent}>
+        <Box sx={{ bgcolor: "background.paper", py: 8 }}>
+          <Box sx={{ maxWidth: 600, mx: "auto", pb: 6 }}>
             <Typography
               component="h1"
               variant="h2"
@@ -91,68 +100,36 @@ const Album: React.FC = () => {
             >
               Album layout
             </Typography>
-            <Typography
-              variant="h6"
-              align="center"
-              color="textSecondary"
-              paragraph
-            >
+            <Typography variant="h6" align="center" color="textSecondary">
               Something short and leading about the collection below—its
               contents, the creator, etc. Make it short and sweet, but not too
               short so folks don&apos;t simply skip over it entirely.
             </Typography>
-            <div className={classes.heroButtons}>
+            <Box sx={{ mt: 4 }}>
               <Grid container spacing={2} justifyContent="center">
-                <Grid item>
+                <Grid>
                   <Button variant="contained" color="primary">
                     Main call to action
                   </Button>
                 </Grid>
-                <Grid item>
+                <Grid>
                   <Button variant="outlined" color="primary">
                     Secondary action
                   </Button>
                 </Grid>
               </Grid>
-            </div>
-          </div>
-        </div>
-        <Container className={classes.cardGrid} maxWidth="md">
+            </Box>
+          </Box>
+        </Box>
+
+        <Container sx={{ py: 8 }} maxWidth="xl">
           {/* End hero unit */}
-          <Grid container spacing={4}>
-            {cards.map((card) => (
-              <Grid item key={card} xs={12} sm={6} md={4}>
-                <Card className={classes.card}>
-                  <CardMedia
-                    className={classes.cardMedia}
-                    image="data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22288%22%20height%3D%22225%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20288%20225%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_164edaf95ee%20text%20%7B%20fill%3A%23eceeef%3Bfont-weight%3Abold%3Bfont-family%3AArial%2C%20Helvetica%2C%20Open%20Sans%2C%20sans-serif%2C%20monospace%3Bfont-size%3A14pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_164edaf95ee%22%3E%3Crect%20width%3D%22288%22%20height%3D%22225%22%20fill%3D%22%2355595c%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%2296.32500076293945%22%20y%3D%22118.8%22%3EThumbnail%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E"
-                    title="Image title"
-                  />
-                  <CardContent className={classes.cardContent}>
-                    <Typography gutterBottom variant="h5" component="h2">
-                      Heading
-                    </Typography>
-                    <Typography>
-                      This is a media card. You can use this section to describe
-                      the content.
-                    </Typography>
-                  </CardContent>
-                  <CardActions>
-                    <Button size="small" color="primary">
-                      View
-                    </Button>
-                    <Button size="small" color="primary">
-                      Edit
-                    </Button>
-                  </CardActions>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
+
+          <WovenImageList itemData={itemData} />
         </Container>
       </main>
       {/* Footer */}
-      <footer className={classes.footer}>
+      <Box sx={{ bgcolor: "background.paper", p: 6 }} component="footer">
         <Typography variant="h6" align="center" gutterBottom>
           Footer
         </Typography>
@@ -164,8 +141,9 @@ const Album: React.FC = () => {
         >
           Something here to give the footer a purpose!
         </Typography>
-      </footer>
+      </Box>
       {/* End footer */}
+      <ScrollToTopFab />
     </React.Fragment>
   );
 };

@@ -1,14 +1,6 @@
-import { mainTheme } from "@/shared/ui/theme";
-import {
-  Box,
-  IconButton,
-  Input,
-  InputAdornment,
-  Paper,
-  styled,
-} from "@mui/material";
+import { Box, IconButton, Input, InputAdornment, Paper } from "@mui/material";
 import { ClearIcon } from "@mui/x-date-pickers";
-
+import { styled } from "@mui/material/styles";
 const StyledPaper = styled(Paper)(() => ({
   display: "flex",
   justifyContent: "center",
@@ -21,7 +13,7 @@ const StyledPaper = styled(Paper)(() => ({
   borderRadius: 35,
 }));
 
-const StyledBox = styled(Box)(() => ({
+const StyledBox = styled(Box)(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
   justifyContent: "center",
@@ -39,20 +31,19 @@ const StyledBox = styled(Box)(() => ({
     right: 0,
     width: "1px",
     height: "50%",
-    backgroundColor: mainTheme.palette.grey[400],
+    backgroundColor: theme.palette.grey[400],
   },
   "&:hover": {
-    backgroundColor: mainTheme.palette.grey[300],
+    backgroundColor: theme.palette.action.hover,
   },
-  "& > :first-child": {
-    color: mainTheme.palette.primary.light,
+  "& > :first-of-type": {
+    color: "text.primary",
     fontSize: "0.95rem",
     fontWeight: 500,
   },
-  "& > :nth-child(2)": {
+  "& > :nth-of-type(2)": {
     fontSize: "0.85rem",
-    fontWeight: 300,
-    color: "rgba(0, 0, 0, 0.5)",
+    fontWeight: 350,
   },
 }));
 
@@ -90,6 +81,7 @@ const DateInput = ({
       }
       sx={{
         input: {
+          color: "text.primary",
           cursor: "pointer",
           "&:focus": {
             caretColor: "transparent",

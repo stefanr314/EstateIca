@@ -23,6 +23,8 @@ export default tseslint.config(
     },
     settings: { react: { version: "18.3" } },
     plugins: {
+      import: importPlugin,
+      "@typescript-eslint": tseslint.plugin,
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
       react,
@@ -35,7 +37,9 @@ export default tseslint.config(
       ],
       ...react.configs.recommended.rules,
       ...react.configs["jsx-runtime"].rules,
-      "no-used-vars": "warn",
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": "warn",
+      "import/prefer-default-export": "off",
     },
   }
 );

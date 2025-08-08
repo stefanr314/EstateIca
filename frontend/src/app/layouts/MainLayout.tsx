@@ -9,8 +9,9 @@ import {
   Typography,
 } from "@mui/material";
 import { Outlet } from "react-router";
-import ElevateAppBar from "@/shared/components/ElevateAppBar";
+// import ElevateAppBar from "@/shared/components/ElevateAppBar";
 import CustomAppBar from "@/shared/components/StyledAppBar";
+import ScrollToTopFab from "@/shared/components/ScrollToTopFab";
 
 function MainLayout() {
   const [open, setOpen] = useState(false);
@@ -43,37 +44,22 @@ function MainLayout() {
           flexGrow: 1,
           bgcolor: "background.default",
           p: 3,
-          marginTop: 8, // Add marginTop to avoid content being hidden by AppBar
+          // Dinamički marginTop koji se prilagođava visini AppBar-a
+          marginTop: {
+            xs: "8rem", // FullAppBar visina na mobilnim
+            sm: "8rem", // FullAppBar visina na tablet
+          },
           width: "100%",
           // maxWidth: "xl",
         }}
       >
-        <Container>
-          <Typography variant="h4" gutterBottom>
-            Welcome to the App!
-          </Typography>
-          <Typography paragraph>
-            This is an example of a simple App Layout using Material UI and
-            React.
-          </Typography>
-        </Container>
-
-        <Container>
-          <Box sx={{ my: 2 }}>
-            {[...new Array(32)]
-              .map(
-                () => `Cras mattis consectetur purus sit amet fermentum.
-Cras justo odio, dapibus ac facilisis in, egestas eget quam.
-Morbi leo risus, porta ac consectetur ac, vestibulum at eros.
-Praesent commodo cursus magna, vel scelerisque nisl consectetur et.`
-              )
-              .join("\n")}
-          </Box>
-        </Container>
         <Container maxWidth="xl">
           <Outlet />
         </Container>
       </Box>
+
+      {/* Scroll to top button */}
+      <ScrollToTopFab />
     </Box>
   );
 }
