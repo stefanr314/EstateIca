@@ -1,29 +1,28 @@
 import React, { useEffect, useRef, useState } from "react";
-import {
-  Box,
-  IconButton,
-  Paper,
-  FormControl,
-  Input,
-  Typography,
-  ClickAwayListener,
-  Popper,
-  Dialog,
-  DialogContent,
-  useMediaQuery,
-  useTheme,
-  DialogActions,
-  Button,
-  AppBar,
-  Toolbar,
-  Stack,
-  InputAdornment,
-  Tooltip,
-} from "@mui/material";
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import Paper from "@mui/material/Paper";
+import FormControl from "@mui/material/FormControl";
+import Input from "@mui/material/Input";
+import Typography from "@mui/material/Typography";
+import ClickAwayListener from "@mui/material/ClickAwayListener";
+import Popper from "@mui/material/Popper";
+import Dialog from "@mui/material/Dialog";
+import DialogContent from "@mui/material/DialogContent";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import DialogActions from "@mui/material/DialogActions";
+import Button from "@mui/material/Button";
+import AppBar from "@mui/material/AppBar";
+import Toolbar from "@mui/material/Toolbar";
+import Stack from "@mui/material/Stack";
+import InputAdornment from "@mui/material/InputAdornment";
+import Tooltip from "@mui/material/Tooltip";
+
+import LocationSearch from "./LocationSearch";
 
 import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
-import { mainTheme } from "../ui/theme";
+import { useTheme } from "@mui/material/styles";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
 import { sr } from "date-fns/locale";
@@ -45,11 +44,12 @@ interface SearchData {
   children: number;
 }
 
-const StyledSearchBar: React.FC = () => {
+const StyledSearchBar = React.forwardRef<HTMLDivElement, {}>((_, ref) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [popoverContent, setPopoverContent] = useState<
     "location" | "guests" | "date" | null
   >(null);
+  const theme = useTheme();
 
   const [searchData, setSearchData] = useState<SearchData>({
     location: "",
@@ -72,7 +72,6 @@ const StyledSearchBar: React.FC = () => {
   const isOpening = useRef(false);
   const id = openPopover ? "simple-popover" : undefined;
 
-  const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [openDialog, setOpenDialog] = useState(false);
 
@@ -83,6 +82,18 @@ const StyledSearchBar: React.FC = () => {
     setPopoverContent(content);
     setAnchorEl(event.currentTarget);
     isOpening.current = true;
+  };
+
+  const handleOnSelectLocation = (location: {
+    description: string;
+    place_id: string;
+  }) => {
+    console.log("Izabrana lokacija:", location.description, location.place_id);
+    setSearchData((prev) => ({
+      ...prev,
+      location: location.place_id,
+    }));
+    // opcionalno: možeš odmah zatražiti lat/lng iz place_id
   };
 
   const handleClosePopover = () => {
@@ -130,14 +141,15 @@ const StyledSearchBar: React.FC = () => {
             </IconButton>
           </Box>
         ) : (
-          <StyledPaper elevation={4} square={false}>
+          <StyledPaper elevation={4} square={false} sx={{ maxWidth: "900px" }}>
             <StyledBox
               sx={{ flex: 2 }}
               onClick={(e) => handleClickPopover(e, "location")}
             >
               <Box>Gdje</Box>
               <FormControl variant="standard" size="small" fullWidth>
-                <Input
+                <LocationSearch onSelect={handleOnSelectLocation} />
+                {/* <Input
                   placeholder="Pretraži..."
                   value={searchData.location}
                   onChange={(e) =>
@@ -167,7 +179,7 @@ const StyledSearchBar: React.FC = () => {
                       </InputAdornment>
                     )
                   }
-                />
+                /> */}
               </FormControl>
             </StyledBox>
 
@@ -209,25 +221,22 @@ const StyledSearchBar: React.FC = () => {
                 flexDirection: "row",
                 alignItems: "center",
 
-                justifyContent: "space-araound",
-                "& > :first-child": {
-                  color: "rgba(0, 0, 0, 0.87)",
+                justifyContent: "space-around",
+                "& > :first-of-type": {
+                  color: "text.primary",
                 },
               }}
             >
               <Box
                 onClick={(e) => handleClickPopover(e, "guests")}
                 sx={{
-                  "& > :first-child": {
-                    color: mainTheme.palette.primary.light,
-
+                  "&>:first-of-type": {
                     fontSize: "0.95rem",
                     fontWeight: 500,
                   },
-                  "& > :nth-child(2)": {
+                  "&>:nth-of-type(2)": {
                     fontSize: "0.85rem",
                     fontWeight: 300,
-                    color: "rgba(0, 0, 0, 0.5)",
                   },
                 }}
               >
@@ -274,6 +283,7 @@ const StyledSearchBar: React.FC = () => {
                   sx={{
                     input: {
                       cursor: "pointer",
+                      color: "text.primary",
                       "&:focus": {
                         caretColor: "transparent",
                       },
@@ -311,6 +321,7 @@ const StyledSearchBar: React.FC = () => {
           fullScreen={isMobile}
           fullWidth
           maxWidth="sm"
+          ref={ref}
         >
           {/* AppBar sa X dugmetom */}
           {isMobile && (
@@ -420,13 +431,15 @@ const StyledSearchBar: React.FC = () => {
             open={openPopover}
             anchorEl={anchorEl}
             placement="bottom-start"
+            ref={ref}
             sx={{
               boxShadow: 3,
               borderRadius: 2,
               maxWidth: "none",
               width: "auto",
               zIndex: 1300,
-              bgcolor: "rgba(255, 255, 255, 0.9)",
+              bgcolor: "background.paper",
+              color: "text.primary",
             }}
           >
             <Paper
@@ -434,7 +447,7 @@ const StyledSearchBar: React.FC = () => {
                 p: 2,
                 boxShadow: 3,
                 borderRadius: 1,
-                bgcolor: "#f9f9f9",
+                bgcolor: "background.paper",
                 width: "auto",
               }}
             >
@@ -471,6 +484,6 @@ const StyledSearchBar: React.FC = () => {
       </Box>
     </LocalizationProvider>
   );
-};
+});
 
 export default StyledSearchBar;

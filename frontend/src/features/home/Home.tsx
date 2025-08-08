@@ -3,7 +3,7 @@ import { Home as HomeIcon } from "@mui/icons-material";
 
 function Home() {
   console.log("Home page");
-
+  // throw new Error("Test error in Home component"); // This will trigger the error boundary
   return (
     <>
       <div>Home</div>
