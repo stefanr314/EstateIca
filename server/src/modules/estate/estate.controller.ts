@@ -1,5 +1,9 @@
 import { NextFunction, Request, Response } from "express";
-import { ForbiddenError, UnauthorizedError } from "../../shared/errors";
+import {
+  BadRequestError,
+  ForbiddenError,
+  UnauthorizedError,
+} from "../../shared/errors";
 import {
   CreateBusinessEstateDto,
   CreateResidentialEstateDto,
@@ -8,6 +12,7 @@ import { EstateService } from "./estate.service";
 import { EstateIdParams } from "./dtos/estateIdParams";
 import {
   UpdateBusinessEstateDto,
+  UpdateEstateAmenitiesDto,
   UpdateResidentialEstateDto,
 } from "./dtos/updateEstate.dto";
 import {
@@ -15,6 +20,8 @@ import {
   GetResidentialEstatesQueryDto,
 } from "./dtos/getEstatesQuery.dto";
 import { PersonalEstateFilterDto } from "./dtos/showHiddenFilter.dto";
+import { HardDeleteEstateDto } from "./dtos/hardDeleteEstate.dto";
+import { BusinessEstate, ResidentialEstate } from "./estate.model";
 
 const estateService = new EstateService();
 
@@ -109,10 +116,11 @@ export const createEstate = async (
       req.estateTypeCreated !== "residential" &&
       req.estateTypeCreated !== "business"
     ) {
-      throw new ForbiddenError("Invalid or missing estate type");
+      throw new BadRequestError("Invalid or missing estate type");
     }
 
     const hostId = req.user.id;
+    const images = req.files as Express.Multer.File[];
     const estateData =
       req.estateTypeCreated === "residential"
         ? (req.body as CreateResidentialEstateDto)
@@ -121,7 +129,8 @@ export const createEstate = async (
     const result = await estateService.createEstate(
       estateData,
       hostId,
-      req.estateTypeCreated
+      req.estateTypeCreated,
+      images
     );
 
     res
@@ -164,6 +173,66 @@ export const updateEstate = async (
   }
 };
 
+export const updateResidentialAmenities = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    if (!req.user)
+      throw new UnauthorizedError(
+        "Morate biti ulogovani da biste mogli da uradite ovu akciju."
+      );
+    const hostId = req.user.id;
+    const { estateId } = req.params;
+    const { amenities } = req.body as UpdateEstateAmenitiesDto;
+
+    const result = await estateService.updateEstateAmenities(
+      ResidentialEstate,
+      estateId,
+      hostId,
+      amenities
+    );
+
+    res.status(200).json({
+      message: "Estate amenities updated successfully",
+      estate: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateBusinessAmenities = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    if (!req.user)
+      throw new UnauthorizedError(
+        "Morate biti ulogovani da biste mogli da uradite ovu akciju."
+      );
+    const hostId = req.user.id;
+    const { estateId } = req.params;
+    const { amenities } = req.body as UpdateEstateAmenitiesDto;
+
+    const result = await estateService.updateEstateAmenities(
+      BusinessEstate,
+      estateId,
+      hostId,
+      amenities
+    );
+
+    res.status(200).json({
+      message: "Estate amenities updated successfully",
+      estate: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const toggleEstateVisibility = async (
   req: Request,
   res: Response,
@@ -174,11 +243,11 @@ export const toggleEstateVisibility = async (
   if (!hostId) {
     throw new UnauthorizedError("You must be logged in to perform this action");
   }
-  if (req.user?.role !== "host" && req.user?.role !== "admin") {
-    throw new ForbiddenError(
-      "Only hosts and admins can toggle estate visibility"
-    );
-  }
+  // if (req.user?.role !== "host" && req.user?.role !== "admin") {
+  //   throw new ForbiddenError(
+  //     "Only hosts and admins can toggle estate visibility"
+  //   );
+  // }
   const isAdmin = req.user?.role === "admin";
   const result = await estateService.toggleEstateVisibility(
     estateId,
@@ -188,5 +257,25 @@ export const toggleEstateVisibility = async (
   res.status(200).json({
     message: "Estate visibility toggled successfully",
     estate: result,
+  });
+};
+
+export const hardDeleteEstateById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { estateId } = req.params as EstateIdParams;
+  const hostId = req.user?.id;
+  const { userPassword } = req.body as HardDeleteEstateDto;
+  if (!hostId) {
+    throw new UnauthorizedError("You must be logged in to perform this action");
+  }
+
+  await estateService.hardDeleteEstate(hostId, estateId, userPassword);
+
+  res.status(200).json({
+    message:
+      "The estate and all its related information have been successfully deleted.",
   });
 };

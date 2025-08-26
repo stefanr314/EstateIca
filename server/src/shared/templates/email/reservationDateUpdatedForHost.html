@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="sr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ažurirana rezervacija - ${appName}</title>
+  </head>
+  <body
+    style="
+      font-family: Arial, sans-serif;
+      background-color: #f9f9ff;
+      margin: 0;
+      padding: 0;
+    "
+  >
+    <table
+      role="presentation"
+      align="center"
+      cellpadding="0"
+      cellspacing="0"
+      width="100%"
+      style="max-width: 600px"
+    >
+      <tr>
+        <td
+          style="
+            background-color: #ff9800;
+            padding: 20px;
+            text-align: center;
+            color: white;
+          "
+        >
+          <h1 style="margin: 0; font-size: 24px">Ažurirana rezervacija</h1>
+        </td>
+      </tr>
+      <tr>
+        <td
+          style="
+            background-color: white;
+            padding: 20px;
+            color: #333;
+            font-size: 16px;
+          "
+        >
+          <p>Zdravo <strong>${hostName}</strong>,</p>
+          <p>
+            Gost <strong>${guestName}</strong> je ažurirao svoju rezervaciju za
+            vaš smještaj <strong>${estateName}</strong>.
+          </p>
+          <ul style="padding-left: 20px; margin-top: 10px; margin-bottom: 10px">
+            <li><strong>Novi dolazak:</strong> ${startDate}</li>
+            <li><strong>Novi odlazak:</strong> ${endDate}</li>
+            <li><strong>Nova cijena:</strong> ${totalPrice}</li>
+          </ul>
+          <p>
+            Da bi ove izmjene postale važeće, potrebno je da odobrite
+            rezervaciju:
+          </p>
+          <p style="text-align: center; margin-top: 20px">
+            <a
+              href="${reservationApprovalLink}"
+              style="
+                background-color: #ef6c00;
+                color: white;
+                padding: 12px 20px;
+                text-decoration: none;
+                border-radius: 6px;
+                display: inline-block;
+                font-weight: bold;
+              "
+            >
+              Odobri rezervaciju
+            </a>
+          </p>
+        </td>
+      </tr>
+      <tr>
+        <td
+          style="
+            background-color: #fff3e0;
+            text-align: center;
+            padding: 10px;
+            color: #555;
+            font-size: 14px;
+          "
+        >
+          &copy; ${new Date().getFullYear()} ${appName} - Sva prava zadržana
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

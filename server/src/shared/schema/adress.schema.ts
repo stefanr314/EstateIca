@@ -1,4 +1,3 @@
-// models/address.model.ts (ako ga odvajaš)
 import { Schema } from "mongoose";
 
 export interface IAddress {

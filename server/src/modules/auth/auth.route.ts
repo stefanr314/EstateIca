@@ -22,7 +22,7 @@ const router = Router();
 router.post("/register", validate(registerGuestDto, "body"), handleNewGuest);
 router.post("/login", validate(loginUserDto, "body"), handleLogin);
 router.post("/logout", isAuth, handleLogout);
-router.get("/refresh", isAuth, refreshToken);
+router.get("/refresh", refreshToken);
 router.post("/verifyAcc", isAuth, verifyAccount);
 router.patch(
   "/onVerifyAcc",

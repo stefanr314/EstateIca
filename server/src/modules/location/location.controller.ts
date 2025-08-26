@@ -33,7 +33,7 @@ export const searchLocation = async (
 
     switch (status) {
       case "OK":
-        return res.status(200).json(
+        res.status(200).json(
           predictions.map((p: any) => ({
             description: p.description,
             place_id: p.place_id,
@@ -42,7 +42,7 @@ export const searchLocation = async (
 
       case "ZERO_RESULTS":
         // Nema rezultata, nije greška — samo vraćamo praznu listu
-        return res.status(200).json([]);
+        res.status(200).json([]);
 
       case "OVER_QUERY_LIMIT":
         throw new CustomError(

@@ -3,6 +3,7 @@ import {
   BadRequestError,
   ForbiddenError,
   NotFoundError,
+  UnauthorizedError,
 } from "../../shared/errors";
 import {
   CreateBusinessEstateDto,
@@ -14,7 +15,12 @@ import {
   updateResidentialEstateDto,
   UpdateResidentialEstateDto,
 } from "./dtos/updateEstate.dto";
-import { BaseEstate, BusinessEstate, ResidentialEstate } from "./estate.model";
+import {
+  BaseEstate,
+  BaseEstateDocument,
+  BusinessEstate,
+  ResidentialEstate,
+} from "./estate.model";
 import {
   GetBusinessEstatesQueryDto,
   GetResidentialEstatesQueryDto,
@@ -22,12 +28,20 @@ import {
 import { ResidentialType } from "../../shared/types/residentialType.enum";
 import { RentalType } from "../../shared/types/rentalType.enum";
 import { PersonalEstateFilterDto } from "./dtos/showHiddenFilter.dto";
+import { Reservation } from "../reservation/reservation.model";
+import { LockDate } from "../reservation/lockDates.model";
+import { UserDocument } from "../user/user.model";
+import { ImageKitService } from "../../imagekit/imagekit.service";
+
+import bcrypt from "bcrypt";
+import { EstateImageService } from "./estateImage.service";
+import { Amenities } from "../../shared/types/amenities.enum";
+// import multer from 'multer';
 
 export class EstateService {
   // Add methods for estate management here
   // For example, createEstate, getEstateById, updateEstate, deleteEstate, etc.
   // Each method should interact with the database and handle business logic
-
   async getEstateById(estateId: string, hostId?: string): Promise<any> {
     const estate = await BaseEstate.findById(estateId).populate(
       "host",
@@ -54,8 +68,6 @@ export class EstateService {
   async getAllResidentialEstates(
     dto: GetResidentialEstatesQueryDto
   ): Promise<any[]> {
-    // Logic to retrieve all estates
-    // Fetch from database, handle pagination, etc.
     const {
       page,
       limit,
@@ -69,18 +81,23 @@ export class EstateService {
       cancellationPolicy,
       amenities,
       petAllowed,
-      guestsIncluded,
+      guestCount,
       unitsAvailable,
+      childrenCount,
       sortBy,
       city,
       country,
       search,
+      startDate,
+      endDate,
     } = dto;
     const skip = (page - 1) * limit;
 
+    const pipeline: any[] = [];
     const match: any = {};
     if (petAllowed !== undefined) match.petAllowance = petAllowed;
-    if (guestsIncluded !== undefined) match.guestIncluded = guestsIncluded;
+    if (guestCount !== undefined)
+      match.guestIncluded = { $gte: guestCount + (childrenCount ?? 0) };
     if (rentalType !== undefined) match.rentalType = rentalType;
     if (residentialType !== undefined) match.residentialType = residentialType;
     if (roomType !== undefined && residentialType === ResidentialType.ROOM)
@@ -122,7 +139,52 @@ export class EstateService {
 
     match.hidden = false; // Ensure hidden estates are not included in the results
 
-    const query = ResidentialEstate.find(match);
+    pipeline.push({ $match: match }); //Dodavanje na pipeline match kriterijuma
+
+    if (startDate && endDate) {
+      pipeline.push(
+        {
+          $lookup: {
+            from: "reservations",
+            localField: "_id",
+            foreignField: "estateReserved",
+            as: "reservations",
+          },
+        },
+        {
+          $lookup: {
+            from: "lockdates",
+            localField: "_id",
+            foreignField: "estate",
+            as: "locks",
+          },
+        },
+        {
+          $match: {
+            reservations: {
+              $not: {
+                $elemMatch: {
+                  startDate: { $lt: endDate },
+                  endDate: { $gt: startDate },
+                  status: { $nin: ["CANCELLED", "COMPLETED"] },
+                },
+              },
+            },
+            locks: {
+              $not: {
+                $elemMatch: {
+                  startDate: { $lt: endDate },
+                  endDate: { $gt: startDate },
+                },
+              },
+            },
+          },
+        }
+      );
+    }
+
+    pipeline.push({ $project: { reservations: 0, locks: 0 } });
+
     if (sortBy) {
       const sortObject: Record<string, 1 | -1> = {};
       const sortFields = sortBy.split(",");
@@ -131,18 +193,17 @@ export class EstateService {
         const [key, order] = field.split(":");
         sortObject[key] = order === "desc" ? -1 : 1; // 1 for ascending, -1 for descending
       }
-      query.sort(sortObject);
+
+      pipeline.push({ $sort: sortObject });
     }
 
-    const result = await query.skip(skip).limit(limit);
-    // if (!result || result.length === 0)
-    //   throw new NotFoundError("No estates matches the criteria");
+    pipeline.push({ $skip: skip }, { $limit: limit });
+    const estates = await ResidentialEstate.aggregate(pipeline);
 
-    return result; // Return an array of estate objects
+    return estates;
   }
+
   async getAllBusinessEstates(dto: GetBusinessEstatesQueryDto): Promise<any[]> {
-    // Logic to retrieve all estates
-    // Fetch from database, handle pagination, etc.
     const {
       page,
       limit,
@@ -166,9 +227,12 @@ export class EstateService {
       city,
       country,
       search,
+      startDate,
+      endDate,
     } = dto;
     const skip = (page - 1) * limit;
 
+    const pipeline: any[] = [];
     const match: any = {};
     if (floor !== undefined) match.floor = floor;
     if (minPrice !== undefined || maxPrice !== undefined) {
@@ -206,7 +270,36 @@ export class EstateService {
 
     match.hidden = false; // Ensure hidden estates are not included in the results
 
-    const query = BusinessEstate.find(match);
+    pipeline.push({ $match: match });
+
+    if (endDate && startDate) {
+      pipeline.push(
+        {
+          $lookup: {
+            from: "reservations",
+            localField: "_id",
+            foreignField: "estateReserved",
+            as: "reservations",
+          },
+        },
+
+        {
+          $match: {
+            reservations: {
+              $not: {
+                $elemMatch: {
+                  startDate: { $lt: endDate },
+                  endDate: { $gt: startDate },
+                  status: { $nin: ["CANCELLED", "COMPLETED"] },
+                },
+              },
+            },
+          },
+        }
+      );
+    }
+
+    pipeline.push({ $project: { reservations: 0 } });
     if (sortBy) {
       const sortObject: Record<string, 1 | -1> = {};
       const sortFields = sortBy.split(",");
@@ -215,11 +308,14 @@ export class EstateService {
         const [key, order] = field.split(":");
         sortObject[key] = order === "desc" ? -1 : 1; // 1 for ascending, -1 for descending
       }
-      query.sort(sortObject);
+
+      pipeline.push({ $sort: sortObject });
     }
 
-    const result = await query.skip(skip).limit(limit);
-    return result; // Return an array of estate objects
+    pipeline.push({ $skip: skip }, { $limit: limit });
+    const estates = await BusinessEstate.aggregate(pipeline);
+
+    return estates; // Return an array of estate objects
   }
 
   async getAllHostEstates(hostId: string, filterDto: PersonalEstateFilterDto) {
@@ -253,17 +349,20 @@ export class EstateService {
   async createEstate(
     dataDto: CreateBusinessEstateDto | CreateResidentialEstateDto,
     hostId: string,
-    estateType: "residential" | "business"
+    estateType: "residential" | "business",
+    images: Express.Multer.File[]
   ): Promise<any> {
     if (estateType === "residential") {
       return this.createResidentialEstate(
+        hostId,
         dataDto as CreateResidentialEstateDto,
-        hostId
+        images
       );
     } else if (estateType === "business") {
       return this.createBusinessEstate(
+        hostId,
         dataDto as CreateBusinessEstateDto,
-        hostId
+        images
       );
     } else {
       throw new Error("Unknown estate type");
@@ -271,21 +370,60 @@ export class EstateService {
   }
 
   private async createResidentialEstate(
+    hostId: string,
     data: CreateResidentialEstateDto,
-    hostId: string
+    images: Express.Multer.File[]
   ): Promise<any> {
-    const residentialEstateObject = { ...data, host: hostId };
-    logging.info(residentialEstateObject);
+    const uploadedImages: { url: string; fileId: string }[] = [];
+
+    if (images && images.length > 0) {
+      for (const img of images) {
+        const result: any = await ImageKitService.uploadFile(
+          img.buffer,
+          img.originalname
+        );
+        uploadedImages.push({
+          url: result.url,
+          fileId: result.fileId,
+        }); // U bazi se cuva samo niz url ka pohranjenim slikama na cloud servisu
+      }
+    }
+    const residentialEstateObject = {
+      ...data,
+      host: hostId,
+      images: uploadedImages,
+    };
     const res = await ResidentialEstate.create(residentialEstateObject);
 
     return res;
   }
 
   private async createBusinessEstate(
+    hostId: string,
     data: CreateBusinessEstateDto,
-    hostId: string
+    images: Express.Multer.File[]
   ): Promise<any> {
-    const businessEstateObject = { ...data, host: hostId };
+    const uploadedImages: { url: string; fileId: string }[] = [];
+
+    if (images && images.length > 0) {
+      for (const img of images) {
+        const result: any = await ImageKitService.uploadFile(
+          img.buffer,
+          img.originalname
+        );
+        uploadedImages.push({
+          url: result.url,
+          fileId: result.fileId,
+        }); // U bazi se cuva samo niz url ka pohranjenim slikama na cloud servisu
+      }
+    }
+
+    const businessEstateObject = {
+      ...data,
+      host: hostId,
+      images: uploadedImages,
+    };
+
     const res = await BusinessEstate.create(businessEstateObject);
 
     return res;
@@ -326,9 +464,69 @@ export class EstateService {
     return estate; // Return the updated estate object
   }
 
-  async deleteEstate(estateId: string): Promise<void> {
-    // Logic to delete an estate
-    // Remove from database, handle errors, etc.
+  async updateEstateAmenities<T extends { findById: Function }>(
+    EstateModel: T,
+    estateId: string,
+    userId: string,
+    amenities: Amenities[]
+  ) {
+    const estate = await EstateModel.findById(estateId);
+
+    if (!estate) {
+      throw new NotFoundError("Estate nije pronađen");
+    }
+
+    if (estate.host.toString() !== userId) {
+      throw new ForbiddenError("Nemate pravo da pristupite ovom resursu");
+    }
+
+    (estate as any).amenities = amenities;
+    await estate.save();
+
+    return estate;
+  }
+
+  async hardDeleteEstate(
+    hostId: string,
+    estateId: string,
+    userPassword: string
+  ): Promise<void> {
+    const estate = await BaseEstate.findById(estateId).populate<{
+      host: UserDocument;
+    }>("host");
+
+    if (!estate) {
+      throw new NotFoundError("This estate is not found in the base.");
+    }
+    if (estate.host._id.toString() !== hostId)
+      throw new ForbiddenError(
+        "Forbidden to perform this action, you are not the owner of estate"
+      );
+    const { password } = estate.host;
+
+    //Kako bi izveo ovu operaciju korisnik je duzan da posalje validnu lozinku
+    const match = await bcrypt.compare(userPassword, password);
+    if (!match) throw new UnauthorizedError("Invalid credentials");
+
+    await Reservation.deleteMany({ estateReserved: estateId });
+
+    // // 3. Obriši recenzije
+    // await Review.deleteMany({ estateId });
+
+    // // 4. Obriši iz wishlist-a korisnika
+    // await User.updateMany(
+    //   { wishlist: estateId },
+    //   { $pull: { wishlist: estateId } }
+    // );
+
+    // 5. Obriši slike sa ImageKit
+    if (estate.images && estate.images.length > 0) {
+      await EstateImageService.deleteAllEstateImages(
+        estate as BaseEstateDocument
+      );
+    }
+
+    await BaseEstate.deleteOne({ _id: estateId });
   }
 
   async toggleEstateVisibility(
