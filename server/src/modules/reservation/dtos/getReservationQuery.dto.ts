@@ -3,7 +3,6 @@ import { Status } from "../../../shared/types/status.enum";
 
 export const getReservationQueryDto = z
   .object({
-    estateId: z.string().optional(),
     page: z.coerce.number().min(1).default(1),
     limit: z.coerce.number().min(1).max(100).default(10),
     startDate: z.coerce
@@ -19,6 +18,8 @@ export const getReservationQueryDto = z
       })
       .optional(),
     status: z.enum(Status).optional(),
+    sortBy: z.string().optional(),
+    // sortOrder: z.enum(["asc", "desc"]).default("asc"),
   })
   .check((ctx) => {
     if (
@@ -35,4 +36,13 @@ export const getReservationQueryDto = z
     }
   });
 
+export const getPendingReservationQueryDto = getReservationQueryDto
+  .omit({
+    status: true,
+  })
+  .extend({ type: z.enum(["Business", "Residential"]).optional() });
+
 export type GetReservationQueryDto = z.infer<typeof getReservationQueryDto>;
+export type GetPendingReservationQueryDto = z.infer<
+  typeof getPendingReservationQueryDto
+>;

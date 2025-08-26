@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { HydratedDocument } from "mongoose";
 import { ReservationDocument } from "../reservation/reservation.model";
 
 export enum ContractStatus {
@@ -19,6 +19,7 @@ export interface IContract {
   createdAt?: Date;
   updatedAt?: Date;
 }
+export type ContractDocument = HydratedDocument<IContract>;
 
 const contractSchema = new mongoose.Schema<IContract>(
   {

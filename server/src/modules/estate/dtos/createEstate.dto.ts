@@ -31,7 +31,6 @@ export const baseEstateDto = z.object({
   transit: z.string().optional(),
   access: z.string().optional(),
   cancellationPolicy: z.enum(CancellationPolicy).optional(),
-  images: z.array(z.url()).optional(),
   rentalType: z.enum(RentalType),
   securityDeposit: z.number().nonnegative().optional(),
   address: addressSchema,
@@ -42,10 +41,11 @@ export const createResidentialEstateDto = baseEstateDto
     bedrooms: z.number().int().positive().optional(),
     bathrooms: z.number().int().positive().optional(),
     beds: z.number().int().positive(),
-    minimumNights: z.number().int().positive(),
-    maximumNights: z.number().int().positive().optional(),
+    minimumStay: z.number().int().positive(),
+    maximumStay: z.number().int().positive().optional(),
     pricePerNight: z.number().positive().optional(),
     pricePerMonth: z.number().positive().optional(),
+    area: z.number().positive().optional(),
     amenities: z.enum(Amenities).array().optional(),
     residentialType: z.enum(ResidentialType),
     roomType: z.enum(RoomType).optional(),
@@ -83,11 +83,11 @@ export const createResidentialEstateDto = baseEstateDto
       });
     }
     if (
-      ctx.value.maximumNights !== undefined &&
-      ctx.value.maximumNights < ctx.value.minimumNights
+      ctx.value.maximumStay !== undefined &&
+      ctx.value.maximumStay < ctx.value.minimumStay
     ) {
       ctx.issues.push({
-        input: ctx.value.maximumNights,
+        input: ctx.value.maximumStay,
         code: "custom",
         message:
           "Maximum nights must be greater than or equal to minimum nights",
@@ -98,7 +98,7 @@ export const createResidentialEstateDto = baseEstateDto
 export const createBusinessEstateDto = baseEstateDto.extend({
   pricePerMonth: z.number().positive(),
   rentalType: z.literal(RentalType.LONG_TERM), // Only long-term rental for business estates
-  unitsAvailable: z.number().int().positive().optional(),
+  unitsAvailable: z.number().int().positive().default(1).optional(),
   area: z.number().positive(),
   intentedUse: z.enum([
     "retail",

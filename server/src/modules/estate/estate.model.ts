@@ -21,7 +21,7 @@ export interface IBaseEstate {
   access?: string;
   cancellationPolicy?: CancellationPolicy;
 
-  images?: string[];
+  images?: { url: string; fileId: string }[];
   rentalType: RentalType; // Required field for rental type, e.g., "short-term" or "long-term"
 
   securityDeposit?: number;
@@ -38,10 +38,11 @@ export interface IResidentialEstate extends IBaseEstate {
   bedrooms?: number;
   bathrooms?: number;
   beds: number;
-  minimumNights: number;
-  maximumNights?: number;
+  minimumStay: number;
+  maximumStay?: number;
   pricePerNight?: number;
   pricePerMonth?: number; // Optional field for long-term rental price per month
+  area?: number;
   amenities?: Amenities[];
   residentialType: ResidentialType;
   roomType?: RoomType;
@@ -54,7 +55,7 @@ export interface IResidentialEstate extends IBaseEstate {
 
 export interface IBusinessEstate extends Omit<IBaseEstate, "rentalType"> {
   pricePerMonth: number; // Required field for business estates
-  unitsAvailable?: number; // Optional field to indicate the number of units available for long-term rental
+  unitsAvailable: number; // Optional field to indicate the number of units available for long-term rental - default 1
   area: number; // Required field for area in square meters
   intentedUse: "retail" | "office" | "warehouse" | "hospitality" | "other";
   floor?: number;
@@ -96,10 +97,12 @@ const baseEstateSchema = new Schema<IBaseEstate>(
       enum: Object.values(CancellationPolicy),
       required: false,
     },
-    images: {
-      type: [String],
-      required: false,
-    },
+    images: [
+      {
+        url: { type: String, required: true },
+        fileId: { type: String, required: true },
+      },
+    ],
     rentalType: {
       type: String,
       enum: Object.values(RentalType),
@@ -136,11 +139,11 @@ const residentialEstateSchema = new Schema<IResidentialEstate>({
     type: Number,
     required: true,
   },
-  minimumNights: {
+  minimumStay: {
     type: Number,
     required: true,
   },
-  maximumNights: {
+  maximumStay: {
     type: Number,
     required: false,
   },
@@ -155,6 +158,10 @@ const residentialEstateSchema = new Schema<IResidentialEstate>({
     required: function (this: IResidentialEstate) {
       return this.rentalType === RentalType.LONG_TERM; // Only required if rentalType is LONG_TERM
     },
+  },
+  area: {
+    type: Number,
+    required: false,
   },
   amenities: [
     {
@@ -213,11 +220,9 @@ residentialEstateSchema.pre("validate", function (next) {
 });
 
 residentialEstateSchema.pre("save", function (next) {
-  if (this.maximumNights && this.maximumNights < this.minimumNights) {
+  if (this.maximumStay && this.maximumStay < this.minimumStay) {
     return next(
-      new Error(
-        "Maximum nights must be greater than or equal to minimum nights"
-      )
+      new Error("Maximum stay must be greater than or equal to minimum stay")
     );
   }
   next();
@@ -231,7 +236,9 @@ const businessEstateSchema = new Schema<IBusinessEstate>({
 
   unitsAvailable: {
     type: Number,
-    required: false, // Optional field to indicate the number of units available for long-term rental
+    required: true, // Optional field to indicate the number of units available for long-term rental
+    default: 1,
+    min: [1, "Mora postojati najmanje jedna jedinica"],
   },
   area: {
     type: Number,

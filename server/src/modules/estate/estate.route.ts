@@ -15,15 +15,23 @@ import {
   getAllPersonalEstates,
   getAllResidentialEstates,
   getEstateById,
+  hardDeleteEstateById,
   toggleEstateVisibility,
+  updateBusinessAmenities,
   updateEstate,
+  updateResidentialAmenities,
 } from "./estate.controller";
-import { estateIdParams } from "./dtos/estateIdParams";
+
 import {
   getBusinessEstatesQueryDto,
   getResidentialEstatesQueryDto,
 } from "./dtos/getEstatesQuery.dto";
 import { personalEstateFilterDto } from "./dtos/showHiddenFilter.dto";
+import { hardDeleteEstateDto } from "./dtos/hardDeleteEstate.dto";
+import { validateObjectId } from "../../shared/middlewares/validateObjectId";
+
+import multer from "multer";
+import { updateEstateAmenitiesDto } from "./dtos/updateEstate.dto";
 
 // Extend Express Request interface to include estateTypeCreated
 declare global {
@@ -35,6 +43,7 @@ declare global {
 }
 
 const router = Router();
+const upload = multer();
 
 router.get(
   "/residential/all",
@@ -60,6 +69,7 @@ router.get(
 
 router.post(
   "/residential",
+  upload.array("images"),
   (req: Request, res: Response, next: NextFunction) => {
     req.estateTypeCreated = "residential";
     next();
@@ -74,6 +84,7 @@ router.post(
 
 router.post(
   "/business",
+  upload.array("images"),
   (req: Request, res: Response, next: NextFunction) => {
     req.estateTypeCreated = "business";
     next();
@@ -88,7 +99,7 @@ router.post(
 
 router.get(
   "/:estateId",
-  validate(estateIdParams, "params"),
+  validateObjectId("estateId"),
   optionalAuth,
   getEstateById
 );
@@ -96,7 +107,7 @@ router.get(
 //update body validated on service level
 router.patch(
   "/:estateId",
-  validate(estateIdParams, "params"),
+  validateObjectId("estateId"),
   isAuth,
   isActiveUser,
   isVerifiedUser,
@@ -105,13 +116,44 @@ router.patch(
 );
 
 router.patch(
+  "/:estateId/update-amenities",
+  validateObjectId("estateId"),
+  validate(updateEstateAmenitiesDto),
+  isAuth,
+  isActiveUser,
+  isVerifiedUser,
+  hasRole([Role.HOST]),
+  updateResidentialAmenities
+);
+router.patch(
+  "/:estateId/update-business-amenities",
+  validateObjectId("estateId"),
+  validate(updateEstateAmenitiesDto),
+  isAuth,
+  isActiveUser,
+  isVerifiedUser,
+  hasRole([Role.HOST]),
+  updateBusinessAmenities
+);
+router.patch(
   "/visibility/:estateId",
-  validate(estateIdParams, "params"),
+  validateObjectId("estateId"),
   isAuth,
   isActiveUser,
   isVerifiedUser,
   hasRole([Role.HOST, Role.ADMIN]),
   toggleEstateVisibility
+);
+
+router.delete(
+  "/hardDelete/:estateId",
+  validateObjectId("estateId"),
+  validate(hardDeleteEstateDto),
+  isAuth,
+  isActiveUser,
+  isVerifiedUser,
+  hasRole([Role.HOST]),
+  hardDeleteEstateById
 );
 
 export default router;
