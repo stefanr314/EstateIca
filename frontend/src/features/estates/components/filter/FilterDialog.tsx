@@ -66,7 +66,7 @@ export default function FilterDialog() {
   };
 
   const handleApplyFilters = () => {
-    const newParams = new URLSearchParams();
+    const newParams = new URLSearchParams(searchParams);
 
     if (type && type !== "any") newParams.set("type", type); // npr: 'apartment'
     if (stayLength !== "any") newParams.set("rentalType", stayLength);

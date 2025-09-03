@@ -1,6 +1,6 @@
 import mongoose, { Schema, Types, HydratedDocument } from "mongoose";
 import { UserDocument } from "../user/user.model";
-import { IReview } from "../review/reviews.model";
+import { IReview } from "../review/review.model";
 
 import { AddressSchema, IAddress } from "../../shared/schema/adress.schema";
 
@@ -49,7 +49,14 @@ export interface IResidentialEstate extends IBaseEstate {
   guestIncluded: number;
   extraPeople?: number;
   petAllowance?: boolean;
-  reviews?: (Types.ObjectId | IReview)[]; // Optional field for reviews
+  averageRating: {
+    overall: number;
+    cleanliness: number;
+    amenities: number;
+    host: number;
+    location: number;
+  }; // prosjek ocjena
+  reviewsCount: number; // broj recenzija
   unitsAvailable?: number; // Optional field to indicate the number of units available for long-term rental
 }
 
@@ -186,13 +193,14 @@ const residentialEstateSchema = new Schema<IResidentialEstate>({
   },
   extraPeople: { type: Number, required: false },
   petAllowance: { type: Boolean, required: false },
-  reviews: [
-    {
-      type: Types.ObjectId,
-      ref: "Review",
-      required: false, // Optional field for reviews
-    },
-  ],
+  averageRating: {
+    overall: { type: Number, required: true, default: 0 },
+    cleanliness: { type: Number, required: true, default: 0 },
+    amenities: { type: Number, required: true, default: 0 },
+    host: { type: Number, required: true, default: 0 },
+    location: { type: Number, required: true, default: 0 },
+  },
+  reviewsCount: { type: Number, required: true, default: 0 },
   unitsAvailable: {
     type: Number,
     required: function (this: IResidentialEstate) {

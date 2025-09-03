@@ -184,8 +184,16 @@ reservationSchema.pre("validate", function (next) {
 });
 
 reservationSchema.index(
-  { estateReserved: 1, startDate: 1, endDate: 1, status: 1 },
-  { name: "reservation_availability_index" }
+  { estateReserved: 1, status: 1, startDate: 1 },
+  { name: "estate_status_startDate_idx" }
+);
+reservationSchema.index(
+  { estateReserved: 1, status: 1, endDate: 1 },
+  { name: "estate_status_endDate_idx" }
 );
 
+reservationSchema.index(
+  { estateReserved: 1, status: 1, startDate: 1, endDate: 1 },
+  { name: "estate_status_start_end_idx" }
+);
 export const Reservation = mongoose.model("Reservation", reservationSchema);

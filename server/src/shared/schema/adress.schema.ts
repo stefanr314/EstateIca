@@ -7,6 +7,7 @@ export interface IAddress {
   suburb?: string;
   countryCode: string;
   street: string;
+  placeId: string;
   location: {
     type: "Point";
     coordinates: [number, number];
@@ -22,6 +23,7 @@ export const AddressSchema = new Schema<IAddress>(
     suburb: { type: String, required: false }, // npr. "Vracar"
     street: { type: String, required: true }, // npr. "Nemanjina 4"
     countryCode: { type: String, required: true },
+    placeId: { type: String, required: true }, // 🔑 Google place_id
     location: {
       type: {
         type: String,

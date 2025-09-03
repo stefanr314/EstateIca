@@ -24,7 +24,7 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect }) => {
         const data = await agent.Location.search(inputValue);
 
         console.log(data);
-        if (data.lenght === 0) {
+        if (data.length !== 0) {
           setOptions(data);
         } else {
           setOptions([]);

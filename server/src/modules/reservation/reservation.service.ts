@@ -47,6 +47,7 @@ import { LockDatesDto, UnlockDatesDto } from "./dtos/lockDates.dto";
 import { LockDate } from "./lockDates.model";
 import { utcMidnight } from "../../shared/utils/transformToUTCMidnight";
 import { getSmartMonthCount } from "../../shared/utils/smartMonthCount";
+import { reservationQueue } from "../../bullmq/queues/reservation.queue";
 
 const EXTRA_FEE_PER_EXTRAGUEST = 5; //dodatna cijena po extra gostu koji je izvan maksimalnog broja gostiju u smjestaju
 const CHILDREN_DISCOUNT = 4;
@@ -62,8 +63,8 @@ export class ReservationService {
     };
     const reservationQuery: any = {
       estateReserved: estateId,
-      status: { $in: [Status.PENDING, Status.CONFIRMED] },
       ...overlapQuery,
+      status: { $in: [Status.PENDING, Status.CONFIRMED] },
     };
     if (reservationId) {
       reservationQuery._id = { $ne: reservationId };
@@ -264,6 +265,19 @@ export class ReservationService {
 
     await reservation.save();
 
+    const delay = new Date(normalizedEnd).getTime() - Date.now();
+    if (delay > 0 && reservation.rentalType === RentalType.SHORT_TERM) {
+      await reservationQueue.add(
+        "completeReservation",
+        { reservationId: reservation._id.toString() },
+        {
+          delay,
+          removeOnComplete: true,
+          removeOnFail: { age: 3600 }, // obriši failane nakon sat vremena
+          jobId: `reservation:${reservation._id.toString()}`, // VAŽNO – da bi se mogli naci jobovi i obrisati ako se promijeni endDate
+        }
+      );
+    }
     await sendEmail({
       to: guestEmail,
       subject: "Kreirali ste novu rezervaciju",
@@ -616,6 +630,14 @@ export class ReservationService {
       throw new BadRequestError(
         "Ovu akciju je moguce uraditi samo za smjestaje koji se izdaju za stanovanje."
       );
+    if (
+      reservation.rentalType === RentalType.LONG_TERM &&
+      reservation.status === Status.PENDING
+    ) {
+      throw new BadRequestError(
+        "Dugotrajne rezervacije u statusu 'na čekanju' se ne mogu mijenjati."
+      );
+    }
     const { startDate, endDate, note } = dto;
 
     const { minimumStay, maximumStay, pricePerNight, pricePerMonth } =
@@ -968,6 +990,27 @@ export class ReservationService {
       reservation.pendingChange = undefined;
       await reservation.save();
 
+      const oldJob = await reservationQueue.getJob(
+        `reservation:${reservationId}`
+      );
+      if (oldJob) {
+        await oldJob.remove();
+      }
+
+      const delay = new Date(reservation.endDate).getTime() - Date.now();
+      if (delay > 0) {
+        await reservationQueue.add(
+          "completeReservation",
+          { reservationId },
+          {
+            delay,
+            removeOnComplete: true,
+            removeOnFail: { age: 3600 },
+            jobId: `reservation:${reservationId}`, // isti id za ovu rezervaciju
+          }
+        );
+      }
+
       await sendEmail({
         to: reservation.userOfReservation.email,
         subject: "Vas zahtjev za izmjenu rezervacije je prihvacen",
@@ -1096,12 +1139,9 @@ export class ReservationService {
       throw new BadRequestError("Nema promjene koja treba da se odbije");
 
     // Odbacujemo pending change
-
     reservation.pendingChange = undefined;
-    reservation.status =
-      reservation.rentalType === RentalType.SHORT_TERM
-        ? Status.CONFIRMED
-        : Status.PENDING; //greska za long term
+    reservation.status = Status.CONFIRMED; //stavljamo i jednu i drugu na confirmed jer se u ovo stanje moze doci jedino ako su i long term i short term bile prethodno confirmed (short term su automatski potvrdjene pri uspjesnom kreiranju)
+
     await reservation.save();
 
     await sendEmail({
@@ -1161,6 +1201,19 @@ export class ReservationService {
     reservation.status = Status.CONFIRMED;
     await reservation.save();
 
+    const delay = new Date(reservation.endDate).getTime() - Date.now();
+    if (delay > 0) {
+      await reservationQueue.add(
+        "completeReservation",
+        { reservationId: reservation._id.toString() },
+        {
+          delay,
+          removeOnComplete: true,
+          removeOnFail: { age: 3600 }, // obriši failane nakon sat vremena
+          jobId: `reservation:${reservation._id.toString()}`, // VAŽNO – da bi se mogli naci jobovi i obrisati ako se promijeni endDate
+        }
+      );
+    }
     let contract: ContractDocument;
 
     contract = await createContractFromReservation(
@@ -1209,6 +1262,20 @@ export class ReservationService {
     reservation.status = Status.CONFIRMED;
     await reservation.save();
 
+    const delay = new Date(reservation.endDate).getTime() - Date.now();
+    if (delay > 0) {
+      await reservationQueue.add(
+        "completeReservation",
+        { reservationId: reservation._id.toString() },
+        {
+          delay,
+          removeOnComplete: true,
+          removeOnFail: { age: 3600 }, // obriši failane nakon sat vremena
+          jobId: `reservation:${reservation._id.toString()}`, // VAŽNO – da bi se mogli naci jobovi i obrisati ako se promijeni endDate
+        }
+      );
+    }
+
     let contract: ContractDocument;
 
     contract = await createContractFromReservation(
@@ -1236,6 +1303,11 @@ export class ReservationService {
 
     reservation.status = Status.CANCELED;
     await reservation.save();
+
+    const job = await reservationQueue.getJob(`reservation:${reservationId}`);
+    if (job) {
+      await job.remove();
+    }
 
     let contract: ContractDocument | undefined;
 
@@ -1271,6 +1343,11 @@ export class ReservationService {
 
     reservation.status = Status.CANCELED;
     await reservation.save();
+
+    const job = await reservationQueue.getJob(`reservation:${reservationId}`);
+    if (job) {
+      await job.remove();
+    }
 
     let contract: ContractDocument;
 

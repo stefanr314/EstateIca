@@ -17,13 +17,16 @@ import userRoutes from "./modules/user/user.route";
 import hostRequestRoutes from "./modules/hostRequest/hostRequest.route";
 import estateRoutes from "./modules/estate/estate.route";
 import reservationRoutes from "./modules/reservation/reservation.route";
+import reviewRoutes from "./modules/review/review.route";
 import locationRoutes from "./modules/location/location.route";
 import estateImageRoutes from "./modules/estate/estateImage.route";
 import contractRoutes from "./modules/contract/contract.route";
+import wishlistRoutes from "./modules/wishlist/wishlist.route";
 
 import connectDB from "./shared/utils/db";
 import { errorHandler } from "./shared/middlewares/errorHandler";
 import helmet from "helmet";
+import { initSubscribers } from "./redis/subscriber";
 
 // === 1. HANDLE UNCAUGHT EXCEPTIONS ===
 process.on("uncaughtException", (err) => {
@@ -62,11 +65,15 @@ export const Main = () => {
   app.use("/api/estates", estateRoutes);
   app.use("/api/estates", estateImageRoutes);
   app.use("/api/reservations", reservationRoutes);
+  app.use("/api/reviews", reviewRoutes);
   app.use("/api/location", locationRoutes);
   app.use("/api/contract", contractRoutes);
+  app.use("/api/wishlist", wishlistRoutes);
 
   app.use(routeNotFound);
   app.use(errorHandler);
+
+  initSubscribers();
 
   httpServer = http.createServer(app);
   httpServer.listen(PORT, () => {
