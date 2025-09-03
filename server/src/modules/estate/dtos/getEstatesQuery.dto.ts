@@ -30,6 +30,7 @@ export const getResidentialEstatesQueryDto = z
     sortBy: z.string().optional(),
 
     // Search by city / text
+    placeId: z.string().optional(),
     city: z.string().optional(),
     country: z.string().optional(),
     search: z.string().optional(),
@@ -91,6 +92,7 @@ export const getBusinessEstatesQueryDto = z
     sortBy: z.string().optional(),
 
     // Search by city / text
+    placeId: z.string().optional(),
     city: z.string().optional(),
     country: z.string().optional(),
     search: z.string().optional(),

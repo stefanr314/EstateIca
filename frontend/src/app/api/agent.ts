@@ -26,11 +26,7 @@ axios.interceptors.response.use(
 
       try {
         // Pozivaj endpoint koji koristi refresh token iz cookie-ja
-        const res = await axios.post(
-          "/auth/refresh",
-          {},
-          { withCredentials: true }
-        );
+        const res = await axios.get("/auth/refresh", { withCredentials: true });
         const newAccessToken = res.data.accessToken;
 
         localStorage.setItem("token", newAccessToken);

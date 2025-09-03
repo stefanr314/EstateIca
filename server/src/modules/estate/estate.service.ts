@@ -29,13 +29,18 @@ import { ResidentialType } from "../../shared/types/residentialType.enum";
 import { RentalType } from "../../shared/types/rentalType.enum";
 import { PersonalEstateFilterDto } from "./dtos/showHiddenFilter.dto";
 import { Reservation } from "../reservation/reservation.model";
-import { LockDate } from "../reservation/lockDates.model";
 import { UserDocument } from "../user/user.model";
+
 import { ImageKitService } from "../../imagekit/imagekit.service";
+import { redisClient } from "../../redis/redisClient";
 
 import bcrypt from "bcrypt";
+import crypto from "crypto";
+
 import { EstateImageService } from "./estateImage.service";
 import { Amenities } from "../../shared/types/amenities.enum";
+import { publishMessage } from "../../redis/publisher";
+import { getPlaceDetails } from "../../shared/utils/getPlaceDetails";
 // import multer from 'multer';
 
 export class EstateService {
@@ -68,6 +73,18 @@ export class EstateService {
   async getAllResidentialEstates(
     dto: GetResidentialEstatesQueryDto
   ): Promise<any[]> {
+    const key = `residential:${crypto
+      .createHash("md5")
+      .update(JSON.stringify(dto))
+      .digest("hex")}`;
+
+    // 2. Provjera da li postoji keš
+    const cached = await redisClient.get(key);
+    if (cached) {
+      logging.log("Data retrieved from Redis cache");
+      return JSON.parse(cached);
+    }
+
     const {
       page,
       limit,
@@ -94,6 +111,22 @@ export class EstateService {
     const skip = (page - 1) * limit;
 
     const pipeline: any[] = [];
+
+    if (dto.placeId) {
+      const place = await getPlaceDetails(dto.placeId);
+      pipeline.push({
+        $geoNear: {
+          near: {
+            type: "Point",
+            coordinates: [place.lng, place.lat],
+          },
+          distanceField: "distance",
+          spherical: true,
+          maxDistance: 10000, // npr. 10km radijus
+        },
+      });
+    }
+
     const match: any = {};
     if (petAllowed !== undefined) match.petAllowance = petAllowed;
     if (guestCount !== undefined)
@@ -109,8 +142,10 @@ export class EstateService {
     if (amenities && amenities.length > 0) {
       match.amenities = { $all: amenities };
     }
-    if (city) match["address.city"] = { $regex: city, $options: "i" };
-    if (country) match["address.country"] = { $regex: country, $options: "i" };
+    if (city && !dto.placeId)
+      match["address.city"] = { $regex: city, $options: "i" };
+    if (country && !dto.placeId)
+      match["address.country"] = { $regex: country, $options: "i" };
     if (search) match.title = { $regex: search, $options: "i" };
 
     if (minPrice !== undefined || maxPrice !== undefined) {
@@ -197,13 +232,33 @@ export class EstateService {
       pipeline.push({ $sort: sortObject });
     }
 
-    pipeline.push({ $skip: skip }, { $limit: limit });
+    pipeline.push({
+      $facet: {
+        data: [{ $skip: skip }, { $limit: limit }],
+        totalCount: [{ $count: "count" }],
+      },
+    });
     const estates = await ResidentialEstate.aggregate(pipeline);
+
+    // 4. Čuvanje u Redis sa TTL (npr. 5 minuta)
+    await redisClient.set(key, JSON.stringify(estates), "EX", 300);
 
     return estates;
   }
 
   async getAllBusinessEstates(dto: GetBusinessEstatesQueryDto): Promise<any[]> {
+    const key = `business:${crypto
+      .createHash("md5")
+      .update(JSON.stringify(dto))
+      .digest("hex")}`;
+
+    // 2. Provjera da li postoji keš
+    const cached = await redisClient.get(key);
+    if (cached) {
+      logging.log("Data retrieved from Redis cache");
+      return JSON.parse(cached);
+    }
+
     const {
       page,
       limit,
@@ -233,6 +288,22 @@ export class EstateService {
     const skip = (page - 1) * limit;
 
     const pipeline: any[] = [];
+
+    if (dto.placeId) {
+      const place = await getPlaceDetails(dto.placeId);
+      pipeline.push({
+        $geoNear: {
+          near: {
+            type: "Point",
+            coordinates: [place.lng, place.lat],
+          },
+          distanceField: "distance",
+          spherical: true,
+          maxDistance: 10000, // npr. 10km radijus
+        },
+      });
+    }
+
     const match: any = {};
     if (floor !== undefined) match.floor = floor;
     if (minPrice !== undefined || maxPrice !== undefined) {
@@ -312,9 +383,16 @@ export class EstateService {
       pipeline.push({ $sort: sortObject });
     }
 
-    pipeline.push({ $skip: skip }, { $limit: limit });
+    pipeline.push({
+      $facet: {
+        data: [{ $skip: skip }, { $limit: limit }],
+        totalCount: [{ $count: "count" }],
+      },
+    });
     const estates = await BusinessEstate.aggregate(pipeline);
 
+    // 4. Čuvanje u Redis sa TTL (npr. 5 minuta)
+    await redisClient.set(key, JSON.stringify(estates), "EX", 300);
     return estates; // Return an array of estate objects
   }
 
@@ -395,6 +473,7 @@ export class EstateService {
     };
     const res = await ResidentialEstate.create(residentialEstateObject);
 
+    publishMessage("estate-updated", { type: "residential" });
     return res;
   }
 
@@ -425,7 +504,7 @@ export class EstateService {
     };
 
     const res = await BusinessEstate.create(businessEstateObject);
-
+    publishMessage("estate-updated", { type: "business" });
     return res;
   }
 
@@ -460,6 +539,10 @@ export class EstateService {
 
     Object.assign(estate, updateData);
     await estate.save();
+    publishMessage("estate-updated", {
+      type:
+        estate.estateType === "ResidentialEstate" ? "residential" : "business",
+    });
 
     return estate; // Return the updated estate object
   }
@@ -525,7 +608,10 @@ export class EstateService {
         estate as BaseEstateDocument
       );
     }
-
+    publishMessage("estate-updated", {
+      type:
+        estate.estateType === "ResidentialEstate" ? "residential" : "business",
+    });
     await BaseEstate.deleteOne({ _id: estateId });
   }
 
@@ -544,6 +630,10 @@ export class EstateService {
 
     estate.hidden = !estate.hidden; // Toggle hidden status
     await estate.save();
+    publishMessage("estate-updated", {
+      type:
+        estate.estateType === "ResidentialEstate" ? "residential" : "business",
+    });
     return estate; // Return the updated estate object
   }
 

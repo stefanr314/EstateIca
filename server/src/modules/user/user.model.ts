@@ -15,7 +15,7 @@ export interface IUser {
   role: Role;
   hostType?: HostType; // Optional, can be added later
   isSuperhost: boolean;
-  wishlist?: mongoose.Types.ObjectId | HydratedDocument<IWishlist>;
+  wishlist?: HydratedDocument<IWishlist>;
   pushTokens?: string[];
   isVerified: boolean;
   isActive: boolean;
@@ -49,11 +49,7 @@ const userSchema = new mongoose.Schema<IUser>(
       required: false,
     },
     isSuperhost: { type: Boolean, default: false },
-    wishlist: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Wishlist",
-      required: false,
-    },
+
     pushTokens: {
       type: [String],
       required: false,
@@ -72,6 +68,17 @@ const userSchema = new mongoose.Schema<IUser>(
 userSchema.virtual("fullName").get(function () {
   return `${this.firstName} ${this.lastName}`; // Kombinacija imena i prezimena
 });
+
+userSchema.virtual("wishlist", {
+  ref: "Wishlist",
+  localField: "_id",
+  foreignField: "user",
+  justOne: true, // wishlist je jedan po useru
+});
+
+// Opcionalno: da populate bude vidljiv pri JSON.stringify / res.json
+userSchema.set("toObject", { virtuals: true });
+userSchema.set("toJSON", { virtuals: true });
 
 // Middleware za hashiranje lozinke
 userSchema.pre("save", async function (next) {

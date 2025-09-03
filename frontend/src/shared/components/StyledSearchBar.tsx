@@ -37,7 +37,9 @@ import {
 } from "./searchBar/styledComponents";
 
 interface SearchData {
-  location: string;
+  placeId: string;
+  city: string;
+  country: string;
   selectedStartDate: Date | null;
   selectedEndDate: Date | null;
   adults: number;
@@ -52,7 +54,9 @@ const StyledSearchBar = React.forwardRef<HTMLDivElement, {}>((_, ref) => {
   const theme = useTheme();
 
   const [searchData, setSearchData] = useState<SearchData>({
-    location: "",
+    placeId: "",
+    city: "",
+    country: "",
     selectedStartDate: null,
     selectedEndDate: null,
     adults: 0,
@@ -89,13 +93,19 @@ const StyledSearchBar = React.forwardRef<HTMLDivElement, {}>((_, ref) => {
     place_id: string;
   }) => {
     console.log("Izabrana lokacija:", location.description, location.place_id);
+    const [city, country] = location.description.split(", ");
     setSearchData((prev) => ({
       ...prev,
-      location: location.place_id,
+      placeId: location.place_id,
+      city,
+      country,
     }));
     // opcionalno: možeš odmah zatražiti lat/lng iz place_id
   };
 
+  const handleSendSearchData = () => {
+    console.log("Slanje podataka za pretragu:", searchData);
+  };
   const handleClosePopover = () => {
     setAnchorEl(null);
     setPopoverContent(null);
@@ -144,7 +154,7 @@ const StyledSearchBar = React.forwardRef<HTMLDivElement, {}>((_, ref) => {
           <StyledPaper elevation={4} square={false} sx={{ maxWidth: "900px" }}>
             <StyledBox
               sx={{ flex: 2 }}
-              onClick={(e) => handleClickPopover(e, "location")}
+              // onClick={(e) => handleClickPopover(e, "location")}
             >
               <Box>Gdje</Box>
               <FormControl variant="standard" size="small" fullWidth>
@@ -300,6 +310,7 @@ const StyledSearchBar = React.forwardRef<HTMLDivElement, {}>((_, ref) => {
                 <IconButton
                   aria-label="search"
                   edge="end"
+                  onClick={handleSendSearchData}
                   sx={{
                     backgroundColor: "primary.main", // Pozadina u primarnoj boji
                     color: "white", // Ikona bela
@@ -349,11 +360,11 @@ const StyledSearchBar = React.forwardRef<HTMLDivElement, {}>((_, ref) => {
                 <Typography variant="subtitle2">Gdje</Typography>
                 <Input
                   placeholder="Pretraži destinaciju"
-                  value={searchData.location}
+                  value={searchData.placeId}
                   onChange={(e) =>
                     setSearchData((prev) => ({
                       ...prev,
-                      location: e.target.value,
+                      placeId: e.target.value,
                     }))
                   }
                   disableUnderline

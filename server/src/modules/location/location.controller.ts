@@ -32,32 +32,42 @@ export const searchLocation = async (
     const { status, error_message, predictions } = response.data;
 
     switch (status) {
-      case "OK":
+      case "OK": {
         res.status(200).json(
           predictions.map((p: any) => ({
             description: p.description,
             place_id: p.place_id,
           }))
         );
+        return;
+      }
 
-      case "ZERO_RESULTS":
-        // Nema rezultata, nije greška — samo vraćamo praznu listu
+      case "ZERO_RESULTS": // Nema rezultata, nije greška — samo vraćamo praznu listu
+      {
         res.status(200).json([]);
+        return;
+      }
 
-      case "OVER_QUERY_LIMIT":
+      case "OVER_QUERY_LIMIT": {
         throw new CustomError(
           "Premašen broj dnevnih zahtjeva prema Google API-ju",
           429
         );
+       
+      }
 
-      case "REQUEST_DENIED":
+      case "REQUEST_DENIED": {
         throw new CustomError(error_message || "Google API odbio zahtjev", 403);
+        
+      }
 
-      case "INVALID_REQUEST":
+      case "INVALID_REQUEST": {
         throw new CustomError(
           error_message || "Nevažeći zahtjev prema Google API-ju",
           400
         );
+        
+      }
 
       case "UNKNOWN_ERROR":
         throw new CustomError("Nepoznata greška sa Google API-ja", 502);
