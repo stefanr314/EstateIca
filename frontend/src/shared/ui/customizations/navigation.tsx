@@ -7,7 +7,7 @@ import { menuItemClasses } from "@mui/material/MenuItem";
 import { selectClasses } from "@mui/material/Select";
 import { tabClasses } from "@mui/material/Tab";
 import UnfoldMoreRoundedIcon from "@mui/icons-material/UnfoldMoreRounded";
-import { gray, brand } from "../theme";
+import { gray, brand, mint } from "../theme";
 
 /* eslint-disable import/prefer-default-export */
 export const navigationCustomizations: Components<Theme> = {
@@ -164,12 +164,12 @@ export const navigationCustomizations: Components<Theme> = {
       root: ({ theme }) => ({
         "&.Mui-selected": {
           color: "white",
-          backgroundColor: (theme.vars || theme).palette.grey[900],
+          backgroundColor: mint[900],
         },
         ...theme.applyStyles("dark", {
           "&.Mui-selected": {
             color: "black",
-            backgroundColor: (theme.vars || theme).palette.grey[50],
+            backgroundColor: mint[50],
           },
         }),
       }),
@@ -179,9 +179,9 @@ export const navigationCustomizations: Components<Theme> = {
     styleOverrides: {
       root: { minHeight: "fit-content" },
       indicator: ({ theme }) => ({
-        backgroundColor: (theme.vars || theme).palette.grey[800],
+        backgroundColor: mint[800],
         ...theme.applyStyles("dark", {
-          backgroundColor: (theme.vars || theme).palette.grey[200],
+          backgroundColor: mint[200],
         }),
       }),
     },
@@ -200,17 +200,17 @@ export const navigationCustomizations: Components<Theme> = {
         borderColor: "transparent",
         ":hover": {
           color: (theme.vars || theme).palette.text.primary,
-          backgroundColor: gray[100],
-          borderColor: gray[200],
+          backgroundColor: mint[100],
+          borderColor: mint[200],
         },
         [`&.${tabClasses.selected}`]: {
-          color: gray[900],
+          color: mint[900],
         },
         ...theme.applyStyles("dark", {
           ":hover": {
             color: (theme.vars || theme).palette.text.primary,
-            backgroundColor: gray[800],
-            borderColor: gray[700],
+            backgroundColor: mint[800],
+            borderColor: mint[700],
           },
           [`&.${tabClasses.selected}`]: {
             color: "#fff",

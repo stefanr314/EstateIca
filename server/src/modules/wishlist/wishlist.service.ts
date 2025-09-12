@@ -18,21 +18,28 @@ export class WishlistService {
       { $unwind: { path: "$estates", preserveNullAndEmptyArrays: true } },
       {
         $lookup: {
-          from: "baseestates", // ime kolekcije
+          from: "baseestates",
           localField: "estates",
           foreignField: "_id",
           as: "estateDetails",
         },
       },
       { $unwind: { path: "$estateDetails", preserveNullAndEmptyArrays: true } },
-      { $sort: { [`estateDetails.${sortBy}`]: -1 } }, // sortiranje po sortBy polju
-      { $skip: skip },
-      { $limit: limitNumber },
       {
-        $group: {
-          _id: "$_id",
-          user: { $first: "$user" },
-          estates: { $push: "$estateDetails" },
+        $facet: {
+          data: [
+            { $sort: { [`estateDetails.${sortBy}`]: -1 } },
+            { $skip: skip },
+            { $limit: limitNumber },
+            {
+              $group: {
+                _id: "$_id",
+                user: { $first: "$user" },
+                estates: { $push: "$estateDetails" },
+              },
+            },
+          ],
+          totalCount: [{ $count: "count" }],
         },
       },
     ]);
@@ -43,7 +50,9 @@ export class WishlistService {
       return wishlist;
     }
 
-    return wishlistAggregation[0];
+    const wishlist = wishlistAggregation[0].data[0] || null;
+    const total = wishlistAggregation[0].totalCount[0]?.count || 0;
+    return { wishlist, total };
   }
 
   async addEstate(userId: string, estateId: string) {
@@ -58,12 +67,14 @@ export class WishlistService {
 
   async removeEstate(userId: string, estateId: string) {
     const wishlist = await Wishlist.findOne({ user: userId });
-    if (!wishlist) throw new NotFoundError("Ne postoji lista zelja");
+    // if (!wishlist) throw new NotFoundError("Ne postoji lista zelja");
+    if (wishlist) {
+      wishlist.estates = wishlist.estates.filter(
+        (id) => id.toString() !== estateId
+      );
+      await wishlist.save();
+    }
 
-    wishlist.estates = wishlist.estates.filter(
-      (id) => id.toString() !== estateId
-    );
-    await wishlist.save();
     return wishlist;
   }
 

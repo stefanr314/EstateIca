@@ -11,7 +11,7 @@ import {
 } from "date-fns";
 import { sr } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
-import { mint, green } from "@/shared/ui/theme";
+import { mint } from "@/shared/ui/theme";
 
 type RangeCalendarProps = {
   startDate: Date | null;

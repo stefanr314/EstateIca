@@ -3,14 +3,29 @@ import Button from "@mui/material/Button";
 import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import { useNavigate, useParams } from "react-router";
 
-export default function EstateDetailsHeader() {
+interface EstateDetailsHeaderProps {
+  title: string;
+  images: { url: string; fileId: string; _id: string }[];
+}
+
+// helper
+function getIKUrl(url: string, w: number, h: number, q = 90) {
+  if (!url) return "";
+  return `${url}?tr=w-${w * 2},h-${h * 2},fo-auto,q-${q},e-sharpen,c-at_max`;
+}
+
+export default function EstateDetailsHeader({
+  title,
+  images,
+}: EstateDetailsHeaderProps) {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+
   return (
     <Grid container direction={"column"} spacing={2}>
       {/* Naslov */}
       <Grid sx={{ xs: 12 }}>
-        <Typography variant="h4">Estate Title</Typography>
+        <Typography variant="h4">{title}</Typography>
       </Grid>
 
       {/* Glavni red: Leva + Desna strana */}
@@ -18,16 +33,20 @@ export default function EstateDetailsHeader() {
         {/* Leva polovina (1 velika slika) */}
         <Grid flex={1} sx={{ xs: 6, display: "inline-flex" }}>
           <Box
+            component="img"
+            src={getIKUrl(images?.[0]?.url ?? "", 800, 480)}
+            alt={title}
+            loading="lazy"
+            decoding="async"
             sx={{
-              bgcolor: "blueviolet",
+              objectFit: "cover",
               height: 480,
               width: "100%",
               borderRadius: 2,
-              textAlign: "center",
+              cursor: "pointer",
             }}
-          >
-            Leva slika
-          </Box>
+            onClick={() => navigate(`/estate/${id}/album`)}
+          />
         </Grid>
 
         {/* Desna polovina (4 male slike raspoređene 2x2) */}
@@ -54,38 +73,22 @@ export default function EstateDetailsHeader() {
             gap={2}
             height={480}
           >
-            <Box
-              bgcolor="lightblue"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-            >
-              1
-            </Box>
-            <Box
-              bgcolor="lightgreen"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-            >
-              2
-            </Box>
-            <Box
-              bgcolor="lightcoral"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-            >
-              3
-            </Box>
-            <Box
-              bgcolor="khaki"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-            >
-              4
-            </Box>
+            {images.slice(1, 5).map((img, idx) => (
+              <Box
+                key={idx}
+                component="img"
+                src={getIKUrl(img.url, 400, 240)}
+                alt={`${title} - ${idx + 2}`}
+                sx={{
+                  objectFit: "cover",
+                  width: "100%",
+                  height: "100%",
+                  cursor: "pointer",
+                  borderRadius: 2,
+                }}
+                onClick={() => navigate(`/estate/${id}/album`)}
+              />
+            ))}
           </Box>
         </Grid>
         {/* Button for opening album */}

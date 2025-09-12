@@ -254,7 +254,7 @@ const CustomAppBar: React.FC<{ onMenuClick: () => void }> = ({
                     iconPosition="start"
                     label="Smještaj"
                     component={Link}
-                    to="/estates"
+                    to="/estates/residential"
                     wrapped
                     sx={{
                       pb: 0,
@@ -268,13 +268,13 @@ const CustomAppBar: React.FC<{ onMenuClick: () => void }> = ({
                     iconPosition="start"
                     label="Nekretnine"
                     component={Link}
-                    to="/businesses"
+                    to="/estates/businesses"
                     wrapped
                     sx={{
                       pb: 0,
                       pt: 0,
                     }}
-                    aria-label="residential"
+                    aria-label="business"
                   />
                 </Tabs>
 

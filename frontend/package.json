@@ -22,6 +22,7 @@
     "@mui/x-tree-view": "^8.8.0",
     "@reduxjs/toolkit": "^2.8.2",
     "@tanstack/react-query": "^5.81.5",
+    "@vis.gl/react-google-maps": "^1.5.5",
     "axios": "^1.10.0",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",

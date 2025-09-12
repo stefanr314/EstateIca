@@ -1,49 +1,49 @@
 import Grid from "@mui/material/Grid";
 import Stack from "@mui/material/Stack";
-import Box from "@mui/material/Box";
+import { IBusinessEstate, IResidentialEstate } from "../types";
+import EstatesMap from "./EstatesMap";
+import ReviewSection from "@/features/reviews/components/ReviewSection";
+import HostInfo from "@/features/user/components/HostInfo";
+import {
+  isResidentialEstate,
+  isBusinessEstate,
+} from "@/shared/helper/determineEstateType";
+interface EstateDetailsFooterProps {
+  estate: IResidentialEstate | IBusinessEstate;
+}
 
-function EstateDetailsFooter() {
+function EstateDetailsFooter({ estate }: EstateDetailsFooterProps) {
+  const { host, address } = estate;
+
   return (
     <Stack spacing={2} justifyContent="center" alignItems="stretch">
       <Grid container spacing={2} width="100%">
-        <Box
-          sx={{
-            width: "100%",
-            height: 500,
-            bgcolor: "lightgray",
-            borderRadius: 2,
-            textAlign: "center",
-          }}
-        >
-          Detalji recenzije
-        </Box>
+        {isResidentialEstate(estate) && (
+          <ReviewSection
+            averageRating={estate.averageRating}
+            reviewsCount={estate.reviewsCount}
+          />
+        )}
       </Grid>
-      <Grid container spacing={2} width="100%">
-        <Box
-          sx={{
-            width: "100%",
-            height: 800,
-            bgcolor: "lightgray",
-            borderRadius: 2,
-            textAlign: "center",
-          }}
-        >
-          Google API
-        </Box>
+      <Grid
+        container
+        spacing={2}
+        width="100%"
+        sx={{ height: { xs: 300, sm: 420, md: 600 } }}
+      >
+        <EstatesMap
+          coordinates={[
+            address.location.coordinates[0],
+            address.location.coordinates[1],
+          ]}
+        />
       </Grid>
-      <Grid container spacing={2} width="100%">
-        <Box
-          sx={{
-            width: "100%",
-            height: 400,
-            bgcolor: "violet",
-            borderRadius: 2,
-            textAlign: "center",
-          }}
-        >
-          Vlasnik
-        </Box>
-      </Grid>
+      <HostInfo
+        host={host}
+        averageHostRating={
+          isResidentialEstate(estate) ? estate.averageRating.host : 0
+        }
+      />
     </Stack>
   );
 }

@@ -5,7 +5,7 @@ import { RouterProvider } from "react-router";
 import PageNotFound from "../shared/pages/PageNotFound";
 import Error from "../shared/pages/Error";
 import Blog from "@/shared/pages/Blog";
-import Album from "@/shared/pages/Album";
+import Album from "@/features/estates/Album";
 import Estates from "@/features/estates/Estates";
 import EstateDetails from "@/features/estates/EstateDetails";
 import SignIn from "@/features/user/SignIn";
@@ -17,6 +17,9 @@ import UserProfileDashboard from "@/features/dashboard/pages/UserProfileDashboar
 import ReservationsDashboard from "@/features/dashboard/pages/ReservationsDashboard";
 import ReviewsDashboard from "@/features/dashboard/pages/ReviewsDashboard";
 import EditEstatePage from "@/features/dashboard/components/EditEstate";
+import { LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
+import { sr, srLatn } from "date-fns/locale";
 
 const router = createBrowserRouter([
   {
@@ -28,7 +31,7 @@ const router = createBrowserRouter([
         element: <Home />,
       },
       {
-        path: "/estates",
+        path: "/estates/:type",
         element: <Estates />,
       },
       {
@@ -36,10 +39,10 @@ const router = createBrowserRouter([
         element: <EstateDetails />,
       },
 
-      {
-        path: "/businesses",
-        element: <Estates />,
-      },
+      // {
+      //   path: "/businesses",
+      //   element: <Estates />,
+      // },
     ],
   },
   {
@@ -100,7 +103,11 @@ const router = createBrowserRouter([
 ]);
 
 const AppRoutes: React.FC = () => {
-  return <RouterProvider router={router} />;
+  return (
+    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={srLatn}>
+      <RouterProvider router={router}></RouterProvider>
+    </LocalizationProvider>
+  );
 };
 
 export default AppRoutes;
