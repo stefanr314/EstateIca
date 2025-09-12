@@ -356,8 +356,24 @@ export class ReservationService {
     const hostEmail = estateToBeReserved.host?.email;
     const hostFullName = `${estateToBeReserved.host?.firstName} ${estateToBeReserved.host?.lastName}`;
     const hostId = estateToBeReserved.host?._id;
-    const { pricePerMonth, cancellationPolicy, address, securityDeposit } =
-      estateToBeReserved;
+    const {
+      pricePerMonth,
+      cancellationPolicy,
+      address,
+      securityDeposit,
+      minimumLeaseMonths,
+      maximumLeaseMonths,
+    } = estateToBeReserved;
+
+    if (minimumLeaseMonths && totalMonths < minimumLeaseMonths)
+      throw new BadRequestError(
+        "Ovaj smjestaj mora biti rezervisan za vise mjeseci od izabranog broja mjeseci."
+      );
+
+    if (maximumLeaseMonths && totalMonths > maximumLeaseMonths)
+      throw new BadRequestError(
+        "Premasili ste dozvoljeni maksimalni broj mjeseci koji se moze izdati."
+      );
 
     const totalPrice = pricePerMonth * totalMonths;
 

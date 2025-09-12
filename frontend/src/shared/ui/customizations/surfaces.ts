@@ -77,7 +77,7 @@ export const surfacesCustomizations: Components<Theme> = {
               style: {
                 border: `1px solid ${(theme.vars || theme).palette.divider}`,
                 boxShadow: "none",
-                background: "hsl(0, 0%, 100%)",
+                background: gray[50],
                 ...theme.applyStyles("dark", {
                   background: alpha(gray[900], 0.4),
                 }),

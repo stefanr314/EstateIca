@@ -41,7 +41,7 @@ export default function ToggleButtonsStayLength({
         </ToggleButton>
       </Tooltip>
       <Tooltip title="Kratkoročni: Boravak do 28 dana.">
-        <ToggleButton value="short-term" aria-label="Kratkoročni">
+        <ToggleButton value="Short Term" aria-label="Kratkoročni">
           <HourglassBottomIcon color="primary" />
           <Typography variant="body2" pl={1}>
             Kratkoročni
@@ -49,7 +49,7 @@ export default function ToggleButtonsStayLength({
         </ToggleButton>
       </Tooltip>
       <Tooltip title="Dugoročni: Boravak duži od 28 dana.">
-        <ToggleButton value="long-term" aria-label="Dugoročni">
+        <ToggleButton value="Long Term" aria-label="Dugoročni">
           <CalendarMonthIcon color="primary" />
           <Typography variant="body2" pl={1}>
             Dugoročni

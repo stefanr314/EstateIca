@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -7,42 +7,68 @@ import {
   Container,
   useTheme,
   useMediaQuery,
+  Skeleton,
 } from "@mui/material";
 import EstatesCard from "./components/EstatesCard";
 import FilterBar from "./components/FilterBar";
+import { fetchEstates, useEstates } from "./hooks/useEstate";
+import { useQueryClient } from "@tanstack/react-query";
+import { useParams, useSearchParams } from "react-router";
 
-// Dummy data
-const mockEstates = Array.from({ length: 12 }, (_, i) => ({
-  id: i,
-  title: `Estate ${i + 1}`,
-  image:
-    "https://unsplash.com/photos/white-and-grey-concrete-building-near-swimming-pool-under-clear-sky-during-daytime-2d4lAQAlbDA",
-  description: "Nice place to stay.",
-  price: Math.floor(Math.random() * 400) + 50, // Random price between 50-450
-  type: [
-    "apartment",
-    "cabin",
-    "cottage",
-    "house",
-    "room",
-    "multi_unit",
-    "studio",
-  ][Math.floor(Math.random() * 7)],
-  amenities: ["wifi", "parking", "pool", "kitchen", "ac"].slice(
-    0,
-    Math.floor(Math.random() * 4) + 1
-  ),
-  petsAllowed: Math.random() > 0.5,
-}));
+// // Dummy data
+// const mockEstates = Array.from({ length: 12 }, (_, i) => ({
+//   id: i,
+//   title: `Estate ${i + 1}`,
+//   image:
+//     "https://unsplash.com/photos/white-and-grey-concrete-building-near-swimming-pool-under-clear-sky-during-daytime-2d4lAQAlbDA",
+//   description: "Nice place to stay.",
+//   price: Math.floor(Math.random() * 400) + 50, // Random price between 50-450
+//   type: [
+//     "apartment",
+//     "cabin",
+//     "cottage",
+//     "house",
+//     "room",
+//     "multi_unit",
+//     "studio",
+//   ][Math.floor(Math.random() * 7)],
+//   amenities: ["wifi", "parking", "pool", "kitchen", "ac"].slice(
+//     0,
+//     Math.floor(Math.random() * 4) + 1
+//   ),
+//   petsAllowed: Math.random() > 0.5,
+// }));
 
 const Estates: React.FC = () => {
-  const [page, setPage] = useState(1);
-  const estatesPerPage = 8;
+  const { type } = useParams<{ type: "residential" | "business" }>();
+  const queryClient = useQueryClient();
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [stayType, setStayType] = useState<string>("any");
+  const [searchParams] = useSearchParams();
+  const [page, setPage] = useState(1);
+
+  const limit = 1;
+  const { data, isPending, error, isError, isPlaceholderData, isFetching } =
+    useEstates({
+      type: type!,
+      page,
+      limit,
+    });
+  const estates = data?.data ?? [];
+  const totalCount = data?.totalCount ?? 0;
+  const hasMore = page * limit < totalCount;
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  useEffect(() => {
+    if (!isPlaceholderData && hasMore) {
+      queryClient.prefetchQuery({
+        queryKey: [type, Object.fromEntries(searchParams), page + 1, limit],
+        queryFn: async () => fetchEstates(type!, page + 1, limit, searchParams),
+      });
+    }
+  }, [searchParams, page, queryClient, isPlaceholderData, data, limit]);
 
   const handlePageChange = (_: any, value: number) => {
     setPage(value);
@@ -54,24 +80,10 @@ const Estates: React.FC = () => {
     setPage(1);
   };
 
-  // Simple filtering logic
-  const filteredEstates = mockEstates.filter((estate) => {
-    // Type filter
-    if (selectedType && estate.type !== selectedType) {
-      return false;
-    }
-
-    // Stay type filter (for now just return all, since we don't have this data in mock)
-    // In real app, this would filter based on stayType property
-    return true;
-  });
-
-  const paginatedEstates = filteredEstates.slice(
-    (page - 1) * estatesPerPage,
-    page * estatesPerPage
-  );
-
   const hasActiveFilters = selectedType !== null || stayType !== "any";
+
+  // if (isPending) return <div>Loading...</div>;
+  if (isError) return <div>Error: {(error as Error).message}</div>;
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
@@ -125,9 +137,9 @@ const Estates: React.FC = () => {
           fontWeight="600"
           sx={{ color: theme.palette.text.primary }}
         >
-          {filteredEstates.length} smještaj
-          {filteredEstates.length !== 1 ? "a" : ""} pronađen
-          {filteredEstates.length !== 1 ? "o" : ""}
+          {estates.length} smještaj
+          {estates.length !== 1 ? "a" : ""} pronađen
+          {estates.length !== 1 ? "o" : ""}
         </Typography>
         {hasActiveFilters && (
           <Typography
@@ -165,22 +177,26 @@ const Estates: React.FC = () => {
           mb: 6,
         }}
       >
-        {paginatedEstates.map((estate) => (
-          <Box
-            key={estate.id}
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              minHeight: 400,
-            }}
-          >
-            <EstatesCard estate={estate} />
-          </Box>
-        ))}
+        {isPending || isFetching ? (
+          <Skeleton variant="rectangular" height={400} width={300}></Skeleton>
+        ) : (
+          estates.map((estate) => (
+            <Box
+              key={estate._id}
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                minHeight: 400,
+              }}
+            >
+              <EstatesCard estate={estate} />
+            </Box>
+          ))
+        )}
       </Box>
 
       {/* No Results */}
-      {paginatedEstates.length === 0 && (
+      {estates.length === 0 && (
         <Box
           sx={{
             textAlign: "center",
@@ -214,10 +230,10 @@ const Estates: React.FC = () => {
       )}
 
       {/* Pagination */}
-      {filteredEstates.length > estatesPerPage && (
+      {totalCount > limit && (
         <Stack spacing={2} sx={{ mt: 6 }} alignItems="center">
           <Pagination
-            count={Math.ceil(filteredEstates.length / estatesPerPage)}
+            count={Math.ceil(totalCount / limit)}
             page={page}
             onChange={handlePageChange}
             color="primary"

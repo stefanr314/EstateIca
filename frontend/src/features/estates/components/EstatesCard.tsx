@@ -21,18 +21,15 @@ import PoolIcon from "@mui/icons-material/Pool";
 import KitchenIcon from "@mui/icons-material/Kitchen";
 import AcUnitIcon from "@mui/icons-material/AcUnit";
 import PetsIcon from "@mui/icons-material/Pets";
+import {
+  AllBusinessData,
+  AllResidentialData,
+  IBusinessEstate,
+  IResidentialEstate,
+} from "../types";
 
 interface EstatesCardProps {
-  estate: {
-    id: number;
-    title: string;
-    image: string;
-    description: string;
-    price: number;
-    type: string;
-    amenities: string[];
-    petsAllowed: boolean;
-  };
+  estate: AllResidentialData | AllBusinessData;
 }
 
 const amenityIcons: { [key: string]: React.ReactElement } = {
@@ -56,17 +53,20 @@ const typeLabels: { [key: string]: string } = {
 export default function EstatesCard({ estate }: EstatesCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+  const { images } = estate;
+  const isResidential = estate.estateType === "ResidentialEstate";
+  const isBusiness = estate.estateType === "BusinessEstate";
 
   // Mock slike - kasnije će doći iz backend-a
-  const images = [
-    "https://images.unsplash.com/photo-1532614338840-ab30cf10ed36?auto=format&fit=crop&w=318",
-    "https://images.unsplash.com/photo-1532614338840-ab30cf10ed36?auto=format&fit=crop&w=318",
-    "https://images.unsplash.com/photo-1532614338840-ab30cf10ed36?auto=format&fit=crop&w=318",
-    "https://images.unsplash.com/photo-1532614338840-ab30cf10ed36?auto=format&fit=crop&w=318",
-  ];
+  // const images = [
+  //   "https://images.unsplash.com/photo-1532614338840-ab30cf10ed36?auto=format&fit=crop&w=318",
+  //   "https://images.unsplash.com/photo-1532614338840-ab30cf10ed36?auto=format&fit=crop&w=318",
+  //   "https://images.unsplash.com/photo-1532614338840-ab30cf10ed36?auto=format&fit=crop&w=318",
+  //   "https://images.unsplash.com/photo-1532614338840-ab30cf10ed36?auto=format&fit=crop&w=318",
+  // ];
 
   const handleOpenInNewTab = () => {
-    const url = `/estate/${estate.id}`;
+    const url = `/estate/${estate._id}`;
     window.open(url, "_blank");
   };
 
@@ -83,7 +83,7 @@ export default function EstatesCard({ estate }: EstatesCardProps) {
   const handleLikeClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     // TODO: Implement wishlist functionality
-    console.log("Added to wishlist:", estate.id);
+    console.log("Added to wishlist:", estate._id);
   };
 
   const showLeftArrow = isHovered && images.length > 1 && currentImageIndex > 0;
@@ -105,7 +105,6 @@ export default function EstatesCard({ estate }: EstatesCardProps) {
         cursor: "pointer",
         transition: "all 0.2s ease",
         border: "none",
-        bgcolor: "background.paper",
         "&:hover": {
           transform: "translateY(-2px)",
           boxShadow: "0 8px 25px rgba(0,0,0,0.1)",
@@ -117,7 +116,7 @@ export default function EstatesCard({ estate }: EstatesCardProps) {
         <CardMedia
           component="img"
           height="200"
-          image={images[currentImageIndex]}
+          image={images[currentImageIndex]?.url}
           alt={estate.title}
           sx={{
             borderTopLeftRadius: 8,
@@ -142,11 +141,11 @@ export default function EstatesCard({ estate }: EstatesCardProps) {
             backdropFilter: "blur(4px)",
           }}
         >
-          {typeLabels[estate.type] || estate.type}
+          {typeLabels[estate.rentalType] || estate.rentalType}
         </Box>
 
         {/* Pets badge */}
-        {estate.petsAllowed && (
+        {isResidential && (estate as AllResidentialData).petAllowance && (
           <Box
             sx={{
               position: "absolute",
@@ -290,7 +289,7 @@ export default function EstatesCard({ estate }: EstatesCardProps) {
               color="text.secondary"
               sx={{ fontSize: "0.875rem" }}
             >
-              Belgrade, Serbia
+              {estate.address.city}, {estate.address.country}
             </Typography>
           </Box>
         </Box>
@@ -313,7 +312,7 @@ export default function EstatesCard({ estate }: EstatesCardProps) {
         </Typography>
 
         {/* Amenities */}
-        {estate.amenities.length > 0 && (
+        {estate.amenities && estate.amenities.length > 0 && (
           <Box sx={{ mb: 1.5 }}>
             <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
               {estate.amenities.slice(0, 3).map((amenity) => (
@@ -348,36 +347,67 @@ export default function EstatesCard({ estate }: EstatesCardProps) {
         )}
 
         {/* Rating and bed count */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            mb: 0,
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-            <StarIcon sx={{ fontSize: 16, color: "warning.main" }} />
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ fontSize: "0.875rem" }}
-            >
-              4.8
-            </Typography>
-          </Box>
+        {isResidential && (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              mb: 0,
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              <StarIcon sx={{ fontSize: 16, color: "warning.main" }} />
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ fontSize: "0.875rem" }}
+              >
+                {estate.averageRatingOverall}
+              </Typography>
+            </Box>
 
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-            <BedIcon sx={{ fontSize: 16, color: "text.secondary" }} />
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ fontSize: "0.875rem" }}
-            >
-              2 sobe
-            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              <BedIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ fontSize: "0.875rem" }}
+              >
+                {estate.beds} kreveta
+              </Typography>
+            </Box>
           </Box>
-        </Box>
+        )}
+
+        {isBusiness && (
+          <Box
+            sx={{
+              display: "flex",
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "space-between",
+              mb: 0.5, // malo prostora dole da ne "zalijepi"
+              gap: 0.5,
+            }}
+          >
+            {/* Kvadratura */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              <StarIcon sx={{ fontSize: 16, color: "warning.main" }} />
+              <Typography variant="body2" color="text.secondary">
+                {estate.area} m²
+              </Typography>
+            </Box>
+
+            {/* Namjena */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              <BedIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+              <Typography variant="body2" color="text.secondary">
+                Namjena: {estate.intendedUse}
+              </Typography>
+            </Box>
+          </Box>
+        )}
       </CardContent>
 
       {/* Price */}
@@ -387,7 +417,7 @@ export default function EstatesCard({ estate }: EstatesCardProps) {
           color="text.secondary"
           sx={{ display: "block", mb: 0 }}
         >
-          Po noći
+          {estate.rentalType === "Short Term" ? "Po noćenju" : "Po mjesecu"}
         </Typography>
         <Typography
           variant="h6"
@@ -395,7 +425,10 @@ export default function EstatesCard({ estate }: EstatesCardProps) {
           color="text.primary"
           sx={{ fontSize: "1rem" }}
         >
-          €{estate.price}
+          €
+          {estate.rentalType === "Short Term"
+            ? (estate as AllResidentialData).pricePerNight
+            : estate.pricePerMonth}
         </Typography>
       </Box>
     </Card>

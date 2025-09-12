@@ -132,6 +132,8 @@ const baseEstateSchema = new Schema<IBaseEstate>(
 // Add 2dsphere index for geospatial queries
 // This index is used for geospatial queries, such as finding estates within a certain distance from a point
 baseEstateSchema.index({ "address.location": "2dsphere" });
+// Index to optimize queries filtering by host
+baseEstateSchema.index({ host: 1 });
 
 const residentialEstateSchema = new Schema<IResidentialEstate>({
   bedrooms: {

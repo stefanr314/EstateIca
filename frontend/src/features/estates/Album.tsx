@@ -7,11 +7,15 @@ import {
   Grid,
   Container,
   Box,
+  Skeleton,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import WovenImageList from "../components/imageLists/WovenImageList";
-import { useNavigate } from "react-router-dom";
-import ScrollToTopFab from "../components/ScrollToTopFab";
+import WovenImageList from "../../shared/components/imageLists/WovenImageList";
+import { useNavigate, useParams } from "react-router-dom";
+import ScrollToTopFab from "../../shared/components/ScrollToTopFab";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import agent from "@/app/api/agent";
+import { IBusinessEstate, IResidentialEstate } from "./types";
 
 const itemData = [
   {
@@ -70,6 +74,24 @@ const itemData = [
 
 const Album: React.FC = () => {
   const navigate = useNavigate();
+  const id = useParams<{ id: string }>().id;
+  const queryClient = useQueryClient();
+
+  const {
+    data: estate,
+    isPending,
+    isFetching,
+  } = useQuery<IResidentialEstate | IBusinessEstate>({
+    queryKey: ["estate", id],
+    queryFn: async () => {
+      const response = await agent.Estates.getEstateById(id!);
+      return response.estate;
+    },
+    initialData: () => queryClient.getQueryData(["estate", id]),
+  });
+
+  // const estate = queryClient.getQueryData<any>(["estate", id]);
+
   return (
     <React.Fragment>
       <AppBar
@@ -89,8 +111,8 @@ const Album: React.FC = () => {
       </AppBar>
       <main>
         {/* Hero unit */}
-        <Box sx={{ bgcolor: "background.paper", py: 8 }}>
-          <Box sx={{ maxWidth: 600, mx: "auto", pb: 6 }}>
+        <Box sx={{ bgcolor: "background.paper", pt: 10 }}>
+          <Box sx={{ maxWidth: 600, mx: "auto", pb: 2 }}>
             <Typography
               component="h1"
               variant="h2"
@@ -100,7 +122,7 @@ const Album: React.FC = () => {
             >
               Album layout
             </Typography>
-            <Typography variant="h6" align="center" color="textSecondary">
+            {/* <Typography variant="h6" align="center" color="textSecondary">
               Something short and leading about the collection below—its
               contents, the creator, etc. Make it short and sweet, but not too
               short so folks don&apos;t simply skip over it entirely.
@@ -118,15 +140,26 @@ const Album: React.FC = () => {
                   </Button>
                 </Grid>
               </Grid>
-            </Box>
+            </Box> */}
           </Box>
         </Box>
 
         <Container sx={{ py: 8 }} maxWidth="xl">
-          {/* End hero unit */}
-
-          <WovenImageList itemData={itemData} />
+          <WovenImageList isPending={isPending} itemData={estate?.images} />
         </Container>
+        {/* {isPending || isFetching ? (
+          <Grid container spacing={2}>
+            {Array.from({ length: 6 }).map((_, idx) => (
+              <Grid sx={{ xs: 12, sm: 6, md: 4 }} key={idx}>
+                <Skeleton variant="rectangular" height={200} />
+              </Grid>
+            ))}
+          </Grid>
+        ) : estate ? (
+          <WovenImageList itemData={estate.images} />
+        ) : (
+          <Typography>No data found, please go back.</Typography>
+        )} */}
       </main>
       {/* Footer */}
       <Box sx={{ bgcolor: "background.paper", p: 6 }} component="footer">

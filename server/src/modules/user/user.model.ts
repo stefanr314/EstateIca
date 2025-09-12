@@ -15,7 +15,6 @@ export interface IUser {
   role: Role;
   hostType?: HostType; // Optional, can be added later
   isSuperhost: boolean;
-  wishlist?: HydratedDocument<IWishlist>;
   pushTokens?: string[];
   isVerified: boolean;
   isActive: boolean;
@@ -74,6 +73,13 @@ userSchema.virtual("wishlist", {
   localField: "_id",
   foreignField: "user",
   justOne: true, // wishlist je jedan po useru
+});
+
+userSchema.virtual("estatesCount", {
+  ref: "BaseEstate",
+  localField: "_id",
+  foreignField: "host",
+  count: true,
 });
 
 // Opcionalno: da populate bude vidljiv pri JSON.stringify / res.json

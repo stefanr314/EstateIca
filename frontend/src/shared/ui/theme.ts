@@ -1,124 +1,3 @@
-// import { createTheme, ThemeOptions } from "@mui/material/styles";
-// import { PaletteColor } from "@mui/material";
-
-// // Extend the Palette and PaletteOptions interfaces to include 'mint'
-// declare module "@mui/material/styles" {
-//   interface Palette {
-//     mint?: PaletteColor;
-//   }
-//   interface PaletteOptions {
-//     mint?: PaletteColor;
-//   }
-// }
-
-// const themeOptions: ThemeOptions = {
-//   palette: {
-//     primary: {
-//       main: "#05920c",
-//     },
-//     secondary: {
-//       main: "#64dd17",
-//     },
-//     info: {
-//       main: "#00c853",
-//     },
-//     error: {
-//       main: "#ff1744",
-//     },
-//     warning: {
-//       main: "#ff9100",
-//     },
-//     success: {
-//       main: "#105417",
-//     },
-//     mint: {
-//       main: "#ADEBB3",
-//       light: "#dbffff",
-//       dark: "#75ccb8",
-//       contrastText: "#000000",
-//     },
-//     grey: {
-//       50: "#fafafa", // Veoma svetla siva
-//       100: "#f5f5f5", // Svetla siva
-//       200: "#eeeeee", // Srednje svetla siva
-//       300: "#e0e0e0", // Srednja siva
-//       400: "#bdbdbd", // Srednje tamna siva
-//       500: "#9e9e9e", // Tamna siva
-//       600: "#757575", // Veoma tamna siva
-//       700: "#616161", // Crna sa sivim tonom
-//       800: "#424242", // Jako tamna siva
-//       900: "#212121", // Gotovo crna
-//     },
-//   },
-// };
-
-// export const mainTheme = createTheme({
-//   ...themeOptions,
-//   colorSchemes: {
-//     dark: {
-//       palette: {
-//         mode: "dark",
-//         primary: { main: "#926105ff" },
-//         mint: {
-//           main: "#ADEBB3",
-//           light: "#dbffff",
-//           dark: "#75ccb8",
-//           contrastText: "#000",
-//         },
-//         background: { default: "#121212", paper: "#1e1e1e" },
-//       },
-//     },
-//   },
-// });
-// export const getTheme = (mode: "light" | "dark") =>
-//   createTheme({
-//     palette: {
-//       mode,
-//       primary: {
-//         main: "#05920c",
-//       },
-//       secondary: {
-//         main: "#64dd17",
-//       },
-//       info: {
-//         main: "#00c853",
-//       },
-//       error: {
-//         main: "#ff1744",
-//       },
-//       warning: {
-//         main: "#ff9100",
-//       },
-//       success: {
-//         main: "#105417",
-//       },
-//       mint: {
-//         main: "#ADEBB3",
-//         light: "#dbffff",
-//         dark: "#75ccb8",
-//         contrastText: "#000000",
-//       },
-//       grey: {
-//         50: "#fafafa",
-//         100: "#f5f5f5",
-//         200: "#eeeeee",
-//         300: "#e0e0e0",
-//         400: "#bdbdbd",
-//         500: "#9e9e9e",
-//         600: "#757575",
-//         700: "#616161",
-//         800: "#424242",
-//         900: "#212121",
-//       },
-//       background: {
-//         default: mode === "dark" ? "#121212" : "#fff",
-//         paper: mode === "dark" ? "#1e1e1e" : "#fff",
-//       },
-//     },
-//     colorSchemes: {
-//       dark: true,
-//     },
-//   });
 import { createTheme, alpha, PaletteMode, Shadows } from "@mui/material/styles";
 
 declare module "@mui/material/Paper" {
@@ -275,6 +154,12 @@ export const getDesignTokens = (mode: PaletteMode) => {
           main: green[400],
           dark: green[700],
         }),
+      },
+      mint: {
+        main: mint[400],
+        light: mint[200],
+        dark: mint[600],
+        contrastText: "#000",
       },
       info: {
         main: tealSoft[300], // HSL(185, 16%, 50%)

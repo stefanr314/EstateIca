@@ -41,6 +41,8 @@ import { EstateImageService } from "./estateImage.service";
 import { Amenities } from "../../shared/types/amenities.enum";
 import { publishMessage } from "../../redis/publisher";
 import { getPlaceDetails } from "../../shared/utils/getPlaceDetails";
+import { Review } from "../review/review.model";
+import { wishlistService } from "../wishlist/wishlist.service";
 // import multer from 'multer';
 
 export class EstateService {
@@ -48,11 +50,16 @@ export class EstateService {
   // For example, createEstate, getEstateById, updateEstate, deleteEstate, etc.
   // Each method should interact with the database and handle business logic
   async getEstateById(estateId: string, hostId?: string): Promise<any> {
-    const estate = await BaseEstate.findById(estateId).populate(
-      "host",
-      "firstName lastName email"
-    );
+    const estate = await BaseEstate.findById(estateId).populate({
+      path: "host",
+      select: "firstName lastName email profilePictureUrl",
+      populate: {
+        path: "estatesCount", // virtuelno polje iz user modela
+      },
+    });
+
     logging.info(hostId);
+    logging.info(estate?.host);
 
     if (!estate) throw new NotFoundError("Estate not found.");
 
@@ -70,9 +77,7 @@ export class EstateService {
     return estate; // Return the estate object
   }
 
-  async getAllResidentialEstates(
-    dto: GetResidentialEstatesQueryDto
-  ): Promise<any[]> {
+  async getAllResidentialEstates(dto: GetResidentialEstatesQueryDto) {
     const key = `residential:${crypto
       .createHash("md5")
       .update(JSON.stringify(dto))
@@ -234,19 +239,44 @@ export class EstateService {
 
     pipeline.push({
       $facet: {
-        data: [{ $skip: skip }, { $limit: limit }],
+        data: [
+          { $skip: skip },
+          { $limit: limit },
+          {
+            $project: {
+              _id: 1,
+              title: 1,
+              description: 1,
+              images: 1,
+              rentalType: 1,
+              beds: 1,
+              pricePerNight: 1,
+              pricePerMonth: 1,
+              amenities: 1,
+              petAllowance: 1,
+              averageRatingOverall: "$averageRating.overall",
+              address: 1,
+              estateType: 1,
+            },
+          },
+        ],
         totalCount: [{ $count: "count" }],
       },
     });
     const estates = await ResidentialEstate.aggregate(pipeline);
 
-    // 4. Čuvanje u Redis sa TTL (npr. 5 minuta)
-    await redisClient.set(key, JSON.stringify(estates), "EX", 300);
+    const data = estates[0]?.data || [];
+    const totalCount = estates[0]?.totalCount?.[0]?.count || 0;
 
-    return estates;
+    // keširanje
+    await redisClient.set(key, JSON.stringify({ data, totalCount }), "EX", 300);
+
+    return { data, totalCount };
   }
 
-  async getAllBusinessEstates(dto: GetBusinessEstatesQueryDto): Promise<any[]> {
+  async getAllBusinessEstates(
+    dto: GetBusinessEstatesQueryDto
+  ): Promise<{ data: (typeof BusinessEstate)[]; totalCount: number }> {
     const key = `business:${crypto
       .createHash("md5")
       .update(JSON.stringify(dto))
@@ -385,28 +415,54 @@ export class EstateService {
 
     pipeline.push({
       $facet: {
-        data: [{ $skip: skip }, { $limit: limit }],
+        data: [
+          { $skip: skip },
+          { $limit: limit },
+          {
+            $project: {
+              _id: 1,
+              title: 1,
+              description: 1,
+              rentalType: 1,
+              images: 1,
+              pricePerMonth: 1,
+              area: 1,
+              unitsAvailable: 1,
+              intendedUse: "$intentedUse", // mapiranje baze u frontend naziv
+              amenities: 1,
+              address: 1,
+              estateType: 1,
+            },
+          },
+        ],
         totalCount: [{ $count: "count" }],
       },
     });
     const estates = await BusinessEstate.aggregate(pipeline);
 
-    // 4. Čuvanje u Redis sa TTL (npr. 5 minuta)
-    await redisClient.set(key, JSON.stringify(estates), "EX", 300);
-    return estates; // Return an array of estate objects
+    const data = estates[0]?.data || [];
+    const totalCount = estates[0]?.totalCount?.[0]?.count || 0;
+
+    // keširanje
+    await redisClient.set(key, JSON.stringify({ data, totalCount }), "EX", 300);
+
+    return { data, totalCount };
   }
 
   async getAllHostEstates(hostId: string, filterDto: PersonalEstateFilterDto) {
     const { page, limit, showHidden, rentalType, estateType, sortBy } =
       filterDto;
     const skip = (page - 1) * limit;
+
+    const pipeline: any[] = [];
     const match: any = {};
 
     if (showHidden !== undefined) match.hidden = showHidden;
     if (estateType !== undefined) match.estateType = estateType;
     if (rentalType !== undefined) match.rentalType = rentalType;
     match.host = hostId;
-    const query = BaseEstate.find(match);
+
+    pipeline.push({ $match: match });
 
     logging.info(match);
     if (sortBy) {
@@ -417,11 +473,20 @@ export class EstateService {
         const [key, order] = field.split(":");
         sortObject[key] = order === "desc" ? -1 : 1; // 1 for ascending, -1 for descending
       }
-      query.sort(sortObject);
+      pipeline.push({ $sort: sortObject });
     }
-    // logging.log(query);
-    const estates = await query.skip(skip).limit(limit);
-    return estates;
+
+    pipeline.push({
+      $facet: {
+        data: [{ $skip: skip }, { $limit: limit }],
+        totalCount: [{ $count: "count" }],
+      },
+    });
+    const estates = await BaseEstate.aggregate(pipeline);
+    const data = estates[0]?.data || [];
+    const totalCount = estates[0]?.totalCount?.[0]?.count || 0;
+
+    return { data, totalCount };
   }
 
   async createEstate(
@@ -593,14 +658,11 @@ export class EstateService {
 
     await Reservation.deleteMany({ estateReserved: estateId });
 
-    // // 3. Obriši recenzije
-    // await Review.deleteMany({ estateId });
+    // 3. Obriši recenzije
+    await Review.deleteMany({ estate: estateId });
 
-    // // 4. Obriši iz wishlist-a korisnika
-    // await User.updateMany(
-    //   { wishlist: estateId },
-    //   { $pull: { wishlist: estateId } }
-    // );
+    // 4. Obriši iz wishlist-a korisnika
+    await wishlistService.removeEstate(hostId, estateId);
 
     // 5. Obriši slike sa ImageKit
     if (estate.images && estate.images.length > 0) {

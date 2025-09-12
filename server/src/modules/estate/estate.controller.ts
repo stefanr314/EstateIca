@@ -54,8 +54,7 @@ export const getAllResidentialEstates = async (
 
   res.status(200).json({
     message: "Estates retrieved successfully.",
-    estates: result,
-    count: result.length,
+    ...result,
   });
 };
 
@@ -69,11 +68,10 @@ export const getAllBusinessEstates = async (
 
   res.status(200).json({
     message:
-      result.length === 0
+      result.data.length === 0
         ? "No estates match the criteria"
         : "Estate retrieved successfully",
-    estates: result,
-    count: result.length,
+    ...result,
   });
 };
 
@@ -92,10 +90,10 @@ export const getAllPersonalEstates = async (
 
   res.status(200).json({
     message:
-      result.length === 0
+      result.data.length === 0
         ? "You haven't created any estates yet or no estates match the criteria"
         : "Personal estates retrieved successfully",
-    personalEstate: result,
+    ...result,
   });
 };
 
