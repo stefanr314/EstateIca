@@ -298,6 +298,12 @@ export const colorSchemes = {
         dark: green[700],
         contrastText: green[50],
       },
+      mint: {
+        main: mint[400],
+        light: mint[200],
+        dark: mint[600],
+        contrastText: "#000",
+      },
       secondary: {
         light: tealSoft[200],
         main: tealSoft[400],
@@ -357,6 +363,11 @@ export const colorSchemes = {
         light: green[300],
         main: green[400],
         dark: green[700],
+      },
+      mint: {
+        light: mint[300],
+        main: mint[400],
+        dark: mint[700],
       },
       secondary: {
         main: tealGray[300], // umirena teal

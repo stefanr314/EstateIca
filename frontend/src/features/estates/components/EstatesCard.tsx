@@ -27,6 +27,7 @@ import {
   IBusinessEstate,
   IResidentialEstate,
 } from "../types";
+import { useLocation } from "react-router";
 
 interface EstatesCardProps {
   estate: AllResidentialData | AllBusinessData;
@@ -51,22 +52,17 @@ const typeLabels: { [key: string]: string } = {
 };
 
 export default function EstatesCard({ estate }: EstatesCardProps) {
+  const location = useLocation();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+
   const { images } = estate;
+
   const isResidential = estate.estateType === "ResidentialEstate";
   const isBusiness = estate.estateType === "BusinessEstate";
 
-  // Mock slike - kasnije će doći iz backend-a
-  // const images = [
-  //   "https://images.unsplash.com/photo-1532614338840-ab30cf10ed36?auto=format&fit=crop&w=318",
-  //   "https://images.unsplash.com/photo-1532614338840-ab30cf10ed36?auto=format&fit=crop&w=318",
-  //   "https://images.unsplash.com/photo-1532614338840-ab30cf10ed36?auto=format&fit=crop&w=318",
-  //   "https://images.unsplash.com/photo-1532614338840-ab30cf10ed36?auto=format&fit=crop&w=318",
-  // ];
-
   const handleOpenInNewTab = () => {
-    const url = `/estate/${estate._id}`;
+    const url = `/estate/${estate._id}${location.search}`;
     window.open(url, "_blank");
   };
 

@@ -2,9 +2,12 @@ import { Snackbar, Alert } from "@mui/material";
 
 import { removeNotification } from "@/features/notifications/notificationSlice";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
+import { RootState } from "@/app/store/store";
 
 export const ToastManager = () => {
-  const notifications = useAppSelector((state) => state.notification);
+  const notifications = useAppSelector(
+    (state: RootState) => state.notification
+  );
   const dispatch = useAppDispatch();
 
   return (

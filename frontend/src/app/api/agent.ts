@@ -1,3 +1,4 @@
+import { LoginUserData } from "@/features/auth/types";
 import axios, { AxiosResponse } from "axios";
 
 axios.defaults.baseURL = "http://localhost:3030/api";
@@ -19,9 +20,9 @@ axios.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-
+    const token = localStorage.getItem("token"); //necemo raditi provjeru kada korisnik ni nema token
     // Ako je 401 i nismo već pokušali refresh
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry && token) {
       originalRequest._retry = true;
 
       try {
@@ -39,7 +40,7 @@ axios.interceptors.response.use(
       } catch (err) {
         // Refresh token fail → logout user
         localStorage.removeItem("token");
-        window.location.href = "/login";
+        window.location.href = "/sign-in";
         // return Promise.reject(err);
       }
     }
@@ -76,7 +77,10 @@ const requests = {
 };
 
 const Auth = {
-  login: (email: string, password: string) =>
+  login: (
+    email: string,
+    password: string
+  ): Promise<{ accessToken: string; user: LoginUserData }> =>
     requests.post("/auth/login", { email, password }),
   register: (body: any) => requests.post("/auth/register", body),
   logout: () => requests.post("/auth/logout", {}),

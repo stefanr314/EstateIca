@@ -60,3 +60,19 @@ export function useEstate(
     },
   });
 }
+
+export function useEstateUnavailableDates(estateId: string): UseQueryResult<
+  {
+    type: "RESERVATION" | "LOCK";
+    startDate: Date;
+    endDate: Date;
+  }[]
+> {
+  return useQuery({
+    queryKey: ["estateBlockedDates", estateId],
+    queryFn: async () => {
+      const dates = await agent.Reservation.unavailableDates(estateId);
+      return dates;
+    },
+  });
+}

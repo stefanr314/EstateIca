@@ -25,7 +25,7 @@ function SubRatingItem({
         <Typography variant="body2" flex={1}>
           {label}
         </Typography>
-        <Typography variant="body2" fontWeight={600} color="mint.main">
+        <Typography variant="body2" fontWeight={600} color="primary.main">
           {value.toFixed(1)}
         </Typography>
       </Stack>
@@ -37,12 +37,12 @@ function SubRatingItem({
           borderRadius: 5,
           bgcolor: gray[200],
           "& .MuiLinearProgress-bar": {
-            bgcolor: "mint.dark",
+            bgcolor: "primary.main",
           },
           ...theme.applyStyles("dark", {
             bgcolor: gray[700],
             "& .MuiLinearProgress-bar": {
-              bgcolor: "mint.light",
+              bgcolor: "primary.light",
             },
           }),
         })}

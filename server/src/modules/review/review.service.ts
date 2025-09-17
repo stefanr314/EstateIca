@@ -108,7 +108,14 @@ export class ReviewService {
   async getReviewsByEstate(
     estateId: string,
     dto: GetReviewsDto
-  ): Promise<IReview[]> {
+  ): Promise<{
+    data: IReview[];
+    totalCount: number;
+    currentPage: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrevious: boolean;
+  }> {
     const { page, limit, sortBy } = dto;
     const skip = (page - 1) * limit;
 
@@ -121,10 +128,26 @@ export class ReviewService {
         sortObject[key] = order === "desc" ? -1 : 1; // 1 for ascending, -1 for descending
       }
     }
-    return await Review.find({ estate: estateId })
-      .sort(sortObject)
-      .skip(skip)
-      .limit(limit);
+
+    const [reviews, totalCount] = await Promise.all([
+      Review.find({ estate: estateId })
+        .populate("user", "email profilePictureUrl")
+        .sort(sortObject)
+        .skip(skip)
+        .limit(limit),
+      Review.countDocuments({ estate: estateId }),
+    ]);
+
+    const totalPages = Math.ceil(totalCount / limit);
+
+    return {
+      data: reviews,
+      totalCount,
+      currentPage: page,
+      totalPages,
+      hasNext: page < totalPages,
+      hasPrevious: page > 1,
+    };
   }
 
   // Dohvaćanje recenzije po ID-u

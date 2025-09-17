@@ -14,6 +14,7 @@ import FilterBar from "./components/FilterBar";
 import { fetchEstates, useEstates } from "./hooks/useEstate";
 import { useQueryClient } from "@tanstack/react-query";
 import { useParams, useSearchParams } from "react-router";
+import QueryErrorHandler from "@/shared/components/QueryErrorHandler";
 
 // // Dummy data
 // const mockEstates = Array.from({ length: 12 }, (_, i) => ({
@@ -42,9 +43,10 @@ import { useParams, useSearchParams } from "react-router";
 const Estates: React.FC = () => {
   const { type } = useParams<{ type: "residential" | "business" }>();
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
+
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [stayType, setStayType] = useState<string>("any");
-  const [searchParams] = useSearchParams();
   const [page, setPage] = useState(1);
 
   const limit = 1;
@@ -83,7 +85,9 @@ const Estates: React.FC = () => {
   const hasActiveFilters = selectedType !== null || stayType !== "any";
 
   // if (isPending) return <div>Loading...</div>;
-  if (isError) return <div>Error: {(error as Error).message}</div>;
+  if (isError) {
+    return <QueryErrorHandler error={error} />;
+  }
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
