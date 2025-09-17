@@ -8,6 +8,7 @@ import {
   isResidentialEstate,
   isBusinessEstate,
 } from "@/shared/helper/determineEstateType";
+import { Item } from "./EstateDetailsMain";
 interface EstateDetailsFooterProps {
   estate: IResidentialEstate | IBusinessEstate;
 }
@@ -17,15 +18,15 @@ function EstateDetailsFooter({ estate }: EstateDetailsFooterProps) {
 
   return (
     <Stack spacing={2} justifyContent="center" alignItems="stretch">
-      <Grid container spacing={2} width="100%">
-        {isResidentialEstate(estate) && (
-          <ReviewSection
-            averageRating={estate.averageRating}
-            reviewsCount={estate.reviewsCount}
-          />
-        )}
-      </Grid>
-      <Grid
+      {isResidentialEstate(estate) && (
+        <ReviewSection
+          estateId={estate._id}
+          averageRating={estate.averageRating}
+          reviewsCount={estate.reviewsCount}
+        />
+      )}
+
+      {/* <Grid
         container
         spacing={2}
         width="100%"
@@ -37,7 +38,8 @@ function EstateDetailsFooter({ estate }: EstateDetailsFooterProps) {
             address.location.coordinates[1],
           ]}
         />
-      </Grid>
+      </Grid> */}
+
       <HostInfo
         host={host}
         averageHostRating={

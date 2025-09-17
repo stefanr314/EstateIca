@@ -1,16 +1,14 @@
-import { Outlet } from "react-router";
+import { Navigate, Outlet, useNavigate } from "react-router";
+import { useAppSelector } from "../store/hooks";
+import { selectIsAuthenticated } from "@/features/auth/authSlice";
 
 function AuthLayout() {
-  return (
-    <div>
-      <aside>Sidebar</aside>
-      <main>
-        <Outlet />
-      </main>
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const navigate = useNavigate();
 
-      <footer>Footer</footer>
-    </div>
-  );
+  if (!isAuthenticated) return <Navigate to="/sign-up" replace />;
+
+  return <Outlet />;
 }
 
 export default AuthLayout;

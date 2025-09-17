@@ -11,11 +11,6 @@ import { VerifyAccountDto } from "./dtos/verifyAccount.dto";
 import { OnVerifyAccountDto } from "./dtos/onVerifyAccount.dto";
 
 const authService = new AuthService();
-// Interfejs za payload
-interface JwtPayload {
-  id: string;
-  role: string;
-}
 
 export const handleNewGuest = async (
   req: Request,
@@ -48,7 +43,7 @@ export const handleLogin = async (
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: PRODUCTION,
-      sameSite: "strict",
+      sameSite: PRODUCTION ? "strict" : "lax",
       maxAge: Number(process.env.REFRESH_TOKEN_EXPIRATION!),
     });
 
@@ -64,12 +59,10 @@ export const handleLogin = async (
         phoneNumber: user.phoneNumber,
         hostType: user.hostType,
         isVerified: user.isVerified,
-        wishlist: user.wishlist,
+        isActive: user.isActive,
       },
     });
   } catch (error) {
-    logging.error(error);
-    // next(new ForbiddenError("Session expired"));
     next(error);
   }
 };

@@ -2,6 +2,7 @@ import { Avatar, Box, Card, Divider, Stack, Typography } from "@mui/material";
 import HomeIcon from "@mui/icons-material/Home";
 import StarIcon from "@mui/icons-material/Star";
 import { mint, green, gray } from "@/shared/ui/theme";
+import { Item } from "@/features/estates/components/EstateDetailsMain";
 
 interface Props {
   host: {
@@ -16,13 +17,14 @@ interface Props {
 
 export default function HostInfoCard({ host, averageHostRating }: Props) {
   return (
-    <Card
+    <Item
+      elevation={4}
       sx={{
         width: "100%",
         overflow: "hidden",
-        boxShadow: 6,
-        border: "2px solid",
-        borderColor: "divider",
+        // boxShadow: 6,
+        // border: "2px solid",
+        // borderColor: "divider",
       }}
     >
       <Box
@@ -42,7 +44,6 @@ export default function HostInfoCard({ host, averageHostRating }: Props) {
             alignItems: "center",
             justifyContent: "center",
             gap: 2,
-            bgcolor: "background.paper",
           }}
         >
           <Box
@@ -136,7 +137,6 @@ export default function HostInfoCard({ host, averageHostRating }: Props) {
             alignItems: "center",
             justifyContent: "space-around",
             gap: 3,
-            bgcolor: "background.paper",
           }}
         >
           {/* Estates */}
@@ -258,6 +258,6 @@ export default function HostInfoCard({ host, averageHostRating }: Props) {
           </Box>
         </Box>
       </Box>
-    </Card>
+    </Item>
   );
 }

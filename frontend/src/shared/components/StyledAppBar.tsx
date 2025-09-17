@@ -24,7 +24,7 @@ import HomeIcon from "@mui/icons-material/Home";
 import BusinessIcon from "@mui/icons-material/Business";
 
 import StyledSearchBar from "./StyledSearchBar";
-import { Link } from "react-router";
+import { Link, useNavigate, useNavigation } from "react-router";
 import FilterDialog from "@/features/estates/components/filter/FilterDialog";
 import ToggleThemeColor from "./ToggleThemeColor";
 import { useAppDispatch } from "@/app/store/hooks";
@@ -70,6 +70,7 @@ const ButtonStyled = styled(Button)(({ theme }) => ({
 const CustomAppBar: React.FC<{ onMenuClick: () => void }> = ({
   onMenuClick,
 }) => {
+  const navigate = useNavigate();
   const [overrideFullAppBar, setOverrideFullAppBar] = React.useState(false);
   const [tabIndex, setTabIndex] = React.useState(0);
   const fullAppBarRef = React.useRef<HTMLDivElement>(null);
@@ -168,7 +169,12 @@ const CustomAppBar: React.FC<{ onMenuClick: () => void }> = ({
               <IconButtonStyled aria-label="account">
                 <AccountCircleIcon />
               </IconButtonStyled>
-              <ButtonStyled variant="outlined">Login</ButtonStyled>
+              <ButtonStyled
+                variant="outlined"
+                onClick={() => navigate("/sign-in")}
+              >
+                Login
+              </ButtonStyled>
             </div>
             <div>
               <FilterDialog />

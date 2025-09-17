@@ -12,6 +12,13 @@ import {
 import { sr } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import { mint } from "@/shared/ui/theme";
+import {
+  getBlockedDayType,
+  getBlockedMonthType,
+  isValidRangeCalculator,
+} from "@/shared/helper/calculateDisabledDates";
+import { useAppDispatch } from "@/app/store/hooks";
+import { pushNotification } from "@/features/notifications/notificationSlice";
 
 type RangeCalendarProps = {
   startDate: Date | null;
@@ -20,6 +27,11 @@ type RangeCalendarProps = {
   setEndDate: (date: Date | null) => void;
   activeInput?: "start" | "end" | null; // 🟦 Fokusirani input
   minDate?: Date;
+  blockedDates?: {
+    type: "RESERVATION" | "LOCK";
+    startDate: Date;
+    endDate: Date;
+  }[];
 };
 
 const changeMonth = (currentMonth: Date, direction: "next" | "prev") => {
@@ -35,10 +47,14 @@ const RangeCalendar: React.FC<RangeCalendarProps> = ({
   setEndDate,
   activeInput = null,
   minDate = new Date(),
+  blockedDates,
 }) => {
+  const { isRangeValid } = isValidRangeCalculator(blockedDates ?? [], "day");
+
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
+  const dispatch = useAppDispatch();
   const [currentMonth, setCurrentMonth] = useState<Date>(
     startDate || new Date()
   );
@@ -63,6 +79,21 @@ const RangeCalendar: React.FC<RangeCalendarProps> = ({
         setEndDate(date);
       }
       return;
+    }
+
+    if (!endDate && startDate && !activeInput) {
+      // validacija ovdje
+      if (!isRangeValid(startDate, date)) {
+        dispatch(
+          pushNotification({
+            type: "error",
+            message: "Izabrani period uključuje blokirane dane.",
+          })
+        );
+        setStartDate(null);
+        return;
+      }
+      setEndDate(date);
     }
 
     // Fallback ako nije poznato koji je input kliknut
@@ -114,12 +145,16 @@ const RangeCalendar: React.FC<RangeCalendarProps> = ({
       slots={{
         day: (props: PickersDayProps<Date>) => {
           const { day, outsideCurrentMonth, ...rest } = props;
+          const type = blockedDates
+            ? getBlockedDayType(day, blockedDates)
+            : null;
           return (
             <PickersDay
               {...rest}
               day={day}
               outsideCurrentMonth={outsideCurrentMonth}
               selected={false}
+              disabled={props.disabled || !!type} // ne može klik ako je blokiran
               sx={{
                 ...(isStartOrEndDate(day) && {
                   backgroundColor: theme.palette.primary.main,
@@ -132,6 +167,34 @@ const RangeCalendar: React.FC<RangeCalendarProps> = ({
                   color: theme.palette.getContrastText(
                     theme.palette.primary.main
                   ),
+                }),
+                ...(type === "LOCK" && {
+                  backgroundColor: theme.palette.error.light,
+                  color: theme.palette.getContrastText(
+                    theme.palette.error.light
+                  ),
+                  position: "relative",
+                  "&::after": {
+                    content: '"🔒"',
+                    position: "absolute",
+                    fontSize: "0.7rem",
+                    bottom: 2,
+                    right: 2,
+                  },
+                }),
+                ...(type === "RESERVATION" && {
+                  backgroundColor: theme.palette.warning.light,
+                  color: theme.palette.getContrastText(
+                    theme.palette.warning.light
+                  ),
+                  position: "relative",
+                  "&::after": {
+                    content: '"🏠"',
+                    position: "absolute",
+                    fontSize: "0.7rem",
+                    bottom: 2,
+                    right: 2,
+                  },
                 }),
                 "&:hover": {
                   backgroundColor:

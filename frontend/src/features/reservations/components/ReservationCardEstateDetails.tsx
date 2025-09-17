@@ -1,14 +1,12 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  Button,
-  TextField,
-  FormControl,
-  Typography,
-  Stack,
-} from "@mui/material";
-import { CalendarMonth, Group } from "@mui/icons-material";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import CardHeader from "@mui/material/CardHeader";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import FormControl from "@mui/material/FormControl";
+import Typography from "@mui/material/Typography";
+import Stack from "@mui/material/Stack";
+import { CalendarMonth, Group, ChildCare } from "@mui/icons-material";
 import { DatePicker } from "@mui/x-date-pickers";
 
 interface ReservationCardProps {
@@ -16,6 +14,7 @@ interface ReservationCardProps {
   defaultEndDate?: Date | null;
   isDisabled: boolean;
   guestCount?: number;
+  childrenCount?: number;
   isLongTermEstate?: boolean;
 }
 
@@ -24,6 +23,7 @@ export default function ReservationCard({
   defaultEndDate = null,
   isDisabled = false,
   guestCount,
+  childrenCount,
   isLongTermEstate = false,
 }: ReservationCardProps) {
   const handleReservation = () => {
@@ -31,6 +31,7 @@ export default function ReservationCard({
       defaultStartDate,
       defaultEndDate,
       guestCount,
+      childrenCount,
     });
   };
 
@@ -38,23 +39,30 @@ export default function ReservationCard({
     <Card
       sx={{
         width: "100%",
-        height: "100%",
+        maxHeight: "100%",
         mx: "auto",
-        background: "background.paper",
+        background: "none",
+        border: "none",
         borderRadius: 3,
-        p: 9,
+        p: { xs: 2, sm: 3, md: 4 }, // manje paddinga na mobilnim
+        overflowY: "auto", // skrol ako se baš nakupi
       }}
     >
       <CardHeader
         title={
-          <Typography variant="h4" align="center" color="text.primary">
+          <Typography
+            variant="h5"
+            align="center"
+            color="text.primary"
+            sx={{ fontWeight: 600 }}
+          >
             Rezerviši svoj smještaj
           </Typography>
         }
-        sx={{ pb: 4 }}
+        sx={{ pb: 2 }}
       />
 
-      <CardContent sx={{ display: "flex", flexDirection: "column", gap: 3.5 }}>
+      <CardContent sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
         {/* Date Range Section */}
         <Stack direction="row" spacing={2}>
           <DatePicker
@@ -111,12 +119,28 @@ export default function ReservationCard({
         {guestCount && (
           <FormControl fullWidth>
             <TextField
-              label="Gosti"
+              label="Odrasli gosti"
               value={guestCount}
               slotProps={{
                 input: {
                   readOnly: true,
                   startAdornment: <Group fontSize="small" sx={{ mr: 1 }} />,
+                },
+              }}
+            />
+          </FormControl>
+        )}
+
+        {/* Children Count */}
+        {childrenCount !== undefined && childrenCount > 0 && (
+          <FormControl fullWidth>
+            <TextField
+              label="Djeca"
+              value={childrenCount}
+              slotProps={{
+                input: {
+                  readOnly: true,
+                  startAdornment: <ChildCare fontSize="small" sx={{ mr: 1 }} />,
                 },
               }}
             />
@@ -130,7 +154,7 @@ export default function ReservationCard({
           fullWidth
           disabled={isDisabled}
           sx={(theme) => ({
-            py: 1.5,
+            py: 1.3,
             borderRadius: 2,
             fontWeight: 600,
             fontSize: "1rem",
@@ -179,7 +203,7 @@ export default function ReservationCard({
           })}
           onClick={handleReservation}
         >
-          Reserve Now
+          Rezervišite
         </Button>
 
         {/* Helper text when disabled */}
@@ -192,14 +216,11 @@ export default function ReservationCard({
         )}
 
         {/* Info */}
-        {/* <Typography
-          variant="body2"
-          align="center"
-          color="text.secondary"
-          sx={{ pt: 1 }}
-        >
-          Nece Vam biti naplaceno jos uvijek.
-        </Typography> */}
+        {!isDisabled && (
+          <Typography variant="body2" align="center" color="text.secondary">
+            Nece Vam biti naplaceno jos uvijek.
+          </Typography>
+        )}
       </CardContent>
     </Card>
   );
