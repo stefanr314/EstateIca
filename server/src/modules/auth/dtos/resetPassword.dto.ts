@@ -4,22 +4,22 @@ export const resetPasswordDto = z
   .object({
     password: z
       .string()
-      .min(8, { error: "Password must be at least 8 characters long" })
+      .min(8, { error: "Lozinka mora imati bar 8 karaktera." })
       .regex(
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#+])[A-Za-z\d@$!%*?&#+]{8,}$/,
         {
           error:
-            "Password must contain uppercase, lowercase, number, and special character",
+            "Lozinka mora imati bar jedno veliko slovo, jedno malo slovo, broj, te specijalni karakter.",
         }
       ),
     confirmPassword: z.string(),
     resetToken: z
       .string()
       .length(128)
-      .regex(/^[a-f0-9]{128}$/, { error: "Invalid token format" }),
+      .regex(/^[a-f0-9]{128}$/, { error: "Neispravan format tokena." }),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    error: "Passwords do not match",
+    error: "Lozinke se ne poklapaju.",
     path: ["confirmPassword"],
   });
 

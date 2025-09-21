@@ -1,3 +1,4 @@
+import { ImageKitService } from "../../imagekit/imagekit.service";
 import { ForbiddenError, NotFoundError } from "../../shared/errors";
 import { GetAllUsersQueryDto } from "./dtos/getAllUsers.dto";
 import { UpdateUserDto } from "./dtos/updateUser.dto";
@@ -20,17 +21,36 @@ export class UserService {
     // logging.log(wishlist);
 
     return {
+      id: user._id,
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
       phoneNumber: user.phoneNumber,
-      //   wishlist,
       role: user.role,
       isActive: user.isActive,
       isVerified: user.isVerified,
-      isSuperhost: user.isSuperhost,
       profilePictureUrl: user.profilePictureUrl,
-      joined: user.createdAt,
+      // joined: user.createdAt,
+    };
+  }
+
+  async getMe(myId: string) {
+    const me = await User.findById(myId);
+    if (!me) {
+      throw new NotFoundError("User not found");
+    }
+
+    return {
+      id: me._id,
+      firstName: me.firstName,
+      lastName: me.lastName,
+      email: me.email,
+      phoneNumber: me.phoneNumber,
+      role: me.role,
+      isActive: me.isActive,
+      isVerified: me.isVerified,
+      profilePictureUrl: me.profilePictureUrl,
+      // joined: me.createdAt,
     };
   }
 
@@ -45,13 +65,53 @@ export class UserService {
     // Update user properties
     user.firstName = userData.firstName || user.firstName;
     user.lastName = userData.lastName || user.lastName;
-    user.profilePictureUrl =
-      userData.profilePictureUrl || user.profilePictureUrl;
     user.phoneNumber = userData.phone || user.phoneNumber;
+
     await user.save();
     return {
-      message: "User updated successfully",
-      user: user,
+      id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      role: user.role,
+      isActive: user.isActive,
+      isVerified: user.isVerified,
+      profilePictureUrl: user.profilePictureUrl,
+      // joined: user.createdAt,
+    };
+  }
+
+  async updateUserProfilePicture(
+    userId: string,
+    profilePicture: Express.Multer.File
+  ) {
+    const user = await User.findById(userId);
+    if (!user) throw new NotFoundError("Korisnik ne postoji.");
+
+    let profilePictureUrl: string | undefined = user.profilePictureUrl;
+    if (profilePicture) {
+      const res: any = await ImageKitService.uploadFile(
+        profilePicture.buffer,
+        profilePicture.originalname,
+        "profiles"
+      );
+      profilePictureUrl = res.url;
+    }
+
+    user.profilePictureUrl = profilePictureUrl;
+    await user.save();
+    return {
+      id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      role: user.role,
+      isActive: user.isActive,
+      isVerified: user.isVerified,
+      profilePictureUrl: user.profilePictureUrl,
+      // joined: user.createdAt,
     };
   }
 

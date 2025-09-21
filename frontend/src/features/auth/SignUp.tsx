@@ -1,229 +1,344 @@
-import * as React from "react";
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Checkbox from "@mui/material/Checkbox";
-
-import Divider from "@mui/material/Divider";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import FormLabel from "@mui/material/FormLabel";
-import FormControl from "@mui/material/FormControl";
-import Link from "@mui/material/Link";
-import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
-import Stack from "@mui/material/Stack";
-import MuiCard from "@mui/material/Card";
-import { styled } from "@mui/material/styles";
-
 import {
-  GoogleIcon,
-  FacebookIcon,
-  SitemarkIcon,
-} from "./components/CustomIcons";
+  Button,
+  Divider,
+  FormControl,
+  FormControlLabel,
+  FormLabel,
+  TextField,
+  Typography,
+  Stack,
+  Checkbox,
+  Link,
+  Box,
+  InputAdornment,
+  IconButton,
+} from "@mui/material";
+import MuiCard from "@mui/material/Card";
+import {
+  Visibility,
+  VisibilityOff,
+  Email,
+  Person,
+  Phone,
+} from "@mui/icons-material";
+import { styled } from "@mui/material/styles";
+import { useForm } from "react-hook-form";
+import { RegisterUserDto, registerUserDto } from "./types";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { green } from "@mui/material/colors";
+import { NavLink, useNavigate } from "react-router";
+import { useAppDispatch } from "@/app/store/hooks";
+import { registerUser } from "./authSlice";
+import { pushNotification } from "../notifications/notificationSlice";
+import { useState } from "react";
+
+// === Styles ===
+const SignUpContainer = styled(Stack)(({ theme }) => ({
+  minHeight: "100dvh",
+  width: "100%",
+  padding: theme.spacing(2),
+  position: "relative",
+  overflowY: "auto", // omogućava skrol kad forma ne stane
+  [theme.breakpoints.up("sm")]: {
+    padding: theme.spacing(4),
+  },
+
+  "&::before": {
+    content: '""',
+    position: "absolute",
+    inset: 0,
+    zIndex: 0,
+    ...(theme.palette.mode === "light" && {
+      background: `
+        radial-gradient(circle at 50% 50%, rgba(173, 235, 179, 0.7) 0%, rgba(144,238,144,0.8) 100%),
+        radial-gradient(circle at 20% 30%, rgba(174, 234, 0, 0.5) 0%, transparent 60%),
+        radial-gradient(circle at 80% 25%, rgba(77, 208, 225, 0.4) 0%, transparent 55%),
+        radial-gradient(circle at 30% 75%, rgba(240, 249, 192, 0.45) 0%, transparent 50%),
+        radial-gradient(circle at 70% 80%, rgba(0, 200, 83, 0.35) 0%, transparent 45%)
+      `,
+      filter: "blur(120px)",
+      backgroundBlendMode: "screen",
+    }),
+    ...theme.applyStyles("dark", {
+      top: "45%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+      width: "80%",
+      height: "70%",
+      borderRadius: "50%",
+      background: `radial-gradient(circle, ${green[600]} 0%, ${green[800]} 30%, transparent 80%)`,
+      filter: "blur(180px)",
+      opacity: 0.5,
+    }),
+  },
+}));
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
   alignSelf: "center",
   width: "100%",
-  padding: theme.spacing(4),
+  padding: theme.spacing(3),
   gap: theme.spacing(2),
   margin: "auto",
-  boxShadow:
-    "hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px",
   [theme.breakpoints.up("sm")]: {
-    width: "450px",
+    padding: theme.spacing(4),
+    maxWidth: "600px", // bolje za mobilni
   },
-  ...theme.applyStyles("dark", {
-    boxShadow:
-      "hsla(220, 30%, 5%, 0.5) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.08) 0px 15px 35px -5px",
+  [theme.breakpoints.up("md")]: {
+    maxWidth: "900px",
+  },
+  borderRadius: Number(theme.shape.borderRadius) * 2,
+  boxShadow: theme.shadows[6],
+  zIndex: 1,
+
+  ...(theme.palette.mode === "light" && {
+    backgroundColor: "rgba(255,255,255,0.75)",
+    backdropFilter: "blur(16px)",
+    border: "1px solid rgba(255,255,255,0.3)",
+  }),
+  ...(theme.palette.mode === "dark" && {
+    backgroundColor: theme.palette.background.paper,
   }),
 }));
 
-const SignUpContainer = styled(Stack)(({ theme }) => ({
-  height: "calc((1 - var(--template-frame-height, 0)) * 100dvh)",
-  minHeight: "100%",
-  padding: theme.spacing(2),
-  [theme.breakpoints.up("sm")]: {
-    padding: theme.spacing(4),
-  },
-  "&::before": {
-    content: '""',
-    display: "block",
-    position: "absolute",
-    zIndex: -1,
-    inset: 0,
-    backgroundImage:
-      "radial-gradient(ellipse at 50% 50%, hsl(210, 100%, 97%), hsl(0, 0%, 100%))",
-    backgroundRepeat: "no-repeat",
-    ...theme.applyStyles("dark", {
-      backgroundImage:
-        "radial-gradient(at 50% 50%, hsla(210, 100%, 16%, 0.5), hsl(220, 30%, 5%))",
-    }),
-  },
-}));
+// === Component ===
+export default function SignUp() {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
-export default function SignUp(props: { disableCustomTheme?: boolean }) {
-  const [emailError, setEmailError] = React.useState(false);
-  const [emailErrorMessage, setEmailErrorMessage] = React.useState("");
-  const [passwordError, setPasswordError] = React.useState(false);
-  const [passwordErrorMessage, setPasswordErrorMessage] = React.useState("");
-  const [nameError, setNameError] = React.useState(false);
-  const [nameErrorMessage, setNameErrorMessage] = React.useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const validateInputs = () => {
-    const email = document.getElementById("email") as HTMLInputElement;
-    const password = document.getElementById("password") as HTMLInputElement;
-    const name = document.getElementById("name") as HTMLInputElement;
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+  } = useForm<RegisterUserDto>({
+    resolver: zodResolver(registerUserDto),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      phoneNumber: "",
+    },
+  });
 
-    let isValid = true;
-
-    if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
-      setEmailError(true);
-      setEmailErrorMessage("Please enter a valid email address.");
-      isValid = false;
-    } else {
-      setEmailError(false);
-      setEmailErrorMessage("");
+  const onSubmit = async (data: RegisterUserDto) => {
+    try {
+      await dispatch(registerUser(data)).unwrap();
+      dispatch(
+        pushNotification({
+          type: "success",
+          message: "Registracija uspješna. Uspješno ste napravili profil.",
+        })
+      );
+      navigate("/dashboard", { replace: true });
+    } catch (error: any) {
+      if (error.includes("already exists")) {
+        setError("email", {
+          type: "manual",
+          message: "Korisnik sa ovim emailom već postoji",
+        });
+      } else {
+        dispatch(
+          pushNotification({
+            type: "error",
+            message: error ?? "Registracija nije uspjela.",
+          })
+        );
+      }
     }
-
-    if (!password.value || password.value.length < 6) {
-      setPasswordError(true);
-      setPasswordErrorMessage("Password must be at least 6 characters long.");
-      isValid = false;
-    } else {
-      setPasswordError(false);
-      setPasswordErrorMessage("");
-    }
-
-    if (!name.value || name.value.length < 1) {
-      setNameError(true);
-      setNameErrorMessage("Name is required.");
-      isValid = false;
-    } else {
-      setNameError(false);
-      setNameErrorMessage("");
-    }
-
-    return isValid;
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    if (nameError || emailError || passwordError) {
-      event.preventDefault();
-      return;
-    }
-    const data = new FormData(event.currentTarget);
-    console.log({
-      name: data.get("name"),
-      lastName: data.get("lastName"),
-      email: data.get("email"),
-      password: data.get("password"),
-    });
-  };
+  // console.log("Errors", errors);
 
   return (
-    // <ColorModeSelect sx={{ position: 'fixed', top: '1rem', right: '1rem' }} />
-    <SignUpContainer direction="column" justifyContent="space-between">
+    <SignUpContainer direction="column" justifyContent="center">
       <Card variant="outlined">
-        <SitemarkIcon />
-        <Typography
-          component="h1"
-          variant="h4"
-          sx={{ width: "100%", fontSize: "clamp(2rem, 10vw, 2.15rem)" }}
-        >
-          Sign up
-        </Typography>
         <Box
           component="form"
-          onSubmit={handleSubmit}
-          sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+          onSubmit={handleSubmit(onSubmit)}
+          noValidate
+          sx={{ display: "flex", flexDirection: "column", gap: 3 }}
         >
-          <FormControl>
-            <FormLabel htmlFor="name">Full name</FormLabel>
-            <TextField
-              autoComplete="name"
-              name="name"
-              required
-              fullWidth
-              id="name"
-              placeholder="Jon Snow"
-              error={nameError}
-              helperText={nameErrorMessage}
-              color={nameError ? "error" : "primary"}
-            />
-          </FormControl>
-          <FormControl>
-            <FormLabel htmlFor="email">Email</FormLabel>
-            <TextField
-              required
-              fullWidth
-              id="email"
-              placeholder="your@email.com"
-              name="email"
-              autoComplete="email"
-              variant="outlined"
-              error={emailError}
-              helperText={emailErrorMessage}
-              color={passwordError ? "error" : "primary"}
-            />
-          </FormControl>
-          <FormControl>
-            <FormLabel htmlFor="password">Password</FormLabel>
-            <TextField
-              required
-              fullWidth
-              name="password"
-              placeholder="••••••"
-              type="password"
-              id="password"
-              autoComplete="new-password"
-              variant="outlined"
-              error={passwordError}
-              helperText={passwordErrorMessage}
-              color={passwordError ? "error" : "primary"}
-            />
-          </FormControl>
-          <FormControlLabel
-            control={<Checkbox value="allowExtraEmails" color="primary" />}
-            label="I want to receive updates via email."
-          />
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            onClick={validateInputs}
+          <Typography
+            component="h1"
+            variant="h4"
+            sx={{ fontSize: "clamp(2rem, 6vw, 2.15rem)", textAlign: "center" }}
           >
-            Sign up
-          </Button>
-        </Box>
-        <Divider>
-          <Typography sx={{ color: "text.secondary" }}>or</Typography>
-        </Divider>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <Button
-            fullWidth
-            variant="outlined"
-            onClick={() => alert("Sign up with Google")}
-            startIcon={<GoogleIcon />}
-          >
-            Sign up with Google
-          </Button>
-          <Button
-            fullWidth
-            variant="outlined"
-            onClick={() => alert("Sign up with Facebook")}
-            startIcon={<FacebookIcon />}
-          >
-            Sign up with Facebook
-          </Button>
-          <Typography sx={{ textAlign: "center" }}>
-            Already have an account?{" "}
-            <Link
-              href="/material-ui/getting-started/templates/sign-in/"
-              variant="body2"
-              sx={{ alignSelf: "center" }}
+            Napravi nalog
+          </Typography>
+
+          <Stack spacing={2}>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+              <FormControl fullWidth>
+                <FormLabel htmlFor="firstName">Ime</FormLabel>
+                <TextField
+                  {...register("firstName")}
+                  error={!!errors.firstName}
+                  helperText={errors.firstName?.message}
+                  id="firstName"
+                  placeholder="Petar"
+                />
+              </FormControl>
+
+              <FormControl fullWidth>
+                <FormLabel htmlFor="lastName">Prezime</FormLabel>
+                <TextField
+                  {...register("lastName")}
+                  error={!!errors.lastName}
+                  helperText={errors.lastName?.message}
+                  id="lastName"
+                  placeholder="Petrović"
+                />
+              </FormControl>
+            </Stack>
+
+            <FormControl fullWidth>
+              <FormLabel htmlFor="email">Email</FormLabel>
+              <TextField
+                {...register("email")}
+                error={!!errors.email}
+                helperText={errors.email?.message}
+                id="email"
+                type="email"
+                placeholder="vas@email.com"
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Email color="action" />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            </FormControl>
+
+            <FormControl fullWidth>
+              <FormLabel htmlFor="phoneNumber">Telefon (opciono)</FormLabel>
+              <TextField
+                {...register("phoneNumber")}
+                error={!!errors.phoneNumber}
+                helperText={errors.phoneNumber?.message}
+                id="phoneNumber"
+                placeholder="+387..."
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Phone color="action" />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            </FormControl>
+
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+              <FormControl fullWidth>
+                <FormLabel htmlFor="password">Lozinka</FormLabel>
+                <TextField
+                  {...register("password")}
+                  error={!!errors.password}
+                  helperText={errors.password?.message}
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••"
+                  slotProps={{
+                    input: {
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Person color="action" />
+                        </InputAdornment>
+                      ),
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            onClick={() => setShowPassword((prev) => !prev)}
+                            edge="end"
+                            sx={{
+                              background: "transparent",
+                              border: "none",
+                              // "&:hover": {
+                              //   background: "transparent",
+                              // },
+                            }}
+                          >
+                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+              </FormControl>
+
+              <FormControl fullWidth>
+                <FormLabel htmlFor="confirmPassword">Potvrdi lozinku</FormLabel>
+                <TextField
+                  {...register("confirmPassword")}
+                  error={!!errors.confirmPassword}
+                  helperText={errors.confirmPassword?.message}
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="••••••"
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            onClick={() =>
+                              setShowConfirmPassword((prev) => !prev)
+                            }
+                            edge="end"
+                            sx={{
+                              background: "transparent",
+                              border: "none",
+                              // "&:hover": {
+                              //   background: "transparent",
+                              // },
+                            }}
+                          >
+                            {showConfirmPassword ? (
+                              <VisibilityOff />
+                            ) : (
+                              <Visibility />
+                            )}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+              </FormControl>
+            </Stack>
+
+            <FormControlLabel
+              control={<Checkbox color="primary" />}
+              label="Želim primati obavijesti putem emaila"
+            />
+
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={isSubmitting}
+              fullWidth
             >
-              Sign in
+              {isSubmitting ? "Kreiranje naloga..." : "Registruj se"}
+            </Button>
+          </Stack>
+
+          <Divider sx={{ my: 2 }} />
+
+          <Typography sx={{ textAlign: "center" }}>
+            Već imate nalog?{" "}
+            <Link component={NavLink} to="/sign-in" variant="body2">
+              Prijavite se
             </Link>
           </Typography>
         </Box>

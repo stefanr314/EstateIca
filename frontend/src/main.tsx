@@ -8,7 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // import App from "./app/App.tsx";
 import AppRoutes from "./app/Routes.tsx";
 import { APIProvider } from "@vis.gl/react-google-maps";
-import { ToastManager } from "./features/notifications/components/ToastMenager.tsx";
+import { ToastManager } from "./features/notifications/components/ToastManager.tsx";
 
 const queryClient = new QueryClient({
   defaultOptions: {

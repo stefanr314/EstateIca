@@ -36,6 +36,24 @@ export const getUserById = async (
   }
 };
 
+export const getMe = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    if (!req.user)
+      throw new UnauthorizedError("Niste ulogovani da uradite ovu akciju.");
+    const myId = req.user.id;
+
+    const me = await userService.getMe(myId);
+
+    res.json({ user: me });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const updateUser = async (
   req: Request,
   res: Response,
@@ -48,11 +66,31 @@ export const updateUser = async (
     !req.user ||
     (dto.userId !== req.user.id && req.user.role !== Role.ADMIN)
   ) {
-    throw new ForbiddenError("You are not authorized to update this user.");
+    throw new ForbiddenError("Nemate pravo da ovu akciju.");
   }
   try {
     const result = await userService.updateUser(dto, userData);
-    res.status(200).json(result);
+    res.status(200).json({ user: result });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateUserProfilePicture = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    if (!req.user) throw new UnauthorizedError("Niste prijavljeni.");
+    const { userId } = req.params;
+    const profilePicture = req.file as Express.Multer.File;
+    const result = await userService.updateUserProfilePicture(
+      userId,
+      profilePicture
+    );
+
+    res.json({ user: result });
   } catch (error) {
     next(error);
   }
@@ -68,7 +106,7 @@ export const deleteUser = async (
     !req.user ||
     (dto.userId !== req.user.id && req.user.role !== Role.ADMIN)
   ) {
-    throw new ForbiddenError("You are not authorized to update this user.");
+    throw new ForbiddenError("Nemate pravo na ovu akciju.");
   }
   try {
     const result = await userService.deleteUser(dto);
@@ -88,7 +126,7 @@ export const toogleActivity = async (
     !req.user ||
     (dto.userId !== req.user.id && req.user.role !== Role.ADMIN)
   ) {
-    throw new ForbiddenError("You are not authorized to manipulate this user.");
+    throw new ForbiddenError("Ne mozete izvrsiti ovu akciju.");
   }
   try {
     const result = await userService.toggleActivity(dto);

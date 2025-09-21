@@ -3,12 +3,12 @@ import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import morgan from "morgan";
+// import morgan from "morgan";
 
 import "./config/logging";
 // import logger from "./config/logging";
 import { HOSTNAME, PORT } from "./config/config";
-import logger from "./config/pinoLogger";
+// import logger from "./config/pinoLogger";
 import { loggingHandler } from "./shared/middlewares/loggingInfo";
 import { routeNotFound } from "./shared/middlewares/routeNotFound";
 
@@ -30,8 +30,8 @@ import { initSubscribers } from "./redis/subscriber";
 
 // === 1. HANDLE UNCAUGHT EXCEPTIONS ===
 process.on("uncaughtException", (err) => {
-  logger.error("Uncaught Exception! Shutting down...");
-  logger.error(err);
+  logging.error("Uncaught Exception! Shutting down...");
+  logging.error(err);
   process.exit(1); // Obavezno gasi jer je stanje nesigurno
 });
 
@@ -55,7 +55,7 @@ export const Main = () => {
   app.use(express.urlencoded({ extended: true }));
   app.use(bodyParser.json());
   app.use(cookieParser());
-  app.use(morgan(":method :url :status"));
+  // app.use(morgan(":method :url :status"));
 
   app.use(loggingHandler);
 
@@ -77,11 +77,11 @@ export const Main = () => {
 
   httpServer = http.createServer(app);
   httpServer.listen(PORT, () => {
-    logging.log("Ovo je debug poruka");
-    logging.warn("Ovo je upozorenje");
-    logging.error("Došlo je do greške");
+    // logging.log("Ovo je debug poruka");
+    // logging.warn("Ovo je upozorenje");
+    // logging.error("Došlo je do greške");
     logging.info(`Server pokrenut na http://${HOSTNAME}:${PORT}`);
-    logger.info(`Server pokrenut na http://${HOSTNAME}:${PORT}`);
+    // logger.info(`Server pokrenut na http://${HOSTNAME}:${PORT}`);
   });
 };
 
@@ -101,8 +101,8 @@ const startServer = async () => {
 
 // === 2. HANDLE UNHANDLED PROMISES ===
 process.on("unhandledRejection", (reason: any) => {
-  logger.error("Unhandled Rejection! Shutting down...");
-  logger.error(reason);
+  logging.error("Unhandled Rejection! Shutting down...");
+  logging.error(reason);
 
   ShutDown(() => {
     process.exit(1);
@@ -110,9 +110,9 @@ process.on("unhandledRejection", (reason: any) => {
 });
 
 process.on("SIGTERM", () => {
-  logger.info("SIGTERM signal received: closing HTTP server");
+  logging.info("SIGTERM signal received: closing HTTP server");
   ShutDown(() => {
-    logger.info("HTTP server closed");
+    logging.info("HTTP server closed");
     process.exit(0);
   });
 });

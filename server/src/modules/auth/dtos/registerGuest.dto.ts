@@ -2,25 +2,24 @@ import { z } from "zod/v4";
 
 export const registerGuestDto = z
   .object({
-    firstName: z.string().min(1, { error: "First name is required" }),
-    lastName: z.string().min(1, { error: "Last name is required" }),
-    email: z.email({ error: "Invalid email address" }),
+    firstName: z.string().min(1, { error: "Ime je obavezno." }),
+    lastName: z.string().min(1, { error: "Prezime je obavezno." }),
+    email: z.email({ error: "Email adresa nije ispravnog oblika." }),
     password: z
       .string()
-      .min(8, { error: "Password must be at least 8 characters long" })
+      .min(8, { error: "Lozinka mora imati bar 8 karaktera" })
       .regex(
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#+])[A-Za-z\d@$!%*?&#+]{8,}$/,
         {
           error:
-            "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&#+)",
+            "Lozinka mora imati bar jedno veliko slovo, jedno malo slovo, jedan broj, te jedan specijani karakter (@$!%*?&#+)",
         }
       ),
     confirmPassword: z.string(),
     phoneNumber: z.string().optional(),
-    profilePictureUrl: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    error: "Passwords do not match",
+    error: "Sifre se ne poklapaju",
     path: ["confirmPassword"],
   });
 

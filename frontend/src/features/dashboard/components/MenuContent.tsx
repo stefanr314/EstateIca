@@ -17,28 +17,50 @@ import RateReviewRoundedIcon from "@mui/icons-material/RateReviewRounded";
 import DashboardCustomizeRoundedIcon from "@mui/icons-material/DashboardCustomizeRounded";
 
 import { mint } from "@/shared/ui/theme";
+import { selectUser } from "@/features/auth/authSlice";
 
 const mainListItems = [
   {
-    text: "Home",
+    text: "Pocetna",
     icon: <DashboardCustomizeRoundedIcon />,
     route: "/dashboard",
+    roles: ["admin", "host", "guest"],
   },
   {
-    text: "Estates",
+    text: "Vase nekretnine",
     icon: <VillaRoundedIcon />,
     route: "/dashboard/your-estates",
     roles: ["host"],
   },
   {
-    text: "Reservations",
+    text: "Vase rezervacije",
     icon: <EventAvailableRoundedIcon />,
     route: "/dashboard/reservations",
+    roles: ["host", "guest"],
   },
   {
-    text: "Reviews",
+    text: "Rezervacije vasih nekretnina",
+    icon: <EventAvailableRoundedIcon />,
+    route: "/dashboard/reservations",
+    roles: ["host"],
+  },
+  {
+    text: "Vase recenzije",
     icon: <RateReviewRoundedIcon />,
     route: "/dashboard/reviews",
+    roles: ["host", "guest"],
+  },
+  {
+    text: "Recenzije vasih nekretnina",
+    icon: <RateReviewRoundedIcon />,
+    route: "/dashboard/reviews",
+    roles: ["host"],
+  },
+  {
+    text: "Domacin - zahtjevi",
+    icon: <RateReviewRoundedIcon />,
+    route: "/dashboard/reviews",
+    roles: ["admin"],
   },
 ];
 
@@ -49,13 +71,22 @@ const secondaryListItems = [
 ];
 
 export default function MenuContent() {
-  const user = useAppSelector((state) => state.user.user);
+  const user = useAppSelector(selectUser);
 
+  if (!user) return null;
+
+  const currentUserRole = user.role;
   return (
     <Stack sx={{ flexGrow: 1, p: 1, justifyContent: "space-between" }}>
       <List>
         {mainListItems.map((item, index) => (
-          <ListItem key={index} disablePadding sx={{ display: "block" }}>
+          <ListItem
+            key={index}
+            disablePadding
+            sx={{
+              display: item.roles.includes(currentUserRole) ? "block" : "none",
+            }}
+          >
             <ListItemButton
               component={NavLink}
               to={item.route}

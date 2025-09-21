@@ -5,7 +5,10 @@ import LogoutButton from "@/shared/components/LogoutButton";
 function HomePage() {
   return (
     <Stack gap={2}>
-      <h1>Welcome to the Dashboard. How can I help you?</h1>;
+      <h1>
+        Dobrodošli na kontrolni panel. Ovdje možete detaljno vidjeti svoje
+        podatke.
+      </h1>
       <LogoutButton />
       <HomePageContent />
     </Stack>
