@@ -11,7 +11,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import MuiCard from "@mui/material/Card";
-import { alpha, styled } from "@mui/material/styles";
+import { styled } from "@mui/material/styles";
 import ForgotPassword from "./components/ForgotPassword";
 import {
   GoogleIcon,
@@ -22,11 +22,11 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
-import { gray, mint } from "@/shared/ui/theme";
 import { green } from "@mui/material/colors";
 import { useAppDispatch } from "@/app/store/hooks";
 import { loginUser } from "./authSlice";
-import { useNavigate } from "react-router";
+import { NavLink, useNavigate } from "react-router";
+import { pushNotification } from "../notifications/notificationSlice";
 
 export const loginUserDto = z.object({
   email: z.email().min(1, "Email je obavezan"),
@@ -36,30 +36,14 @@ export const loginUserDto = z.object({
 export type LoginUserDto = z.infer<typeof loginUserDto>;
 
 // ========== Styles ==========
-const Card = styled(MuiCard)(({ theme }) => ({
-  display: "flex",
-  flexDirection: "column",
-  alignSelf: "center",
-  width: "100%",
-  padding: theme.spacing(4),
-  gap: theme.spacing(2),
-  margin: "auto",
-  [theme.breakpoints.up("sm")]: {
-    maxWidth: "450px",
-  },
-  backgroundColor: theme.palette.background.paper,
-  borderRadius: Number(theme.shape.borderRadius) * 2,
-  boxShadow: theme.shadows[6],
-  position: "relative",
-  zIndex: 1,
-}));
-
 const SignInContainer = styled(Stack)(({ theme }) => ({
-  height: "calc((1 - var(--template-frame-height, 0)) * 100dvh)",
-  minHeight: "100%",
+  minHeight: "100dvh",
+  width: "100%",
   padding: theme.spacing(2),
   position: "relative",
-  overflow: "hidden",
+  overflowY: "auto", // skrolaj ako je forma previsoka
+  justifyContent: "center",
+  alignItems: "center",
   [theme.breakpoints.up("sm")]: {
     padding: theme.spacing(4),
   },
@@ -67,26 +51,61 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
   "&::before": {
     content: '""',
     position: "absolute",
-    top: "45%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    width: "90%", // širi glow
-    height: "70%", // malo spljošten oval
-    borderRadius: "50%",
-    background: `radial-gradient(circle, ${green[500]} 0%, ${green[700]} 30%, transparent 80%)`,
-    filter: "blur(120px)", // veći blur = mekši glow
-    opacity: 0.45, // jače prisutan
+    inset: 0,
     zIndex: 0,
+    ...(theme.palette.mode === "light" && {
+      background: `
+        radial-gradient(circle at 50% 50%, rgba(173, 235, 179, 0.7) 0%, rgba(144,238,144,0.8) 100%),
+        radial-gradient(circle at 20% 30%, rgba(174, 234, 0, 0.5) 0%, transparent 60%),
+        radial-gradient(circle at 80% 25%, rgba(77, 208, 225, 0.4) 0%, transparent 55%),
+        radial-gradient(circle at 30% 75%, rgba(240, 249, 192, 0.45) 0%, transparent 50%),
+        radial-gradient(circle at 70% 80%, rgba(0, 200, 83, 0.35) 0%, transparent 45%)
+      `,
+      filter: "blur(120px)",
+      backgroundBlendMode: "screen",
+    }),
     ...theme.applyStyles("dark", {
+      top: "45%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+      width: "80%",
+      height: "70%",
+      borderRadius: "50%",
       background: `radial-gradient(circle, ${green[600]} 0%, ${green[800]} 30%, transparent 80%)`,
-      filter: "blur(140px)",
-      opacity: 0.35,
+      filter: "blur(180px)",
+      opacity: 0.5,
     }),
   },
 }));
 
+const Card = styled(MuiCard)(({ theme }) => ({
+  display: "flex",
+  flexDirection: "column",
+  alignSelf: "center",
+  width: "100%",
+  padding: theme.spacing(3),
+  gap: theme.spacing(2),
+  margin: theme.spacing(2, "auto"),
+  [theme.breakpoints.up("sm")]: {
+    maxWidth: "500px",
+    padding: theme.spacing(4),
+  },
+  borderRadius: Number(theme.shape.borderRadius) * 2,
+  boxShadow: theme.shadows[6],
+  zIndex: 1,
+
+  ...(theme.palette.mode === "light" && {
+    backgroundColor: "rgba(255,255,255,0.75)",
+    backdropFilter: "blur(16px)",
+    border: "1px solid rgba(255,255,255,0.3)",
+  }),
+  ...(theme.palette.mode === "dark" && {
+    backgroundColor: theme.palette.background.paper,
+  }),
+}));
+
 // ========== Component ==========
-export default function SignIn(props: { disableCustomTheme?: boolean }) {
+export default function SignIn() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
@@ -110,12 +129,15 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
       const user = await dispatch(loginUser(data)).unwrap();
 
       console.log("Login success:", user);
-
-      // ✅ ovde ide redirect
       navigate("/dashboard", { replace: true });
     } catch (error: any) {
       console.error("Login failed:", error);
-      // 👉 ovde možeš da prikažeš toast, alert ili error state
+      dispatch(
+        pushNotification({
+          type: "error",
+          message: error || "Email ili lozinka nisu validini.",
+        })
+      );
     }
   };
 
@@ -224,10 +246,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
             Sign in with Facebook
           </Button> */}
           <Typography sx={{ textAlign: "center" }}>
-            Nemate nalog?{" "}
-            <Link href="/sign-up" variant="body2" sx={{ alignSelf: "center" }}>
-              Napravite nalog
-            </Link>
+            Nemate nalog? <NavLink to="/sign-up">Napravite nalog</NavLink>
           </Typography>
         </Box>
       </Card>

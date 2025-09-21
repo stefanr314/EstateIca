@@ -1,7 +1,8 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import agent from "@/app/api/agent";
 import { RootState } from "@/app/store/store";
-import { LoginUserData, AuthState } from "./types";
+import { BasicUserData, AuthState } from "./types";
+import { RegisterUserDto } from "./types";
 
 const initialState: AuthState = {
   user: null,
@@ -11,7 +12,7 @@ const initialState: AuthState = {
 
 // ✅ LOGIN
 export const loginUser = createAsyncThunk<
-  LoginUserData,
+  BasicUserData,
   { email: string; password: string },
   { rejectValue: string }
 >("auth/login", async (credentials, thunkAPI) => {
@@ -22,37 +23,47 @@ export const loginUser = createAsyncThunk<
     return res.user;
   } catch (err: any) {
     console.error(err);
-    return thunkAPI.rejectWithValue(err.response?.data || "Login failed");
+    return thunkAPI.rejectWithValue(
+      err.response?.data.message || "Login failed"
+    );
   }
 });
 
 // ✅ REGISTER
 export const registerUser = createAsyncThunk<
-  LoginUserData,
-  { name: string; lastName: string; email: string; password: string },
+  BasicUserData,
+  RegisterUserDto,
   { rejectValue: string }
 >("auth/register", async (body, thunkAPI) => {
   try {
-    const res = await agent.Auth.register(body);
+    const formData = new FormData();
+    Object.entries(body).forEach(([key, value]) => {
+      if (value) formData.append(key, value as any);
+    });
+
+    const res = await agent.Auth.register(formData);
+
     localStorage.setItem("token", res.accessToken);
-    return res.user as LoginUserData;
+    return res.user as BasicUserData;
   } catch (err: any) {
-    return thunkAPI.rejectWithValue(err.response?.data || "Register failed");
+    return thunkAPI.rejectWithValue(
+      err.response?.data.message || "Register failed"
+    );
   }
 });
 
 // ✅ FETCH CURRENT USER (koristi se kod refresh ili reload)
 export const fetchCurrentUser = createAsyncThunk<
-  LoginUserData,
+  BasicUserData,
   void,
   { rejectValue: string }
 >("auth/me", async (_, thunkAPI) => {
   try {
-    const res = await agent.Users.getUserById("me"); // ili napravi poseban agent.Users.getMe()
-    return res as LoginUserData;
+    const res = await agent.Users.getMe();
+    return res.user as BasicUserData;
   } catch (err: any) {
     return thunkAPI.rejectWithValue(
-      err.response?.data || "Failed to fetch user"
+      err.response?.data.message || "Failed to fetch user"
     );
   }
 });
@@ -68,7 +79,9 @@ export const refreshToken = createAsyncThunk<
     localStorage.setItem("token", res.accessToken);
     return res.accessToken;
   } catch (err: any) {
-    return thunkAPI.rejectWithValue(err.response?.data || "Failed to refresh");
+    return thunkAPI.rejectWithValue(
+      err.response?.data.message || "Failed to refresh"
+    );
   }
 });
 
@@ -87,6 +100,66 @@ export const logoutUser = createAsyncThunk(
   }
 );
 
+export const verificationSender = createAsyncThunk<
+  void,
+  { email: string },
+  { rejectValue: string }
+>("auth/sendVerification", async ({ email }, thunkAPI) => {
+  try {
+    const res = await agent.Auth.verifyAccount(email);
+  } catch (error: any) {
+    return thunkAPI.rejectWithValue(error.response?.data.message);
+  }
+});
+
+export const verifyUser = createAsyncThunk<
+  BasicUserData,
+  { token: string },
+  { rejectValue: string }
+>("auth/verifyUser", async ({ token }, thunkAPI) => {
+  try {
+    const res = await agent.Auth.onVerifyAccount(token);
+    return res.user as BasicUserData;
+  } catch (error: any) {
+    return (
+      thunkAPI.rejectWithValue(error.response?.data.message) ||
+      "Verifikacije nije uspjela iz nepoznatog razloga."
+    );
+  }
+});
+
+export const forgotPasswordSender = createAsyncThunk<
+  void,
+  { email: string },
+  { rejectValue: string }
+>("auth/forgotPasswordSender", async ({ email }, thunkAPI) => {
+  try {
+    await agent.Auth.forgotPassword(email);
+  } catch (error: any) {
+    return thunkAPI.rejectWithValue(
+      error.response?.data.message ||
+        "Nažalost nismo uspjeli poslati mejl za ponovno kreiranje vaše lozinke."
+    );
+  }
+});
+
+//reset PASSWORD
+export const resetPassword = createAsyncThunk<
+  { message: string },
+  { password: string; confirmPassword: string; resetToken: string },
+  { rejectValue: string }
+>("auth/resetPassword", async (body, thunkAPI) => {
+  try {
+    const res = await agent.Auth.resetPassword(body);
+    return res;
+  } catch (error: any) {
+    return thunkAPI.rejectWithValue(
+      error.response?.data.message ||
+        "Neuspjesan proces resetovanje lozinke, probajte ponovo kasnije."
+    );
+  }
+});
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -94,11 +167,15 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.isAuthenticated = false;
+      state.status = "idle";
       localStorage.removeItem("token");
     },
-    setUser: (state, action: PayloadAction<LoginUserData>) => {
+    setUser: (state, action: PayloadAction<BasicUserData>) => {
       state.user = action.payload;
       state.isAuthenticated = true;
+    },
+    updateUser: (state, action: PayloadAction<BasicUserData>) => {
+      state.user = { ...state.user, ...action.payload };
     },
   },
   extraReducers: (builder) => {
@@ -110,7 +187,7 @@ const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action) => {
         state.user = action.payload;
         state.isAuthenticated = true;
-        state.status = "idle";
+        state.status = "succeeded";
       })
       .addCase(loginUser.rejected, (state) => {
         state.status = "failed";
@@ -121,24 +198,33 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
       })
       // FETCH CURRENT USER
+      .addCase(fetchCurrentUser.pending, (state) => {
+        state.status = "loading";
+      })
       .addCase(fetchCurrentUser.fulfilled, (state, action) => {
         state.user = action.payload;
         state.isAuthenticated = true;
+        state.status = "succeeded";
+      })
+      .addCase(fetchCurrentUser.rejected, (state) => {
+        state.user = null;
+        state.isAuthenticated = false;
+        state.status = "failed";
       })
       // REFRESH
       .addCase(refreshToken.fulfilled, (state) => {
         // ovdje ne treba user, samo token update
         state.isAuthenticated = !!state.user;
+      })
+      // VERIFY
+      .addCase(verifyUser.fulfilled, (state, action) => {
+        state.user = action.payload;
+        state.isAuthenticated = true; // da se osigura
       });
-    //   //LOGOUT
-    //   .addCase(logoutUser.fulfilled, (state) => {
-    //     state.isAuthenticated = false;
-    //     state.user = null;
-    //   });
   },
 });
 
-export const { logout, setUser } = authSlice.actions;
+export const { logout, setUser, updateUser } = authSlice.actions;
 export default authSlice.reducer;
 
 // Selector helperi

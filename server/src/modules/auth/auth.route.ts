@@ -16,10 +16,17 @@ import { loginUserDto } from "./dtos/loginUser.dto";
 import { forgotPasswordDto } from "./dtos/forgotPassword.dto";
 import { resetPasswordDto } from "./dtos/resetPassword.dto";
 import { onVerifyAccountDto } from "./dtos/onVerifyAccount.dto";
+import multer from "multer";
 
 const router = Router();
+const upload = multer();
 
-router.post("/register", validate(registerGuestDto, "body"), handleNewGuest);
+router.post(
+  "/register",
+  upload.single("profilePicture"),
+  validate(registerGuestDto, "body"),
+  handleNewGuest
+);
 router.post("/login", validate(loginUserDto, "body"), handleLogin);
 router.post("/logout", isAuth, handleLogout);
 router.get("/refresh", refreshToken);
@@ -32,7 +39,6 @@ router.patch(
 router.post(
   "/forgotPassword",
   validate(forgotPasswordDto, "body"),
-  isAuth,
   forgotPassword
 );
 router.post(

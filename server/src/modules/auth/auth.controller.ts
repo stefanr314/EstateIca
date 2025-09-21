@@ -19,11 +19,35 @@ export const handleNewGuest = async (
 ) => {
   try {
     const dto = req.body as RegisterGuestDto;
+    const profilePicture = req.file as Express.Multer.File | undefined;
 
-    const result = await authService.register(dto);
-    logging.info("User registered", result);
+    const { refreshToken, accessToken, user } = await authService.register(
+      dto,
+      profilePicture
+    );
 
-    res.status(201).json({ message: "User registered successfully" });
+    // Set the refresh token in a cookie
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: PRODUCTION,
+      sameSite: PRODUCTION ? "strict" : "lax",
+      maxAge: Number(process.env.REFRESH_TOKEN_EXPIRATION!),
+    });
+
+    res.status(201).json({
+      message: "User registered successfully",
+      user: {
+        id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        isActive: user.isActive,
+        isVerified: user.isVerified,
+        profilePicture: user.profilePictureUrl,
+      },
+      accessToken,
+    });
   } catch (error) {
     next(error);
   }
@@ -55,7 +79,7 @@ export const handleLogin = async (
         role: user.role,
         firstName: user.firstName,
         lastName: user.lastName,
-        profilePictureUrl: user.profilePictureUrl,
+        profilePicture: user.profilePictureUrl,
         phoneNumber: user.phoneNumber,
         hostType: user.hostType,
         isVerified: user.isVerified,
@@ -144,8 +168,23 @@ export const onVerifyAccount = async (
 ) => {
   const dto = req.body as OnVerifyAccountDto;
   try {
-    const result = await authService.onVerifyAccount(dto);
-    res.status(200).json({ message: "Account verification completed", result });
+    const { user } = await authService.onVerifyAccount(dto);
+
+    res.status(200).json({
+      message: "Account verification completed",
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        profilePicture: user.profilePictureUrl,
+        phoneNumber: user.phoneNumber,
+        hostType: user.hostType,
+        isVerified: user.isVerified,
+        isActive: user.isActive,
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -159,7 +198,7 @@ export const forgotPassword = async (
   const dto = req.body as ForgotPasswordDto;
   try {
     await authService.forgotPassword(dto);
-    res.status(200).json({ message: "Password reset email sent" });
+    res.status(200).json({ message: "Mejl za resetovanje lozinke je poslat." });
   } catch (error) {
     next(error);
   }
@@ -173,7 +212,7 @@ export const resetPassword = async (
   const dto = req.body as ResetPasswordDto;
   try {
     await authService.resetPassword(dto);
-    res.status(200).json({ message: "Password reset successfully" });
+    res.status(200).json({ message: "Resetovanje lozinke uspjesno." });
   } catch (error) {
     next(error);
   }

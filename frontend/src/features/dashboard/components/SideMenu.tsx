@@ -13,6 +13,8 @@ import OptionsMenu from "./OptionsMenu";
 import Button from "@mui/material/Button";
 import KeyboardArrowLeftRoundedIcon from "@mui/icons-material/KeyboardArrowLeftRounded";
 import { NavLink, useNavigate } from "react-router-dom";
+import { useAppSelector } from "@/app/store/hooks";
+import { selectUser } from "@/features/auth/authSlice";
 
 const drawerWidth = 240;
 
@@ -29,6 +31,9 @@ const Drawer = styled(MuiDrawer)({
 
 export default function SideMenu() {
   const navigate = useNavigate();
+  const user = useAppSelector(selectUser);
+
+  if (!user) return null;
 
   return (
     <Drawer
@@ -91,8 +96,8 @@ export default function SideMenu() {
       >
         <Avatar
           sizes="small"
-          alt="Riley Carter"
-          src="/static/images/avatar/7.jpg"
+          alt={user.firstName}
+          src={user.profilePicture}
           sx={{ width: 36, height: 36, cursor: "pointer" }}
           onClick={() => navigate("/dashboard/profile")}
         />
@@ -104,10 +109,10 @@ export default function SideMenu() {
             variant="body2"
             sx={{ fontWeight: 500, lineHeight: "16px" }}
           >
-            Riley Carter
+            {user.firstName} {user.lastName}
           </Typography>
           <Typography variant="caption" sx={{ color: "text.secondary" }}>
-            riley@email.com
+            {user.email}
           </Typography>
         </Box>
         <OptionsMenu />

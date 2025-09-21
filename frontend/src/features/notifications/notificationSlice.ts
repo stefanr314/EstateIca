@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { nanoid } from "@reduxjs/toolkit";
 
 interface NotificationToast {
   id: string;
@@ -16,7 +17,7 @@ const notificationSlice = createSlice({
       state,
       action: PayloadAction<Omit<NotificationToast, "id">>
     ) {
-      const id = Date.now().toString();
+      const id = nanoid();
       state.push({ id, ...action.payload });
     },
     removeNotification(state, action: PayloadAction<string>) {

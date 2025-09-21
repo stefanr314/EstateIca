@@ -19,7 +19,12 @@ import ReviewsDashboard from "@/features/dashboard/pages/ReviewsDashboard";
 import EditEstatePage from "@/features/dashboard/components/EditEstate";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
-import { sr, srLatn } from "date-fns/locale";
+import { srLatn } from "date-fns/locale";
+import AuthLayout from "./layouts/AuthLayout";
+import { useAuthInit } from "./hook/useAuthInit";
+import VerifyAccountPage from "@/features/auth/VerifyAccount";
+import ResetPassword from "@/features/auth/ResetPassword";
+import SignedInLayout from "./layouts/SignedInLayout";
 
 const router = createBrowserRouter([
   {
@@ -56,43 +61,44 @@ const router = createBrowserRouter([
     element: <Album />,
   },
   {
-    path: "/sign-in",
-    errorElement: <Error />,
-    element: <SignIn />,
+    element: <SignedInLayout />,
+    children: [
+      {
+        path: "/sign-in",
+        errorElement: <Error />,
+        element: <SignIn />,
+      },
+      {
+        path: "/sign-up",
+        errorElement: <Error />,
+        element: <SignUp />,
+      },
+      {
+        path: "/reset-password",
+        element: <ResetPassword />,
+      },
+    ],
   },
+
   {
-    path: "/sign-up",
-    errorElement: <Error />,
-    element: <SignUp />,
-  },
-  {
-    element: <Dashboard />,
-    path: "/dashboard",
+    element: <AuthLayout />,
     errorElement: <Error />,
     children: [
       {
-        index: true,
-        element: <HomePage />,
+        element: <Dashboard />, // layout (sidebar, navbar, outlet)
+        path: "/dashboard",
+        children: [
+          { index: true, element: <HomePage /> },
+          { path: "your-estates", element: <EstatesDashboard /> },
+          { path: "your-estates/:estateId", element: <EditEstatePage /> },
+          { path: "profile", element: <UserProfileDashboard /> },
+          { path: "reservations", element: <ReservationsDashboard /> },
+          { path: "reviews", element: <ReviewsDashboard /> },
+        ],
       },
       {
-        path: "your-estates",
-        element: <EstatesDashboard />,
-      },
-      {
-        path: "your-estates/:estateId",
-        element: <EditEstatePage />,
-      },
-      {
-        path: "profile",
-        element: <UserProfileDashboard />,
-      },
-      {
-        path: "reservations",
-        element: <ReservationsDashboard />,
-      },
-      {
-        path: "reviews",
-        element: <ReviewsDashboard />,
+        element: <VerifyAccountPage />,
+        path: "/verify-account",
       },
     ],
   },
@@ -103,6 +109,8 @@ const router = createBrowserRouter([
 ]);
 
 const AppRoutes: React.FC = () => {
+  useAuthInit(); //kako se ne bi resetovao redux svaki put kada se manuelno osvjezi stranica
+
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={srLatn}>
       <RouterProvider router={router}></RouterProvider>

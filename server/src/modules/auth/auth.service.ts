@@ -22,6 +22,8 @@ import { ResetPasswordDto } from "./dtos/resetPassword.dto";
 import { VerifyAccountDto } from "./dtos/verifyAccount.dto";
 import { createToken } from "../../shared/utils/createTokenLogic";
 import { OnVerifyAccountDto } from "./dtos/onVerifyAccount.dto";
+import { ImageKitService } from "../../imagekit/imagekit.service";
+import { Role } from "../../shared/types/role.enum";
 
 // Interfejs za payload
 type JwtPayload = {
@@ -32,15 +34,62 @@ type JwtPayload = {
 };
 
 export class AuthService {
-  async register(dto: RegisterGuestDto): Promise<void> {
+  async register(
+    dto: RegisterGuestDto,
+    profilePicture?: Express.Multer.File
+  ): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    user: UserDocument;
+  }> {
     const existingUser = await User.findOne({ email: dto.email });
     if (existingUser) {
       throw new ConflictError("User already exists");
     }
 
-    const newUser = new User(dto); //handle password hashing in the User model
+    let profilePictureUrl: string = "";
+    if (profilePicture) {
+      const res: any = await ImageKitService.uploadFile(
+        profilePicture.buffer,
+        `${dto.email}-profile-${Date.now()}-${profilePicture.originalname}`,
+        "profiles"
+      );
+
+      profilePictureUrl = res.url;
+    }
+
+    const newUser = new User({
+      ...dto,
+      profilePictureUrl,
+      isActive: true,
+      isVerified: false,
+      role: Role.GUEST,
+    }); //lozinka se hešuje na nivou modela
 
     await newUser.save();
+
+    // JWT payload
+    const payload = {
+      id: newUser._id.toString(),
+      role: newUser.role,
+      isActive: newUser.isActive,
+      isVerified: newUser.isVerified,
+    };
+
+    // Generiši access i refresh token
+    const accessToken = jwt.sign(payload, ACCESS_TOKEN_SECRET!, {
+      expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRATION!),
+    });
+
+    const refreshToken = jwt.sign(payload, REFRESH_TOKEN_SECRET!, {
+      expiresIn: Number(process.env.REFRESH_TOKEN_EXPIRATION!),
+    });
+
+    // Sačuvaj refresh token kod usera
+    newUser.refreshToken = refreshToken;
+    await newUser.save();
+
+    return { accessToken, refreshToken, user: newUser };
   }
 
   async login(dto: LoginUserDto): Promise<{
@@ -50,12 +99,14 @@ export class AuthService {
   }> {
     const { email, password } = dto;
     const user = await User.findOne({ email });
-    if (!user) throw new UnauthorizedError("Invalid credentials");
+    if (!user)
+      throw new UnauthorizedError("Email ili lozinka nisu ispravno uneseni.");
 
-    if (!user.isActive) throw new ForbiddenError("User is not active");
+    if (!user.isActive) throw new ForbiddenError("Korisnik nije aktivan.");
 
     const match = await bcrypt.compare(password, user.password);
-    if (!match) throw new UnauthorizedError("Invalid credentials");
+    if (!match)
+      throw new UnauthorizedError("Email ili lozinka nisu ispravno uneseni.");
 
     const payload = {
       id: user._id.toString(),
@@ -137,7 +188,7 @@ export class AuthService {
     user.verificationExpires = verificationExpires;
     await user.save();
 
-    const verificationLink = `https://example.com/verify?token=${rawToken}`;
+    const verificationLink = `http://localhost:5173/verify-account?token=${rawToken}`;
     const info = await sendEmail({
       to: user.email,
       subject: "Verify your account",
@@ -150,7 +201,9 @@ export class AuthService {
     logging.info(info);
   }
 
-  async onVerifyAccount(dto: OnVerifyAccountDto) {
+  async onVerifyAccount(
+    dto: OnVerifyAccountDto
+  ): Promise<{ user: UserDocument }> {
     const { token } = dto;
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
@@ -158,23 +211,26 @@ export class AuthService {
       verificationToken: hashedToken,
       verificationExpires: { $gt: new Date() },
     });
-    if (!user) throw new UnauthorizedError("Invalid token");
+    if (!user)
+      throw new UnauthorizedError("Token nije validan ili je istekao.");
     if (user.isVerified) {
-      throw new ConflictError("User is already verified.");
+      throw new ConflictError("Korisnik je vec verifikovan.");
     }
 
     user.isVerified = true;
     user.verificationToken = undefined;
     user.verificationExpires = undefined;
     await user.save();
+
+    return { user };
   }
 
   async forgotPassword(dto: ForgotPasswordDto) {
     const user = await User.findOne({ email: dto.email });
-    if (!user) throw new NotFoundError("User not found");
+    if (!user) throw new NotFoundError("Korisnik nije pronadjen.");
 
     if (!user.isActive) {
-      throw new ForbiddenError("User is not active");
+      throw new ForbiddenError("Korisnik nije aktivan.");
     }
     // Helper function to create a token
     const {
@@ -187,7 +243,7 @@ export class AuthService {
     user.resetPasswordExpires = resetPasswordExpires;
     await user.save();
 
-    const resetLink = `https://example.com/reset-password?token=${rawToken}&email=${encodeURIComponent(
+    const resetLink = `http://localhost:5173/reset-password?token=${rawToken}&email=${encodeURIComponent(
       dto.email
     )}`;
 
@@ -213,9 +269,11 @@ export class AuthService {
       resetPasswordExpires: { $gt: new Date() },
     });
     if (!user)
-      throw new ForbiddenError("Password reset token is invalid or expired");
+      throw new ForbiddenError(
+        "Password reset token nije validan ili je istekao"
+      );
     if (!user.isActive) {
-      throw new ForbiddenError("User is not active");
+      throw new ForbiddenError("Korisnik nije aktivan");
     }
 
     // Proceed with password reset

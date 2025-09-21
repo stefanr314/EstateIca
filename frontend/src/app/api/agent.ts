@@ -1,8 +1,8 @@
-import { LoginUserData } from "@/features/auth/types";
+import { BasicUserData } from "@/features/auth/types";
 import axios, { AxiosResponse } from "axios";
 
 axios.defaults.baseURL = "http://localhost:3030/api";
-axios.defaults.headers.common["Content-Type"] = "application/json";
+// axios.defaults.headers.common["Content-Type"] = "application/json";
 axios.defaults.headers.common["Accept"] = "application/json";
 axios.defaults.withCredentials = true;
 
@@ -16,9 +16,17 @@ axios.interceptors.request.use((config) => {
   return config;
 });
 
+axios.interceptors.request.use((config) => {
+  if (config.data && !(config.data instanceof FormData)) {
+    config.headers["Content-Type"] = "application/json";
+  }
+  return config;
+});
+
 axios.interceptors.response.use(
   (response) => response,
   async (error) => {
+    console.log(error);
     const originalRequest = error.config;
     const token = localStorage.getItem("token"); //necemo raditi provjeru kada korisnik ni nema token
     // Ako je 401 i nismo već pokušali refresh
@@ -74,13 +82,18 @@ const requests = {
 
     return axios.post(url, formData).then(responseBody);
   },
+  formPatch: (url: string, file: File, fileKey = "profilePicture") => {
+    const formData = new FormData();
+    formData.append(fileKey, file);
+    return axios.patch(url, formData).then(responseBody);
+  },
 };
 
 const Auth = {
   login: (
     email: string,
     password: string
-  ): Promise<{ accessToken: string; user: LoginUserData }> =>
+  ): Promise<{ accessToken: string; user: BasicUserData }> =>
     requests.post("/auth/login", { email, password }),
   register: (body: any) => requests.post("/auth/register", body),
   logout: () => requests.post("/auth/logout", {}),
@@ -97,8 +110,11 @@ const Users = {
   getAllUsers: (params?: URLSearchParams) =>
     requests.get("/user/getAll", params),
   getUserById: (userId: string) => requests.get(`/user/${userId}`),
+  getMe: () => requests.get(`/user/me`),
   updateUser: (userId: string, body: any) =>
-    requests.put(`/user/${userId}`, body),
+    requests.patch(`/user/update-profile/${userId}`, body),
+  changeUserProfilePicture: (userId: string, file: File) =>
+    requests.formPatch(`/user/update-profile-picture/${userId}`, file),
   toggleActivity: (userId: string) =>
     requests.patch(`/user/toggle-activity/${userId}`),
   deleteUser: (userId: string) => requests.delete(`/user/deactivate/${userId}`),

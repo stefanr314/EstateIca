@@ -1,4 +1,13 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import { selectUser } from "@/features/auth/authSlice";
+import {
+  useUpdateUserProfile,
+  useUpdateUserProfilePicture,
+} from "@/features/user/hooks/useUser";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -10,8 +19,6 @@ import IconButton from "@mui/material/IconButton";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
-import { useSelector } from "react-redux";
-import { RootState } from "@/app/store/store";
 
 import EditIcon from "@mui/icons-material/Edit";
 import SecurityIcon from "@mui/icons-material/Security";
@@ -20,44 +27,60 @@ import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import SaveIcon from "@mui/icons-material/Save";
 import CancelIcon from "@mui/icons-material/Cancel";
 import PersonIcon from "@mui/icons-material/Person";
+import { UpdateUserDto, updateUserDto } from "@/features/user/types";
 
 export default function UserProfileContent() {
   const theme = useTheme();
-  const user = useSelector((state: RootState) => state.user.user);
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    firstName: "Ime",
-    lastName: "Prezime",
-    phone: "+381 60 123 456",
-    email: "korisnik@example.com",
+  const user = useSelector(selectUser);
+  if (!user) return null;
+
+  const { register, handleSubmit, reset } = useForm<UpdateUserDto>({
+    resolver: zodResolver(updateUserDto),
+    defaultValues: {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      phone: user.phoneNumber,
+    }, // puni iz Reduxa
   });
 
-  const [originalData] = useState({ ...formData });
-  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const { mutate: updateProfileMutation } = useUpdateUserProfile();
+  const { mutate: updatePictureMutation } = useUpdateUserProfilePicture();
+  const {
+    firstName,
+    lastName,
+    role,
+    isActive,
+    isVerified,
+    profilePicture,
+    email,
+  } = user;
+  const [isEditing, setIsEditing] = useState(false);
 
-  // Mock role - treba da dođe iz Redux-a kada se implementira
-  const userRole = "Host"; // Ovo će biti dinamičko iz Redux-a
+  useEffect(() => {
+    if (user) {
+      reset({
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phone: user.phoneNumber,
+      });
+    }
+  }, [user, reset]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
-      const reader = new FileReader();
-      reader.onload = () => setProfileImage(reader.result as string);
-      reader.readAsDataURL(e.target.files[0]);
+      updatePictureMutation({ userId: user.id, file: e.target.files[0] });
     }
   };
 
-  const handleChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleSave = () => {
-    console.log("Saving", formData);
+  const handleSave = (data: UpdateUserDto) => {
+    console.log("Saving", data);
+    updateProfileMutation({ userId: user.id, body: data });
     setIsEditing(false);
-    // Pozvati backend PUT / PATCH zahtev
   };
 
   const handleCancel = () => {
-    setFormData(originalData);
+    // setFormData(originalData);
+    reset(user);
     setIsEditing(false);
   };
 
@@ -108,7 +131,7 @@ export default function UserProfileContent() {
                 {/* User Role Chip */}
                 <Chip
                   icon={<PersonIcon />}
-                  label={userRole}
+                  label={role}
                   variant="filled"
                   sx={{
                     fontWeight: 600,
@@ -118,21 +141,23 @@ export default function UserProfileContent() {
                 />
 
                 {/* Verification Badge */}
-                <Box
-                  sx={{
-                    bgcolor: theme.palette.primary.main,
-                    color: "#fff",
-                    borderRadius: "50%",
-                    p: 1.5,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    boxShadow: theme.shadows[2],
-                  }}
-                  title="Verifikovan korisnik"
-                >
-                  <VerifiedUserIcon fontSize="medium" />
-                </Box>
+                {isVerified && (
+                  <Box
+                    sx={{
+                      bgcolor: theme.palette.primary.main,
+                      color: "#fff",
+                      borderRadius: "50%",
+                      p: 1.5,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      boxShadow: theme.shadows[2],
+                    }}
+                    title="Verifikovan korisnik"
+                  >
+                    <VerifiedUserIcon fontSize="medium" />
+                  </Box>
+                )}
               </Box>
             </Box>
           </CardContent>
@@ -152,7 +177,7 @@ export default function UserProfileContent() {
               <CardContent sx={{ p: 4, textAlign: "center" }}>
                 <Box sx={{ position: "relative", display: "inline-block" }}>
                   <Avatar
-                    src={profileImage || undefined}
+                    src={profilePicture || undefined}
                     sx={{
                       width: 180,
                       height: 180,
@@ -162,7 +187,7 @@ export default function UserProfileContent() {
                       boxShadow: theme.shadows[6],
                     }}
                   >
-                    {!profileImage && formData.firstName[0]}
+                    {!profilePicture && firstName}
                   </Avatar>
 
                   <IconButton
@@ -191,15 +216,17 @@ export default function UserProfileContent() {
                 </Box>
 
                 <Typography variant="h4" sx={{ mt: 3, fontWeight: 600 }}>
-                  {formData.firstName} {formData.lastName}
+                  {firstName} {lastName}
                 </Typography>
-                <Typography
-                  variant="body1"
-                  color="text.secondary"
-                  sx={{ mt: 1 }}
-                >
-                  Verifikovan korisnik
-                </Typography>
+                {isVerified && (
+                  <Typography
+                    variant="body1"
+                    color="text.secondary"
+                    sx={{ mt: 1 }}
+                  >
+                    Verifikovan korisnik
+                  </Typography>
+                )}
 
                 {/* Edit Profile Button moved here */}
                 {!isEditing && (
@@ -225,7 +252,11 @@ export default function UserProfileContent() {
 
           {/* Form Card */}
           <Box sx={{ flex: { lg: "0 0 65%" } }}>
-            <Card elevation={3}>
+            <Card
+              component={"form"}
+              onSubmit={handleSubmit(handleSave)}
+              elevation={3}
+            >
               <CardContent sx={{ p: 4 }}>
                 <Typography variant="h5" sx={{ mb: 4, fontWeight: 600 }}>
                   Lični podaci
@@ -242,10 +273,7 @@ export default function UserProfileContent() {
                     <TextField
                       label="Ime"
                       fullWidth
-                      value={formData.firstName}
-                      onChange={(e) =>
-                        handleChange("firstName", e.target.value)
-                      }
+                      {...register("firstName")}
                       disabled={!isEditing}
                       sx={{
                         "& .MuiOutlinedInput-root": {
@@ -257,8 +285,7 @@ export default function UserProfileContent() {
                     <TextField
                       label="Prezime"
                       fullWidth
-                      value={formData.lastName}
-                      onChange={(e) => handleChange("lastName", e.target.value)}
+                      {...register("lastName")}
                       disabled={!isEditing}
                       sx={{
                         "& .MuiOutlinedInput-root": {
@@ -278,8 +305,7 @@ export default function UserProfileContent() {
                     <TextField
                       label="Telefon"
                       fullWidth
-                      value={formData.phone}
-                      onChange={(e) => handleChange("phone", e.target.value)}
+                      {...register("phone")}
                       disabled={!isEditing}
                       sx={{
                         "& .MuiOutlinedInput-root": {
@@ -290,10 +316,14 @@ export default function UserProfileContent() {
                     />
                     <TextField
                       label="Email"
+                      value={email}
                       fullWidth
-                      value={formData.email}
-                      onChange={(e) => handleChange("email", e.target.value)}
                       disabled={!isEditing}
+                      slotProps={{
+                        input: {
+                          readOnly: true,
+                        },
+                      }}
                       sx={{
                         "& .MuiOutlinedInput-root": {
                           borderRadius: 2,
@@ -315,11 +345,11 @@ export default function UserProfileContent() {
                     justifyContent: "flex-start",
                   }}
                 >
-                  {isEditing ? (
+                  {isEditing && (
                     <>
                       <Button
                         variant="contained"
-                        onClick={handleSave}
+                        type="submit"
                         startIcon={<SaveIcon />}
                         sx={{
                           borderRadius: 2,
@@ -348,22 +378,6 @@ export default function UserProfileContent() {
                         Otkaži
                       </Button>
                     </>
-                  ) : (
-                    <Button
-                      variant="outlined"
-                      color="secondary"
-                      startIcon={<SecurityIcon />}
-                      sx={{
-                        borderRadius: 2,
-                        textTransform: "none",
-                        fontWeight: 600,
-                        px: 4,
-                        py: 1.5,
-                        fontSize: "1rem",
-                      }}
-                    >
-                      Promeni šifru
-                    </Button>
                   )}
                 </Box>
               </CardContent>
