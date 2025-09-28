@@ -10,7 +10,6 @@ import {
   Elevator,
   FamilyRestroom,
   Microwave,
-  Security,
   Bathroom,
   BreakfastDining,
   Deck,
@@ -18,81 +17,29 @@ import {
   SmokeFree,
   Yard,
 } from "@mui/icons-material";
+import { Amenities } from "@/features/estates/types";
 
-export const amenitiesMap = {
-  Wifi: {
-    icon: Wifi,
-    label: "WiFi",
-  },
-  Parking: {
-    icon: LocalParking,
-    label: "Parking",
-  },
-  Bathroom: {
-    icon: Bathroom,
-    label: "Kupatilo",
-  },
-  Kitchen: {
-    icon: Kitchen,
-    label: "Kuhinja",
-  },
-  TV: {
-    icon: Tv,
-    label: "TV",
-  },
-  Pool: {
-    icon: Pool,
-    label: "Bazen",
-  },
-  Fireplace: {
-    icon: Fireplace,
-    label: "Kamin",
-  },
-  HotTub: {
-    icon: HotTub,
-    label: "Džakuzi",
-  },
-  AirConditioning: {
-    icon: AcUnit,
-    label: "Klima",
-  },
-  Microwave: {
-    icon: Microwave,
-    label: "Mikrovalna",
-  },
-  Elevator: {
-    icon: Elevator,
-    label: "Lift",
-  },
-  FamilyFriendly: {
-    icon: FamilyRestroom,
-    label: "Porodično",
-  },
-  CCTV: {
-    icon: Security,
-    label: "Video nadzor",
-  },
-  Breakfast: {
-    icon: BreakfastDining,
-    label: "Doručak",
-  },
-  Balcony: {
-    icon: Deck,
-    label: "Balkon",
-  },
-  Gym: {
-    icon: FitnessCenter,
-    label: "Teretana",
-  },
-  SmokeFree: {
-    icon: SmokeFree,
-    label: "Zabranjeno pušenje",
-  },
-  Garden: {
-    icon: Yard,
-    label: "Bašta",
-  },
-  // ... dodaj šta koristiš, ostalo ignoriši
-} as const;
+export const amenitiesMap: Partial<
+  Record<Amenities, { icon: React.ElementType; label: string }>
+> = {
+  [Amenities.Wifi]: { icon: Wifi, label: "WiFi" },
+  [Amenities.Parking]: { icon: LocalParking, label: "Parking" },
+  [Amenities.Kitchen]: { icon: Kitchen, label: "Kuhinja" },
+  [Amenities.TV]: { icon: Tv, label: "TV" },
+  [Amenities.Pool]: { icon: Pool, label: "Bazen" },
+  [Amenities.Fireplace]: { icon: Fireplace, label: "Kamin" },
+  [Amenities.HotTub]: { icon: HotTub, label: "Džakuzi" },
+  [Amenities.AirConditioning]: { icon: AcUnit, label: "Klima" },
+  [Amenities.Microwave]: { icon: Microwave, label: "Mikrovalna" },
+  [Amenities.Elevator]: { icon: Elevator, label: "Lift" },
+  [Amenities.FamilyFriendly]: { icon: FamilyRestroom, label: "Porodično" },
+  [Amenities.Breakfast]: { icon: BreakfastDining, label: "Doručak" },
+  [Amenities.Balcony]: { icon: Deck, label: "Balkon" },
+  [Amenities.Gym]: { icon: FitnessCenter, label: "Teretana" },
+  [Amenities.SmokeFree]: { icon: SmokeFree, label: "Zabranjeno pušenje" },
+  [Amenities.Garden]: { icon: Yard, label: "Bašta" },
+  [Amenities.Laundry]: { icon: Bathroom, label: "Veš mašina" }, // improv
+  // dodaj šta koristiš, ostalo može ostati bez ikone
+};
 
 export type AmenityKey = keyof typeof amenitiesMap;

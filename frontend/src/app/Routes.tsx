@@ -25,6 +25,9 @@ import { useAuthInit } from "./hook/useAuthInit";
 import VerifyAccountPage from "@/features/auth/VerifyAccount";
 import ResetPassword from "@/features/auth/ResetPassword";
 import SignedInLayout from "./layouts/SignedInLayout";
+import HostRequestsPage from "@/features/dashboard/pages/HostRequestsPage";
+import CreateEstatePage from "@/features/dashboard/components/CreateEstate";
+import GuestHostRequestDetailsPage from "@/features/host-requests/GuestHostRequestDetailsPage";
 
 const router = createBrowserRouter([
   {
@@ -89,11 +92,29 @@ const router = createBrowserRouter([
         path: "/dashboard",
         children: [
           { index: true, element: <HomePage /> },
+
+          // Estates
           { path: "your-estates", element: <EstatesDashboard /> },
           { path: "your-estates/:estateId", element: <EditEstatePage /> },
+          { path: "your-estates/create", element: <CreateEstatePage /> },
+
+          // Reservations
+          { path: "reservations/mine", element: <ReservationsDashboard /> },
+          { path: "reservations/host", element: <ReservationsDashboard /> },
+
+          // Reviews
+          { path: "reviews/mine", element: <ReviewsDashboard /> },
+          { path: "reviews/host", element: <ReviewsDashboard /> },
+
+          // Profile
           { path: "profile", element: <UserProfileDashboard /> },
-          { path: "reservations", element: <ReservationsDashboard /> },
-          { path: "reviews", element: <ReviewsDashboard /> },
+
+          // Host requests
+          { path: "host-requests", element: <HostRequestsPage /> },
+          {
+            path: "your-host-requests/me",
+            element: <GuestHostRequestDetailsPage />,
+          },
         ],
       },
       {

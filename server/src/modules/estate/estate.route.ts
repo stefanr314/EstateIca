@@ -31,7 +31,11 @@ import { hardDeleteEstateDto } from "./dtos/hardDeleteEstate.dto";
 import { validateObjectId } from "../../shared/middlewares/validateObjectId";
 
 import multer from "multer";
-import { updateEstateAmenitiesDto } from "./dtos/updateEstate.dto";
+import {
+  updateBusinessEstateDto,
+  updateEstateAmenitiesDto,
+  updateResidentialEstateDto,
+} from "./dtos/updateEstate.dto";
 
 // Extend Express Request interface to include estateTypeCreated
 declare global {
@@ -104,19 +108,8 @@ router.get(
   getEstateById
 );
 
-//update body validated on service level
 router.patch(
-  "/:estateId",
-  validateObjectId("estateId"),
-  isAuth,
-  isActiveUser,
-  isVerifiedUser,
-  hasRole([Role.HOST]),
-  updateEstate
-);
-
-router.patch(
-  "/:estateId/update-amenities",
+  "/update-amenities/:estateId",
   validateObjectId("estateId"),
   validate(updateEstateAmenitiesDto),
   isAuth,
@@ -126,7 +119,7 @@ router.patch(
   updateResidentialAmenities
 );
 router.patch(
-  "/:estateId/update-business-amenities",
+  "/update-business-amenities/:estateId",
   validateObjectId("estateId"),
   validate(updateEstateAmenitiesDto),
   isAuth,
@@ -143,6 +136,17 @@ router.patch(
   isVerifiedUser,
   hasRole([Role.HOST, Role.ADMIN]),
   toggleEstateVisibility
+);
+
+//update body validation će zavisiti od tipa nekretnine
+router.patch(
+  "/update/:estateId",
+  validateObjectId("estateId"),
+  isAuth,
+  isActiveUser,
+  isVerifiedUser,
+  hasRole([Role.HOST]),
+  updateEstate
 );
 
 router.delete(

@@ -1,20 +1,3 @@
-// import { Typography, Button } from "@mui/material";
-// import { useRouteError } from "react-router";
-// function Error() {
-//   const error = useRouteError();
-//   return (
-//     <div>
-//       <Typography variant="h6" color="error" gutterBottom>
-//         Error: {error?.message || "Unknown error"}
-//       </Typography>
-//       <Button variant="outlined" onClick={() => window.history.back()}>
-//         Go back
-//       </Button>
-//     </div>
-//   );
-// }
-
-// export default Error;
 import Typography from "@mui/material/Typography";
 import { useRouteError, isRouteErrorResponse } from "react-router-dom";
 

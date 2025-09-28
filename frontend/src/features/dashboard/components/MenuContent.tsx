@@ -18,6 +18,7 @@ import DashboardCustomizeRoundedIcon from "@mui/icons-material/DashboardCustomiz
 
 import { mint } from "@/shared/ui/theme";
 import { selectUser } from "@/features/auth/authSlice";
+import { useMemo } from "react";
 
 const mainListItems = [
   {
@@ -35,31 +36,31 @@ const mainListItems = [
   {
     text: "Vase rezervacije",
     icon: <EventAvailableRoundedIcon />,
-    route: "/dashboard/reservations",
+    route: "/dashboard/reservations/mine",
     roles: ["host", "guest"],
   },
   {
     text: "Rezervacije vasih nekretnina",
     icon: <EventAvailableRoundedIcon />,
-    route: "/dashboard/reservations",
+    route: "/dashboard/reservations/host",
     roles: ["host"],
   },
   {
     text: "Vase recenzije",
     icon: <RateReviewRoundedIcon />,
-    route: "/dashboard/reviews",
+    route: "/dashboard/reviews/mine",
     roles: ["host", "guest"],
   },
   {
     text: "Recenzije vasih nekretnina",
     icon: <RateReviewRoundedIcon />,
-    route: "/dashboard/reviews",
+    route: "/dashboard/reviews/host",
     roles: ["host"],
   },
   {
     text: "Domacin - zahtjevi",
     icon: <RateReviewRoundedIcon />,
-    route: "/dashboard/reviews",
+    route: "/dashboard/host-requests",
     roles: ["admin"],
   },
 ];
@@ -75,16 +76,20 @@ export default function MenuContent() {
 
   if (!user) return null;
 
-  const currentUserRole = user.role;
+  const visibleListItems = useMemo(
+    () => mainListItems.filter((item) => item.roles.includes(user.role)),
+    [user.role]
+  );
+
   return (
     <Stack sx={{ flexGrow: 1, p: 1, justifyContent: "space-between" }}>
       <List>
-        {mainListItems.map((item, index) => (
+        {visibleListItems.map((item, index) => (
           <ListItem
             key={index}
             disablePadding
             sx={{
-              display: item.roles.includes(currentUserRole) ? "block" : "none",
+              display: "block",
             }}
           >
             <ListItemButton
@@ -108,7 +113,7 @@ export default function MenuContent() {
           </ListItem>
         ))}
       </List>
-      <List dense>
+      {/* <List dense>
         {secondaryListItems.map((item, index) => (
           <ListItem key={index} disablePadding sx={{ display: "block" }}>
             <ListItemButton>
@@ -117,7 +122,7 @@ export default function MenuContent() {
             </ListItemButton>
           </ListItem>
         ))}
-      </List>
+      </List> */}
     </Stack>
   );
 }

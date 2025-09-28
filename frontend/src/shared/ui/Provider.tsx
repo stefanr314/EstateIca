@@ -1,18 +1,3 @@
-// import { ThemeProvider, useColorScheme } from "@mui/material/styles";
-// import CssBaseline from "@mui/material/CssBaseline";
-// import { getTheme, mainTheme } from "./theme";
-
-// const Provider = ({ children }: { children: React.ReactNode }) => {
-//   const { mode } = useColorScheme();
-//   return (
-//     <ThemeProvider theme={mainTheme}>
-//       <CssBaseline />
-//       {children}
-//     </ThemeProvider>
-//   );
-// };
-
-// export { Provider };
 import * as React from "react";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import type { ThemeOptions } from "@mui/material/styles";

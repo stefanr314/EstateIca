@@ -86,14 +86,15 @@ export class ReservationService {
     const [reservations, locks] = await Promise.all([
       Reservation.find({
         estateReserved: estateId,
-        status: Status.CONFIRMED,
-      }).select("startDate endDate -_id"),
+        status: { $in: [Status.PENDING, Status.CONFIRMED] },
+      }).select("startDate endDate status -_id"),
       LockDate.find({ estate: estateId }).select("startDate endDate -_id"),
     ]);
 
     return [
       ...reservations.map((r) => ({
         type: "RESERVATION",
+        status: r.status,
         startDate: r.startDate,
         endDate: r.endDate,
       })),
@@ -901,15 +902,11 @@ export class ReservationService {
   }
 
   async lockDates(hostId: string, estateId: string, dto: LockDatesDto) {
-    const estateToBeLocked = await ResidentialEstate.findById(estateId);
+    const estateToBeLocked = await BaseEstate.findById(estateId);
     if (!estateToBeLocked)
       throw new NotFoundError("Trazeni smjestaj ne postoji");
     if (estateToBeLocked.host.toString() !== hostId)
       throw new ForbiddenError("Nemate pravo upravljanja tudjim smjestajem.");
-    if (estateToBeLocked.hidden)
-      throw new BadRequestError(
-        "Trazena akcija nije moguca za sakriveni smjestaj."
-      );
 
     const { startDate, endDate, note } = dto;
     const normalizedStart = utcMidnight(startDate);

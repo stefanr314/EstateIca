@@ -4,24 +4,62 @@ import {
   createBusinessEstateDto,
 } from "./createEstate.dto";
 import { Amenities } from "../../../shared/types/amenities.enum";
+import { CancellationPolicy } from "../../../shared/types/cancellationPolicy.enum";
+import { ResidentialType } from "../../../shared/types/residentialType.enum";
+import { RoomType } from "../../../shared/types/roomType.enum";
 
-export const updateResidentialEstateDto = createResidentialEstateDto.partial();
+export const updateResidentialEstateDto = z.object({
+  title: z.string().min(3).max(100).optional(),
+  description: z.string().min(1).optional(),
+  neighborhoodOverview: z.string().optional(),
+  notes: z.string().optional(),
+  houseRules: z.string().optional(),
+  transit: z.string().optional(),
+  access: z.string().optional(),
+  cancellationPolicy: z.enum(CancellationPolicy).optional(),
+  securityDeposit: z.number().nonnegative().optional(),
 
-export const updateBusinessEstateDto = createBusinessEstateDto.partial().refine(
-  (data) => {
-    if (
-      data.minimumLeaseMonths !== undefined &&
-      data.maximumLeaseMonths !== undefined
-    ) {
-      return data.maximumLeaseMonths >= data.minimumLeaseMonths;
-    }
-    return true;
-  },
-  {
-    message: "maximumLeaseMonths mora biti veći ili jednak minimumLeaseMonths",
-    path: ["maximumLeaseMonths"],
-  }
-);
+  bedrooms: z.number().int().positive().optional(),
+  bathrooms: z.number().int().positive().optional(),
+  beds: z.number().int().positive().optional(),
+  minimumStay: z.number().int().positive().optional(),
+  maximumStay: z.number().int().positive().optional(),
+  pricePerNight: z.number().positive().optional(),
+  pricePerMonth: z.number().positive().optional(),
+  area: z.number().positive().optional(),
+  residentialType: z.enum(ResidentialType).optional(),
+  roomType: z.enum(RoomType).optional(),
+  guestIncluded: z.number().int().nonnegative().optional(),
+  extraPeople: z.number().int().nonnegative().optional(),
+  petAllowance: z.boolean().optional(),
+  unitsAvailable: z.number().int().positive().optional(),
+  amenities: z.array(z.enum(Amenities)).optional(),
+});
+
+export const updateBusinessEstateDto = z.object({
+  title: z.string().min(3).max(100).optional(),
+  description: z.string().min(1).optional(),
+  pricePerMonth: z.number().positive().optional(),
+  area: z.number().positive().optional(),
+  unitsAvailable: z.number().int().positive().optional(),
+
+  // specifična polja za business estate
+  intentedUse: z
+    .enum(["retail", "office", "warehouse", "hospitality", "other"])
+    .optional(),
+  floor: z.number().int().optional(),
+  hasElevator: z.boolean().optional(),
+  isGroundFloor: z.boolean().optional(),
+  ceilingHeight: z.number().positive().optional(),
+  hasParking: z.boolean().optional(),
+  parkingSpaces: z.number().int().positive().optional(),
+  hasRestroom: z.boolean().optional(),
+  minimumLeaseMonths: z.number().int().positive().optional(),
+  maximumLeaseMonths: z.number().int().positive().optional(),
+  airConditioning: z.boolean().optional(),
+  internetReady: z.boolean().optional(),
+  amenities: z.array(z.enum(Amenities)).optional(),
+});
 
 export const updateBusinessEstateFeaturesDto = z.object({
   hasElevator: z.boolean().optional(),
@@ -47,16 +85,3 @@ export type UpdateEstateAmenitiesDto = z.infer<typeof updateEstateAmenitiesDto>;
 export type UpdateBusinessEstateFeaturesDto = z.infer<
   typeof updateBusinessEstateFeaturesDto
 >;
-// export const updateEstateDto = baseEstateDto.partial().refine(
-//   (data) => {
-//     if (data.minimumNights !== undefined && data.maximumNights !== undefined) {
-//       return data.maximumNights >= data.minimumNights;
-//     }
-//     return true; // if one of the fields is missing, skip the check
-//   },
-//   {
-//     message: "maximumNights mora biti veći ili jednak minimumNights",
-//     path: ["maximumNights"],
-//   }
-// );
-// export type UpdateEstateDto = z.infer<typeof updateEstateDto>;

@@ -27,6 +27,7 @@ import AmenitiesChipArray from "./AmenitiesChipArray";
 import { AmenityKey } from "@/shared/constants/amenitiesMap";
 import CancelPolicyToggleGroup from "./CancelPolicyToggleGroup";
 import ToggleButtonsStayLength from "./ToggleButtonsStayLength";
+import { Amenities } from "../../types";
 
 export default function FilterDialog() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -36,9 +37,9 @@ export default function FilterDialog() {
   const [price, setPrice] = React.useState<[number, number]>([0, 500]); //mjesto 500 moze biti max cijena
   const [beds, setBeds] = React.useState(0);
   const [baths, setBaths] = React.useState(0);
-  const [selectedAmenities, setSelectedAmenities] = React.useState<
-    AmenityKey[]
-  >([]);
+  const [selectedAmenities, setSelectedAmenities] = React.useState<Amenities[]>(
+    []
+  );
   const [cancelPolicy, setCancelPolicy] = React.useState<string | null>("any");
   const [petsAllowed, setPetsAllowed] = React.useState(false);
 
@@ -74,8 +75,9 @@ export default function FilterDialog() {
     if (baths > 0) newParams.set("baths", baths.toString());
     if (price[0] !== 0) newParams.set("minPrice", price[0].toString());
     if (price[1] !== 500) newParams.set("maxPrice", price[1].toString());
-    if (selectedAmenities.length !== 0)
-      newParams.set("amenities", selectedAmenities.toString());
+    if (selectedAmenities.length > 0) {
+      selectedAmenities.forEach((a) => newParams.append("amenities", a));
+    }
     if (cancelPolicy && cancelPolicy !== "any")
       newParams.set("cancelationPolicy", cancelPolicy);
     if (petsAllowed) newParams.set("pets", "true"); // samo ako je čekirano

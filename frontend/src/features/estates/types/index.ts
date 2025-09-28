@@ -76,6 +76,7 @@ export interface IBaseEstate {
   _id: string;
   title: string;
   description: string;
+  hidden: boolean;
   neighborhoodOverview?: string;
   notes?: string;
   houseRules?: string;
@@ -97,8 +98,8 @@ export interface IBaseEstate {
   address: IAddress;
 
   estateType: "ResidentialEstate" | "BusinessEstate"; //estateType field through discriminator key option
-  createdAt?: Date;
-  updatedAt?: Date;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface IResidentialEstate extends IBaseEstate {
@@ -178,4 +179,23 @@ export interface AllBusinessData {
   amenities?: Amenities[];
   address: IAddress;
   estateType: "BusinessEstate";
+}
+
+export interface AllPersonalEstatesData {
+  _id: string;
+  title: string;
+  description: string;
+  hidden?: boolean;
+
+  images?: { url: string; fileId: string }[];
+  rentalType: "Short Term" | "Long Term"; // Required field for rental type, e.g., "short-term" or "long-term"
+
+  securityDeposit?: number;
+
+  host: string;
+  address: IAddress;
+
+  estateType: "ResidentialEstate" | "BusinessEstate"; //estateType field through discriminator key option
+  createdAt?: string;
+  updatedAt?: string;
 }

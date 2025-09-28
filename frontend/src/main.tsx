@@ -10,7 +10,7 @@ import AppRoutes from "./app/Routes.tsx";
 import { APIProvider } from "@vis.gl/react-google-maps";
 import { ToastManager } from "./features/notifications/components/ToastManager.tsx";
 
-const queryClient = new QueryClient({
+export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes

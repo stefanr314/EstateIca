@@ -42,24 +42,27 @@ export function errorHandler(
   // 🔥 JWT errors
   if (err instanceof Error) {
     if (err.name === "TokenExpiredError") {
-      return res.status(401).json({
+      res.status(401).json({
         message: "Token je istekao",
         stack: process.env.NODE_ENV === "production" ? "🥞" : err.stack,
       });
+      return;
     }
 
     if (err.name === "JsonWebTokenError") {
-      return res.status(401).json({
+      res.status(401).json({
         message: "Token nije validan",
         stack: process.env.NODE_ENV === "production" ? "🥞" : err.stack,
       });
+      return;
     }
 
     if (err.name === "NotBeforeError") {
-      return res.status(401).json({
+      res.status(401).json({
         message: "Token jos uvijek nije aktivan",
         stack: process.env.NODE_ENV === "production" ? "🥞" : err.stack,
       });
+      return;
     }
   }
 

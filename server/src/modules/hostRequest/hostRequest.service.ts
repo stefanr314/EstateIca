@@ -11,17 +11,43 @@ import { sendEmail } from "../../shared/utils/sendMail";
 import { GetAllHostRequestsDto } from "./dtos/getAllHostRequests.dto";
 
 export class HostRequestService {
-  async getHostRequestById(
-    dto: HostRequestIdParamsDto
-  ): Promise<HydratedDocument<IHostRequest>> {
-    const hostRequest = await HostRequest.findById(dto.requestId);
+  async getHostRequestById(dto: HostRequestIdParamsDto) {
+    const hostRequest = await HostRequest.findById(dto.requestId)
+      .populate<{
+        user: UserDocument;
+      }>(
+        "user",
+        "firstName lastName email phoneNumber isVerified isActive profilePictureUrl"
+      )
+      .lean();
+
     if (!hostRequest) {
       throw new NotFoundError("Host request not found.");
     }
+
+    const { profilePictureUrl, ...restUser } = hostRequest.user;
+    return {
+      ...hostRequest,
+      user: {
+        ...restUser,
+        profilePicture: profilePictureUrl,
+      },
+    };
+  }
+
+  async getMyHostRequest(userId: string) {
+    const hostRequest = await HostRequest.findOne({
+      user: userId,
+    }).lean();
+
+    if (!hostRequest) {
+      throw new NotFoundError("Zahtjev nije pronadjen.");
+    }
+
     return hostRequest;
   }
 
-  async getAllHostRequests(dto: GetAllHostRequestsDto): Promise<any[]> {
+  async getAllHostRequests(dto: GetAllHostRequestsDto) {
     const { page, limit, status, archived, requestedType, search, sortBy } =
       dto;
     const skip = (page - 1) * limit;
@@ -41,6 +67,15 @@ export class HostRequestService {
           localField: "user",
           foreignField: "_id",
           as: "user",
+          pipeline: [
+            {
+              $project: {
+                id: "$_id",
+                email: 1,
+                _id: 0,
+              },
+            },
+          ],
         },
       },
       { $unwind: "$user" },
@@ -50,11 +85,7 @@ export class HostRequestService {
     if (search) {
       pipeline.push({
         $match: {
-          $or: [
-            { "user.firstName": { $regex: search, $options: "i" } },
-            { "user.lastName": { $regex: search, $options: "i" } },
-            { "user.email": { $regex: search, $options: "i" } },
-          ],
+          $or: [{ "user.email": { $regex: search, $options: "i" } }],
         },
       });
     }
@@ -71,13 +102,23 @@ export class HostRequestService {
 
       pipeline.push({ $sort: sortObject });
     }
-
-    // PAGINATION
-    pipeline.push({ $skip: skip });
-    pipeline.push({ $limit: limit });
+    // === FACET za count + data ===
+    pipeline.push({
+      $facet: {
+        data: [{ $skip: skip }, { $limit: limit }],
+        totalCount: [{ $count: "count" }],
+      },
+    });
 
     const result = await HostRequest.aggregate(pipeline);
-    return result;
+
+    // transformacija izlaza
+    return {
+      data: result[0].data,
+      totalCount: result[0].totalCount[0]?.count || 0,
+      page,
+      limit,
+    };
   }
 
   async createHostRequest(
@@ -116,14 +157,16 @@ export class HostRequestService {
     }>("user");
 
     if (!hostRequest) {
-      throw new NotFoundError("Host request not found.");
+      throw new NotFoundError("Zahtjev nije pronadjen.");
     }
 
     if (
       hostRequest.status === HostRequestStatus.APPROVED ||
       hostRequest.status === HostRequestStatus.REJECTED
     ) {
-      throw new ConflictError("Host request has already been reviewed.");
+      throw new ConflictError(
+        "Zahtjev za postojanjem domacina je vec pregledan."
+      );
     }
 
     hostRequest.status = updateData.status;

@@ -7,6 +7,7 @@ import {
   deleteHostRequest,
   getAllHostRequests,
   getHostRequestById,
+  getMyHostRequest,
   updateHostRequestStatus,
 } from "./hostRequest.controller";
 import { validate } from "../../shared/middlewares/validator";
@@ -28,7 +29,14 @@ router.get(
   getAllHostRequests
 );
 
-router.post("/", validate(createHostRequestDto), createHostRequest);
+router.get("/me", hasRole([Role.GUEST]), getMyHostRequest);
+
+router.post(
+  "/",
+  validate(createHostRequestDto),
+  hasRole([Role.GUEST]),
+  createHostRequest
+);
 
 router.put(
   "/:requestId/status",

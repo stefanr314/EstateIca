@@ -7,6 +7,7 @@ import {
 
 type BlockedDate = {
   type: "RESERVATION" | "LOCK";
+  status?: "pending" | "confirmed";
   startDate: Date;
   endDate: Date;
 };
@@ -16,24 +17,24 @@ type Mode = "day" | "month";
 export function getBlockedMonthType(
   month: Date,
   blocked: BlockedDate[]
-): "LOCK" | "RESERVATION" | null {
+): { type: "RESERVATION" | "LOCK"; status?: "pending" | "confirmed" } | null {
   const found = blocked.find((range) =>
     isWithinInterval(month, {
       start: startOfMonth(range.startDate),
       end: endOfMonth(range.endDate),
     })
   );
-  return found ? found.type : null;
+  return found ? { type: found.type, status: found?.status } : null;
 }
 
 export function getBlockedDayType(
   day: Date,
   blockedDates: BlockedDate[]
-): "RESERVATION" | "LOCK" | null {
+): { type: "RESERVATION" | "LOCK"; status?: "pending" | "confirmed" } | null {
   const found = blockedDates.find((range) =>
     isWithinInterval(day, { start: range.startDate, end: range.endDate })
   );
-  return found ? found.type : null;
+  return found ? { type: found.type, status: found?.status } : null;
 }
 
 export function isMonthRangeValid(

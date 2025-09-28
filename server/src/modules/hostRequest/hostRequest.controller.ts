@@ -40,7 +40,7 @@ export const getAllHostRequests = async (
     const hostRequests = await hostRequestService.getAllHostRequests(dto);
     res.status(200).json({
       message: "Host requests retrieved successfully.",
-      hostRequests,
+      ...hostRequests,
     });
   } catch (error) {
     next(error);
@@ -60,10 +60,32 @@ export const getHostRequestById = async (
       req.user.role !== "admin" &&
       req.user.id !== hostRequest.user.toString()
     ) {
-      throw new ForbiddenError("User not authorized to view this request.");
+      throw new ForbiddenError(
+        "Korisnik nema pravo da pristupi ovom sadrzaju."
+      );
     }
     res.status(200).json({
       message: "Host request retrieved successfully.",
+      hostRequest,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getMyHostRequest = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    if (!req.user) {
+      throw new UnauthorizedError("Korisnik nije prijaveljen.");
+    }
+    const userId = req.user.id;
+    const hostRequest = await hostRequestService.getMyHostRequest(userId);
+    res.status(200).json({
+      message: "My host request retrieved successfully.",
       hostRequest,
     });
   } catch (error) {
@@ -82,13 +104,6 @@ export const updateHostRequestStatus = async (
     }
     const dto = req.params as HostRequestIdParamsDto;
     const updateData = req.body as UpdateHostRequestStatusDto;
-
-    // Ensure the user is authorized to update the request
-    if (req.user.role !== "admin") {
-      throw new UnauthorizedError(
-        "User not authorized to update this request."
-      );
-    }
 
     const updatedHostRequest = await hostRequestService.updateHostRequestStatus(
       dto,

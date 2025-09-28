@@ -142,7 +142,7 @@ const ReservationModal: React.FC<Props> = ({ open, onClose, reservation }) => {
         sx={{ px: 2 }}
       >
         <Tab label="Pregled" />
-        <Tab label="Historija" />
+        <Tab label="Istorija" />
       </Tabs>
 
       <Divider />

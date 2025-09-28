@@ -27,6 +27,7 @@ import { useAppDispatch } from "@/app/store/hooks";
 import { loginUser } from "./authSlice";
 import { NavLink, useNavigate } from "react-router";
 import { pushNotification } from "../notifications/notificationSlice";
+import { CircularProgress } from "@mui/material";
 
 export const loginUserDto = z.object({
   email: z.email().min(1, "Email je obavezan"),
@@ -211,6 +212,7 @@ export default function SignIn() {
             fullWidth
             variant="contained"
             disabled={isSubmitting}
+            startIcon={isSubmitting ? <CircularProgress size={20} /> : null}
           >
             {isSubmitting ? "Prijavljivanje..." : "Prijavi se"}
           </Button>
