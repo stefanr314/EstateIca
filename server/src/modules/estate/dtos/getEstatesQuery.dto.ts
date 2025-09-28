@@ -85,7 +85,10 @@ export const getBusinessEstatesQueryDto = z
       .enum(["retail", "office", "warehouse", "hospitality", "other"])
       .optional(),
     cancellationPolicy: z.enum(CancellationPolicy).optional(),
-    amenities: z.array(z.enum(Amenities)).optional(),
+    amenities: z
+      .union([z.enum(Amenities), z.array(z.enum(Amenities))])
+      .optional()
+      .transform((val) => (val ? (Array.isArray(val) ? val : [val]) : [])),
     unitsAvailable: z.coerce.number().positive().optional(),
 
     // Sorting: 'price' or '-createdAt'

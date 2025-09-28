@@ -31,7 +31,7 @@ export const handleNewGuest = async (
       httpOnly: true,
       secure: PRODUCTION,
       sameSite: PRODUCTION ? "strict" : "lax",
-      maxAge: Number(process.env.REFRESH_TOKEN_EXPIRATION!),
+      maxAge: Number(process.env.REFRESH_TOKEN_EXPIRATION!) * 1000,
     });
 
     res.status(201).json({
@@ -68,7 +68,7 @@ export const handleLogin = async (
       httpOnly: true,
       secure: PRODUCTION,
       sameSite: PRODUCTION ? "strict" : "lax",
-      maxAge: Number(process.env.REFRESH_TOKEN_EXPIRATION!),
+      maxAge: Number(process.env.REFRESH_TOKEN_EXPIRATION!) * 1000,
     });
 
     res.json({

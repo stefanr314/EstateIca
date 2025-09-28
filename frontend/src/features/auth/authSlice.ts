@@ -3,6 +3,7 @@ import agent from "@/app/api/agent";
 import { RootState } from "@/app/store/store";
 import { BasicUserData, AuthState } from "./types";
 import { RegisterUserDto } from "./types";
+import { queryClient as localQueryClient } from "@/main";
 
 const initialState: AuthState = {
   user: null,
@@ -96,6 +97,7 @@ export const logoutUser = createAsyncThunk(
     } finally {
       localStorage.removeItem("token");
       thunkAPI.dispatch(logout()); // ručno očisti state
+      localQueryClient.removeQueries({ queryKey: ["me"] });
     }
   }
 );
@@ -118,8 +120,12 @@ export const verifyUser = createAsyncThunk<
   { rejectValue: string }
 >("auth/verifyUser", async ({ token }, thunkAPI) => {
   try {
-    const res = await agent.Auth.onVerifyAccount(token);
-    return res.user as BasicUserData;
+    await agent.Auth.onVerifyAccount(token);
+
+    // ✅ odmah povuci friškog usera nakon verifikacije, jer u suprotnom ostace stari token u kojem korisnik nije verifikovan
+    const me = await agent.Users.getMe();
+
+    return me.user as BasicUserData;
   } catch (error: any) {
     return (
       thunkAPI.rejectWithValue(error.response?.data.message) ||
@@ -181,21 +187,22 @@ const authSlice = createSlice({
   extraReducers: (builder) => {
     builder
       // LOGIN
-      .addCase(loginUser.pending, (state) => {
-        state.status = "loading";
-      })
+      // .addCase(loginUser.pending, (state) => {
+      //   state.status = "loading";
+      // })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.user = action.payload;
         state.isAuthenticated = true;
         state.status = "succeeded";
       })
-      .addCase(loginUser.rejected, (state) => {
-        state.status = "failed";
-      })
+      // .addCase(loginUser.rejected, (state) => {
+      //   state.status = "failed";
+      // })
       // REGISTER
       .addCase(registerUser.fulfilled, (state, action) => {
         state.user = action.payload;
         state.isAuthenticated = true;
+        state.status = "succeeded";
       })
       // FETCH CURRENT USER
       .addCase(fetchCurrentUser.pending, (state) => {

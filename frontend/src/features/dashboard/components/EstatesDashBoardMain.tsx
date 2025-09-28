@@ -1,3 +1,9 @@
+import { useState } from "react";
+
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { usePersonalEstates } from "@/features/estates/hooks/useEstate";
+import { AllPersonalEstatesData } from "@/features/estates/types";
+
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardActions from "@mui/material/CardActions";
@@ -7,123 +13,172 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import Grid from "@mui/material/Grid";
 import Stack from "@mui/material/Stack";
+import Pagination from "@mui/material/Pagination";
+import AppLoader from "@/shared/components/AppLoader";
 
-import { useNavigate } from "react-router-dom";
+import AddHomeIcon from "@mui/icons-material/AddHome";
 
-type Estate = {
-  id: string;
-  title: string;
-  description: string;
-  image: string;
-  location: string;
-  beds: number;
-  rooms: number;
-  isVisible: boolean;
-};
-
-const mockEstates: Estate[] = [
-  {
-    id: "1",
-    title: "Modern Apartment in City Center",
-    description: "Bright apartment with 2 bedrooms, near the main square.",
-    image: "https://source.unsplash.com/400x250/?apartment",
-    location: "Belgrade, Serbia",
-    beds: 2,
-    rooms: 3,
-    isVisible: true,
-  },
-  {
-    id: "2",
-    title: "Cozy Cottage in the Mountains",
-    description: "Peaceful getaway with fireplace and beautiful views.",
-    image: "https://source.unsplash.com/400x250/?cabin",
-    location: "Zlatibor, Serbia",
-    beds: 3,
-    rooms: 4,
-    isVisible: false,
-  },
-];
+const limit = 9;
 
 export default function YourEstatesDashboard() {
   const navigate = useNavigate();
+  const [page, setPage] = useState(1);
+  const [searchParams] = useSearchParams();
+  const { data: response, isLoading } = usePersonalEstates(
+    page,
+    limit,
+    searchParams
+  );
+
+  const personalEstates: AllPersonalEstatesData[] = response?.data || [];
+  const totalCount = response?.totalCount || 0;
+  const totalPages = Math.ceil(totalCount / limit);
 
   const handleHideToggle = (id: string) => {
-    // TODO: Call API to hide/show estate
+    // TODO: API poziv da sakrije/prikaže
     console.log("Toggle visibility for estate:", id);
   };
 
   const handleDelete = (id: string) => {
-    // TODO: Call API to delete estate
+    // TODO: API poziv da obriše
     console.log("Delete estate:", id);
   };
 
+  if (isLoading) return <AppLoader loading={isLoading} />;
+
   return (
     <Box sx={{ px: 3, pb: 6, pt: 3 }}>
-      <Typography variant="h2" gutterBottom>
-        Your Estates Mr. Rile
-      </Typography>
+      <Stack
+        direction="row"
+        justifyContent="end"
+        alignItems="center"
+        sx={{ mb: 3 }}
+      >
+        {/* <Typography variant="h5" sx={{ fontWeight: 600 }}>
+          Vaše nekretnine
+        </Typography> */}
 
-      <Grid container spacing={3}>
-        {mockEstates.map((estate) => (
-          <Grid sx={{ xs: "12", sm: "6", md: "4" }} key={estate.id}>
+        <Button
+          variant="contained"
+          onClick={() => navigate("/dashboard/your-estates/create")}
+          endIcon={<AddHomeIcon />}
+        >
+          + Dodaj nekretninu
+        </Button>
+      </Stack>
+
+      <Grid container spacing={2}>
+        {personalEstates.map((estate) => (
+          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={estate._id}>
             <Card
               sx={{
+                height: "100%", // sve kartice iste visine
+                display: "flex",
+                flexDirection: "column",
                 cursor: "pointer",
                 transition: "transform 0.2s",
-                "&:hover": {
-                  transform: "scale(1.01)",
-                },
+                "&:hover": { transform: "scale(1.01)" },
               }}
-              onClick={() => navigate(`/dashboard/your-estates/${estate.id}`)}
+              onClick={() => navigate(`/dashboard/your-estates/${estate._id}`)}
             >
-              <CardMedia
-                component="img"
-                height="200"
-                image={estate.image}
-                alt={estate.title}
-              />
-              <CardContent>
-                <Typography variant="h6">{estate.title}</Typography>
+              <Box sx={{ position: "relative" }}>
+                <CardMedia
+                  component="img"
+                  height="200"
+                  image={
+                    estate.images?.[0]?.url ||
+                    "https://via.placeholder.com/400x250?text=No+Image"
+                  }
+                  alt={estate.title}
+                  sx={{
+                    filter: estate.hidden
+                      ? "grayscale(100%) brightness(60%)"
+                      : "none",
+                  }}
+                />
+                {estate.hidden && (
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      top: 8,
+                      left: 8,
+                      bgcolor: "rgba(0,0,0,0.6)",
+                      color: "white",
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: 1,
+                      fontSize: "0.75rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Sakriveno
+                  </Box>
+                )}
+              </Box>
+
+              {/* 📌 content se širi, actions pada na dno */}
+              <CardContent sx={{ flexGrow: 1 }}>
+                <Typography variant="h6" noWrap>
+                  {estate.title}
+                </Typography>
                 <Typography
                   variant="body2"
                   color="text.secondary"
-                  sx={{ mt: 0.5 }}
+                  sx={{
+                    mt: 0.5,
+                    display: "-webkit-box",
+                    WebkitLineClamp: 3, // max 3 linije
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
                 >
                   {estate.description}
                 </Typography>
-                <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
-                  <Typography variant="body2">🏙 {estate.location}</Typography>
-                  <Typography variant="body2">🛏 {estate.beds} beds</Typography>
+                <Stack
+                  direction="row"
+                  spacing={2}
+                  sx={{ mt: 1, flexWrap: "wrap" }}
+                >
                   <Typography variant="body2">
-                    🚪 {estate.rooms} rooms
+                    📍 {estate.address.city}, {estate.address.country}
+                  </Typography>
+                  <Typography variant="body2">🏷 {estate.rentalType}</Typography>
+                  <Typography variant="body2">
+                    🏠{" "}
+                    {estate.estateType === "ResidentialEstate"
+                      ? "Stambena"
+                      : "Poslovna"}
                   </Typography>
                 </Stack>
               </CardContent>
+
               <CardActions>
                 <Button
                   size="small"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleHideToggle(estate.id);
+                    navigate(`/dashboard/your-estates/${estate._id}`);
                   }}
                 >
-                  {estate.isVisible ? "Sakrij" : "Prikaži"}
-                </Button>
-                <Button
-                  size="small"
-                  color="error"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(estate.id);
-                  }}
-                >
-                  Obriši
+                  Uredi
                 </Button>
               </CardActions>
             </Card>
           </Grid>
         ))}
       </Grid>
+
+      {totalPages > 1 && (
+        <Stack alignItems="center" sx={{ mt: 4 }}>
+          <Pagination
+            count={totalPages}
+            page={page}
+            onChange={(_, value) => setPage(value)}
+            color="primary"
+          />
+        </Stack>
+      )}
     </Box>
   );
 }

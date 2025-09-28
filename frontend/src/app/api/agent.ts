@@ -28,6 +28,14 @@ axios.interceptors.response.use(
   async (error) => {
     console.log(error);
     const originalRequest = error.config;
+
+    // ako je sam refresh pao → logout
+    if (originalRequest.url?.includes("/auth/refresh")) {
+      localStorage.removeItem("token");
+      window.location.href = "/sign-in";
+      return Promise.reject(error);
+    }
+
     const token = localStorage.getItem("token"); //necemo raditi provjeru kada korisnik ni nema token
     // Ako je 401 i nismo već pokušali refresh
     if (error.response?.status === 401 && !originalRequest._retry && token) {
@@ -75,7 +83,13 @@ const requests = {
     const formData = new FormData();
 
     Object.entries(body).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) formData.append(key, value);
+      if (value !== undefined && value !== null) {
+        if (typeof value === "object") {
+          formData.append(key, JSON.stringify(value));
+        } else {
+          formData.append(key, value as any);
+        }
+      }
     });
 
     files?.forEach((file) => formData.append(fileKey, file));
@@ -86,6 +100,11 @@ const requests = {
     const formData = new FormData();
     formData.append(fileKey, file);
     return axios.patch(url, formData).then(responseBody);
+  },
+  formFiles: (url: string, files: File[], fileKey = "images"): Promise<any> => {
+    const formData = new FormData();
+    files.forEach((file) => formData.append(fileKey, file));
+    return axios.post(url, formData).then(responseBody);
   },
 };
 
@@ -124,6 +143,7 @@ const HostRequest = {
   createHostRequest: (body: any) => requests.post("/host-request/", body),
   getAllHostRequests: (params?: URLSearchParams) =>
     requests.get("/host-request/all-requests", params),
+  getMeHostRequests: () => requests.get("/host-request/me"),
   getHostRequestById: (requestId: string) =>
     requests.get(`/host-request/${requestId}`),
   updateHostRequestStatus: (requestId: string, body: any) =>
@@ -154,13 +174,13 @@ const Estates = {
 
   //PATCH
   updateEstate: (estateId: string, body: any) =>
-    requests.patch(`/estates/${estateId}`, body),
+    requests.patch(`/estates/update/${estateId}`, body),
 
   updateResidentialAmenities: (estateId: string, body: any) =>
-    requests.patch(`/estates/${estateId}/update-amenities`, body),
+    requests.patch(`/estates/update-amenities/${estateId}`, body),
 
   updateBusinessAmenities: (estateId: string, body: any) =>
-    requests.patch(`/estates/${estateId}/update-business-amenities`, body),
+    requests.patch(`/estates/update-business-amenities/${estateId}`, body),
 
   toggleEstateVisibility: (estateId: string) =>
     requests.patch(`/estates/visibility/${estateId}`),
@@ -173,15 +193,19 @@ const Estates = {
 };
 
 const EstatesImages = {
-  addImages: (estateId: string, body: Record<string, any>, files?: File[]) =>
-    requests.formPost(`/estates/${estateId}/images`, body, files),
+  addImages: (estateId: string, files: File[], fileKey?: string) =>
+    requests.formFiles(`/estates/images/${estateId}`, files, fileKey),
   deleteImage: (estateId: string, fileId: string) =>
-    requests.hardDelete(`/estates/${estateId}/images/${fileId}`),
+    requests.hardDelete(`/estates/image-delete/${estateId}/${fileId}`),
 };
 
 const Location = {
   search: (input: string) =>
     requests.get("/location/search", new URLSearchParams({ input })),
+  getDetails: (placeId: string) =>
+    requests.get("/location/details", new URLSearchParams({ placeId })),
+  searchAddresses: (input: string) =>
+    requests.get("/location/search-addresses", new URLSearchParams({ input })),
 };
 
 const Reservation = {

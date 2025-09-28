@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 import {
   BadRequestError,
   ForbiddenError,
@@ -78,9 +78,16 @@ export class EstateService {
   }
 
   async getAllResidentialEstates(dto: GetResidentialEstatesQueryDto) {
+    const sortedDto = Object.keys(dto)
+      .sort()
+      .reduce((obj, key) => {
+        obj[key] = (dto as any)[key];
+        return obj;
+      }, {} as Record<string, any>);
+
     const key = `residential:${crypto
       .createHash("md5")
-      .update(JSON.stringify(dto))
+      .update(JSON.stringify(sortedDto))
       .digest("hex")}`;
 
     // 2. Provjera da li postoji keš
@@ -277,9 +284,16 @@ export class EstateService {
   async getAllBusinessEstates(
     dto: GetBusinessEstatesQueryDto
   ): Promise<{ data: (typeof BusinessEstate)[]; totalCount: number }> {
+    const sortedDto = Object.keys(dto)
+      .sort()
+      .reduce((obj, key) => {
+        obj[key] = (dto as any)[key];
+        return obj;
+      }, {} as Record<string, any>);
+
     const key = `business:${crypto
       .createHash("md5")
-      .update(JSON.stringify(dto))
+      .update(JSON.stringify(sortedDto))
       .digest("hex")}`;
 
     // 2. Provjera da li postoji keš
@@ -450,6 +464,24 @@ export class EstateService {
   }
 
   async getAllHostEstates(hostId: string, filterDto: PersonalEstateFilterDto) {
+    const sortedDto = Object.keys(filterDto)
+      .sort()
+      .reduce((obj, key) => {
+        obj[key] = (filterDto as any)[key];
+        return obj;
+      }, {} as Record<string, any>);
+
+    const key = `personal:${hostId}:${crypto
+      .createHash("md5")
+      .update(JSON.stringify(sortedDto))
+      .digest("hex")}`;
+
+    // 2. Provjera da li postoji keš
+    const cached = await redisClient.get(key);
+    if (cached) {
+      logging.log("Data retrieved from Redis cache");
+      return JSON.parse(cached);
+    }
     const { page, limit, showHidden, rentalType, estateType, sortBy } =
       filterDto;
     const skip = (page - 1) * limit;
@@ -460,7 +492,8 @@ export class EstateService {
     if (showHidden !== undefined) match.hidden = showHidden;
     if (estateType !== undefined) match.estateType = estateType;
     if (rentalType !== undefined) match.rentalType = rentalType;
-    match.host = hostId;
+
+    match.host = new mongoose.Types.ObjectId(hostId); //type conversion
 
     pipeline.push({ $match: match });
 
@@ -478,13 +511,34 @@ export class EstateService {
 
     pipeline.push({
       $facet: {
-        data: [{ $skip: skip }, { $limit: limit }],
+        data: [
+          { $skip: skip },
+          { $limit: limit },
+          {
+            $project: {
+              title: 1,
+              description: 1,
+              hidden: 1,
+              images: 1,
+              rentalType: 1,
+              securityDeposit: 1,
+              host: 1,
+              address: 1,
+              estateType: 1,
+              createdAt: 1,
+              updatedAt: 1,
+            },
+          },
+        ],
         totalCount: [{ $count: "count" }],
       },
     });
     const estates = await BaseEstate.aggregate(pipeline);
     const data = estates[0]?.data || [];
     const totalCount = estates[0]?.totalCount?.[0]?.count || 0;
+
+    // keširanje
+    await redisClient.set(key, JSON.stringify({ data, totalCount }), "EX", 300);
 
     return { data, totalCount };
   }
@@ -538,7 +592,8 @@ export class EstateService {
     };
     const res = await ResidentialEstate.create(residentialEstateObject);
 
-    publishMessage("estate-updated", { type: "residential" });
+    publishMessage("estate-updated", { scope: "global", type: "residential" });
+    publishMessage("estate-updated", { scope: "personal", hostId });
     return res;
   }
 
@@ -569,7 +624,9 @@ export class EstateService {
     };
 
     const res = await BusinessEstate.create(businessEstateObject);
-    publishMessage("estate-updated", { type: "business" });
+    publishMessage("estate-updated", { scope: "global", type: "business" });
+    publishMessage("estate-updated", { scope: "personal", hostId });
+
     return res;
   }
 
@@ -582,32 +639,28 @@ export class EstateService {
 
     const estate = await BaseEstate.findById(estateId);
 
-    if (!estate) throw new NotFoundError("Estate not found");
+    if (!estate) throw new NotFoundError("Estate nije pronađen");
     if (estate.host.toString() !== hostId)
-      throw new ForbiddenError(
-        "Forbidden to perform this action, you are not the owner of estate"
-      );
+      throw new ForbiddenError("Nemate pravo da pristupite ovom resursu");
 
-    const updateData =
+    const schema =
       estate.estateType === "ResidentialEstate"
-        ? (estateData as UpdateResidentialEstateDto)
-        : (estateData as UpdateBusinessEstateDto);
+        ? updateResidentialEstateDto
+        : updateBusinessEstateDto;
 
-    // Validation done here due to check() property on dtos which has to be merged with existing data in document
-    const merged = { ...estate.toObject(), ...updateData };
-    const result =
-      estate.estateType === "ResidentialEstate"
-        ? updateResidentialEstateDto.safeParse(merged)
-        : updateBusinessEstateDto.safeParse(merged);
+    const result = schema.safeParse(estateData);
 
-    if (!result.success) throw new BadRequestError("Validation failed");
+    if (!result.success) throw new BadRequestError("Validacija nije prošla");
 
-    Object.assign(estate, updateData);
+    Object.assign(estate, result.data); //kopira samo validirana polja iz dto u objekat
     await estate.save();
+
     publishMessage("estate-updated", {
+      scope: "global",
       type:
         estate.estateType === "ResidentialEstate" ? "residential" : "business",
     });
+    publishMessage("estate-updated", { scope: "personal", hostId });
 
     return estate; // Return the updated estate object
   }
@@ -648,14 +701,24 @@ export class EstateService {
     }
     if (estate.host._id.toString() !== hostId)
       throw new ForbiddenError(
-        "Forbidden to perform this action, you are not the owner of estate"
+        "Ova akcija vam je zabranjena, jer niste vlasnik."
       );
     const { password } = estate.host;
 
     //Kako bi izveo ovu operaciju korisnik je duzan da posalje validnu lozinku
     const match = await bcrypt.compare(userPassword, password);
-    if (!match) throw new UnauthorizedError("Invalid credentials");
+    if (!match) throw new ForbiddenError("Lozinka nije ispravna");
 
+    const activeReservation = await Reservation.findOne({
+      estateReserved: new Types.ObjectId(estateId),
+      status: { $in: ["confirmed", "pending"] }, // definiši koje statuse tretiraš kao "blokirane"
+    });
+
+    if (activeReservation) {
+      throw new ForbiddenError(
+        "Nije dozvoljeno obrisati oglas jer postoje aktivne rezervacije ili rezervacije koje čekaju na odobrenje."
+      );
+    }
     await Reservation.deleteMany({ estateReserved: estateId });
 
     // 3. Obriši recenzije
@@ -670,10 +733,14 @@ export class EstateService {
         estate as BaseEstateDocument
       );
     }
+
     publishMessage("estate-updated", {
+      scope: "global",
       type:
         estate.estateType === "ResidentialEstate" ? "residential" : "business",
     });
+    publishMessage("estate-updated", { scope: "personal", hostId });
+
     await BaseEstate.deleteOne({ _id: estateId });
   }
 
@@ -692,10 +759,14 @@ export class EstateService {
 
     estate.hidden = !estate.hidden; // Toggle hidden status
     await estate.save();
+
     publishMessage("estate-updated", {
+      scope: "global",
       type:
         estate.estateType === "ResidentialEstate" ? "residential" : "business",
     });
+    publishMessage("estate-updated", { scope: "personal", hostId });
+
     return estate; // Return the updated estate object
   }
 

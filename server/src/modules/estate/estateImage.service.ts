@@ -19,6 +19,10 @@ export class EstateImageService {
     if (estate.host.toString() !== hostId)
       throw new ForbiddenError("Nemate pravo pristupa ovoj akciji");
 
+    if ((estate.images?.length ?? 0) + files.length > 30) {
+      throw new BadRequestError("Maksimalno 30 slika po prostoru.");
+    }
+
     const uploadedImages = [];
     const imagesToBase: { url: string; fileId: string }[] = [];
     for (const file of files) {
@@ -37,7 +41,8 @@ export class EstateImageService {
       uploadedImages.push(result);
     }
 
-    estate.images = imagesToBase;
+    estate.images = [...(estate.images ?? []), ...imagesToBase];
+
     await estate.save();
     return uploadedImages;
   }

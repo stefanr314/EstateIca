@@ -1,53 +1,21 @@
-import * as React from "react";
-import { styled } from "@mui/material/styles";
-import Chip from "@mui/material/Chip";
-import Box from "@mui/material/Box";
+import { amenitiesMap } from "@/shared/constants/amenitiesMap";
+import { Amenities } from "@/features/estates/types";
+import { Box, Chip } from "@mui/material";
 
-// import {
-//   AcUnit,
-//   Elevator,
-//   Kitchen,
-//   LocalParking,
-//   Wifi,
-// } from "@mui/icons-material";
-import { amenitiesMap, AmenityKey } from "@/shared/constants/amenitiesMap";
-
-// interface ChipData {
-//   key: number;
-//   label: string;
-//   icon: React.ReactElement;
-// }
-
-const ListItem = styled("li")(({ theme }) => ({
-  margin: theme.spacing(0.5),
-}));
+type Props = {
+  selectedAmenities: Amenities[];
+  setSelectedAmenities: React.Dispatch<React.SetStateAction<Amenities[]>>;
+};
 
 export default function AmenitiesChipArray({
   selectedAmenities,
   setSelectedAmenities,
-}: {
-  selectedAmenities: AmenityKey[];
-  setSelectedAmenities: React.Dispatch<React.SetStateAction<AmenityKey[]>>;
-}) {
-  // const [chipData, setChipData] = React.useState<readonly ChipData[]>([
-  //   { key: 0, label: "WiFi", icon: <Wifi /> },
-  //   { key: 1, label: "Parking", icon: <LocalParking /> },
-  //   { key: 2, label: "Air Conditioning", icon: <AcUnit /> },
-  //   { key: 3, label: "Kitchen", icon: <Kitchen /> },
-  //   { key: 4, label: "Elevator", icon: <Elevator /> },
-  // ]);
-
-  const toggleAmenity = (key: AmenityKey) => {
+}: Props) {
+  const toggleAmenity = (key: Amenities) => {
     setSelectedAmenities((prev) =>
       prev.includes(key) ? prev.filter((item) => item !== key) : [...prev, key]
     );
   };
-
-  //   const handleDelete = (chipToDelete: ChipData) => () => {
-  //     setChipData((chips) =>
-  //       chips.filter((chip) => chip.key !== chipToDelete.key)
-  //     );
-  //   };
 
   return (
     <Box
@@ -61,27 +29,28 @@ export default function AmenitiesChipArray({
       component="ul"
     >
       {Object.entries(amenitiesMap).map(([key, { label, icon }]) => {
-        const selected = selectedAmenities.includes(key as AmenityKey);
+        const enumKey = key as Amenities;
+        const selected = selectedAmenities.includes(enumKey);
         const Icon = icon;
         return (
-          <ListItem key={key}>
+          <li key={key} style={{ margin: 4 }}>
             <Chip
               icon={<Icon />}
               label={label}
               variant={selected ? "filled" : "outlined"}
               color={selected ? "primary" : "default"}
-              onClick={() => toggleAmenity(key as AmenityKey)}
+              onClick={() => toggleAmenity(enumKey)}
               sx={{
                 fontSize: "1rem",
                 height: 40,
-                paddingX: 1.5,
+                px: 1.5,
                 ".MuiChip-icon": {
                   fontSize: "1.5rem",
                   color: selected ? "white" : "mint.dark",
                 },
               }}
             />
-          </ListItem>
+          </li>
         );
       })}
     </Box>

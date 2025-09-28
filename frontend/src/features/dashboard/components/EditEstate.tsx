@@ -1,250 +1,221 @@
-import React from "react";
-import Box from "@mui/material/Box";
-import Grid from "@mui/material/Grid";
-import TextField from "@mui/material/TextField";
-import Button from "@mui/material/Button";
-import Typography from "@mui/material/Typography";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-import Select, { SelectChangeEvent } from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
-import Tabs from "@mui/material/Tabs";
-import Tab from "@mui/material/Tab";
-import Checkbox from "@mui/material/Checkbox";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Chip from "@mui/material/Chip";
-import Stack from "@mui/material/Stack";
-import IconButton from "@mui/material/IconButton";
-import PhotoCamera from "@mui/icons-material/PhotoCamera";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router";
+import {
+  Box,
+  Tabs,
+  Tab,
+  Typography,
+  Card,
+  CardContent,
+  Button,
+  Stack,
+} from "@mui/material";
+import { useForm } from "react-hook-form";
+import {
+  useEstate,
+  useEstateUnavailableDates,
+  useUpdateEstate,
+} from "@/features/estates/hooks/useEstate";
+
+import EditResidentialEstateInfo, {
+  ResidentialFormValues,
+} from "./EditResidentialEstateInfo";
+import EditBusinessEstateInfo, {
+  BusinessFormValues,
+} from "./EditBusinessEstateInfo";
+import { IResidentialEstate, IBusinessEstate } from "@/features/estates/types";
+import AppLoader from "@/shared/components/AppLoader";
+import EstateImagesGrid from "./EstateImagesGrid";
+import EstateSettingsTab from "./EstatesSettingsTab";
+import { ArrowBack } from "@mui/icons-material";
 
 export default function EditEstatePage() {
-  const [formData, setFormData] = React.useState<{
-    title: string;
-    description: string;
-    type: string;
-    pricePerNight: string;
-    location: string;
-    petFriendly: boolean;
-    amenities: string[]; // <-- fix
-    images: string[]; // <-- fix
-  }>({
-    title: "",
-    description: "",
-    type: "",
-    pricePerNight: "",
-    location: "",
-    petFriendly: false,
-    amenities: [],
-    images: [],
+  const navigate = useNavigate();
+  const { estateId } = useParams();
+
+  const { data: estate, isPending } = useEstate(estateId!, {
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
-  const [tab, setTab] = React.useState(0);
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSelectChange = (e: SelectChangeEvent) => {
-    setFormData((prev) => ({ ...prev, type: e.target.value as string }));
-  };
-
-  const handleSubmit = () => {
-    console.log("Estate updated:", formData);
-    // TODO: Send to backend
-  };
-
-  const handleAmenityToggle = (amenity: string) => {
-    setFormData((prev) => {
-      const exists = prev.amenities.includes(amenity);
-      return {
-        ...prev,
-        amenities: exists
-          ? prev.amenities.filter((a) => a !== amenity)
-          : [...prev.amenities, amenity],
-      };
+  const { data: blockedDates, isPending: isBlockedDatesPending } =
+    useEstateUnavailableDates(estateId!, {
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
     });
-  };
+  const { mutate: updateEstate, isPending: isUpdatingEstate } = useUpdateEstate(
+    estateId!
+  );
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const files = Array.from(e.target.files);
-      setFormData((prev) => ({
-        ...prev,
-        images: [
-          ...prev.images,
-          ...files.map((file) => URL.createObjectURL(file)),
-        ],
-      }));
+  const [tab, setTab] = useState(0);
+
+  // RHF za oba tipa – drži odvojeno za jasnoću (može se i unificirati)
+  const residentialForm = useForm<ResidentialFormValues>();
+  const businessForm = useForm<BusinessFormValues>();
+
+  // kad stigne estate → reset default values
+  useEffect(() => {
+    if (!estate) return;
+    if (estate.estateType === "ResidentialEstate") {
+      const e = estate as IResidentialEstate;
+      residentialForm.reset({
+        title: e.title,
+        description: e.description,
+        neighborhoodOverview: e.neighborhoodOverview ?? undefined,
+        notes: e.notes ?? undefined,
+        houseRules: e.houseRules ?? undefined,
+        transit: e.transit ?? undefined,
+        access: e.access ?? undefined,
+        cancellationPolicy: e.cancellationPolicy ?? undefined,
+        securityDeposit: e.securityDeposit ?? undefined,
+        bedrooms: e.bedrooms ?? undefined,
+        bathrooms: e.bathrooms ?? undefined,
+        beds: e.beds,
+        minimumStay: e.minimumStay,
+        maximumStay: e.maximumStay ?? undefined,
+        pricePerNight:
+          e.rentalType === "Short Term"
+            ? e.pricePerNight ?? undefined
+            : undefined,
+        pricePerMonth:
+          e.rentalType === "Long Term"
+            ? e.pricePerMonth ?? undefined
+            : undefined,
+        area: e.area ?? undefined,
+        residentialType: e.residentialType as any,
+        roomType: e.roomType as any,
+        guestIncluded: e.guestIncluded,
+        extraPeople: e.extraPeople ?? undefined,
+        petAllowance: e.petAllowance ?? false,
+        unitsAvailable: e.unitsAvailable ?? undefined,
+        amenities: e.amenities ?? [],
+      });
+    } else {
+      const e = estate as IBusinessEstate;
+      businessForm.reset({
+        title: e.title,
+        description: e.description,
+        pricePerMonth: e.pricePerMonth,
+        area: e.area,
+        unitsAvailable: e.unitsAvailable ?? undefined,
+        intentedUse: e.intentedUse ?? undefined,
+        floor: e.floor ?? undefined,
+        hasElevator: e.hasElevator ?? undefined,
+        isGroundFloor: e.isGroundFloor ?? undefined,
+        ceilingHeight: e.ceilingHeight ?? undefined,
+        hasParking: e.hasParking ?? undefined,
+        parkingSpaces: e.parkingSpaces ?? undefined,
+        hasRestroom: e.hasRestroom ?? undefined,
+        minimumLeaseMonths: e.minimumLeaseMonths ?? undefined,
+        maximumLeaseMonths: e.maximumLeaseMonths ?? undefined,
+        airConditioning: e.airConditioning ?? undefined,
+        internetReady: e.internetReady ?? undefined,
+
+        amenities: e.amenities ?? [], // Optional field for business amenities
+      });
     }
-  };
+  }, [estate, residentialForm, businessForm]);
 
-  const amenitiesList = ["WiFi", "Parking", "Air Conditioning", "Pool", "Gym"];
+  const handleSave = async () => {
+    if (!estate) return;
+
+    const values =
+      estate.estateType === "ResidentialEstate"
+        ? residentialForm.getValues()
+        : businessForm.getValues();
+
+    console.log(values);
+
+    // // očisti prazne stringove
+    // Object.keys(values).forEach((key) => {
+    //   if ((values as any)[key] === "") {
+    //     (values as any)[key] = undefined;
+    //   }
+    // });
+    // console.log(values);
+    updateEstate(values);
+  };
+  if (!estateId) return <div>Nothing to show, go back please.</div>;
+
+  if (isPending) return <AppLoader loading={isPending} />;
+  if (!estate)
+    return <Typography>Nije pronadjen smjestaj. Vratite se nazad.</Typography>;
 
   return (
-    <Box sx={{ p: 4 }}>
-      <Typography variant="h5" gutterBottom>
-        Edit Estate
-      </Typography>
+    <Box sx={{ p: 2, mx: "auto", mt: 0, width: "100%" }}>
+      <Stack spacing={1} sx={{ mb: 2 }}>
+        <Button
+          startIcon={<ArrowBack />}
+          onClick={() => navigate(-1)}
+          sx={{ alignSelf: "flex-start" }}
+        >
+          Nazad
+        </Button>
+        <Typography variant="h5">Uredi nekretninu</Typography>
+      </Stack>
 
-      <Tabs
-        value={tab}
-        onChange={(e, newValue) => setTab(newValue)}
-        sx={{ mb: 3 }}
-      >
-        <Tab label="Details" />
-        <Tab label="Images" />
-        <Tab label="Settings" />
+      <Tabs value={tab} onChange={(e, v) => setTab(v)} sx={{ mb: 3 }}>
+        <Tab label="Detalji" />
+        <Tab label="Slike" />
+        <Tab label="Podešavanja" />
       </Tabs>
 
       {tab === 0 && (
-        <Grid container spacing={3}>
-          <Grid sx={{ width: { xs: "100%", md: "50%" } }}>
-            <TextField
-              label="Title"
-              name="title"
-              fullWidth
-              value={formData.title}
-              onChange={handleChange}
-            />
-          </Grid>
-
-          <Grid sx={{ width: { xs: "100%", md: "50%" } }}>
-            <FormControl fullWidth>
-              <InputLabel>Type</InputLabel>
-              <Select
-                value={formData.type}
-                onChange={handleSelectChange}
-                label="Type"
-              >
-                <MenuItem value="apartment">Apartment</MenuItem>
-                <MenuItem value="house">House</MenuItem>
-                <MenuItem value="villa">Villa</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-
-          <Grid sx={{ width: "100%" }}>
-            <TextField
-              label="Description"
-              name="description"
-              multiline
-              minRows={4}
-              fullWidth
-              value={formData.description}
-              onChange={handleChange}
-            />
-          </Grid>
-
-          <Grid sx={{ width: { xs: "100%", md: "50%" } }}>
-            <TextField
-              label="Location"
-              name="location"
-              fullWidth
-              value={formData.location}
-              onChange={handleChange}
-            />
-          </Grid>
-
-          <Grid sx={{ width: { xs: "100%", md: "50%" } }}>
-            <TextField
-              label="Price per night (€)"
-              name="pricePerNight"
-              type="number"
-              fullWidth
-              value={formData.pricePerNight}
-              onChange={handleChange}
-            />
-          </Grid>
-        </Grid>
+        <Card>
+          <CardContent sx={{ maxHeight: "80vh", overflowY: "auto" }}>
+            {estate.estateType === "ResidentialEstate" ? (
+              <EditResidentialEstateInfo
+                estate={estate as IResidentialEstate}
+                register={residentialForm.register}
+                control={residentialForm.control}
+                errors={residentialForm.formState.errors}
+              />
+            ) : (
+              <EditBusinessEstateInfo
+                estate={estate as IBusinessEstate}
+                register={businessForm.register}
+                control={businessForm.control}
+                errors={businessForm.formState.errors}
+              />
+            )}
+          </CardContent>
+        </Card>
       )}
 
       {tab === 1 && (
-        <Box>
-          <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
-            <Button
-              variant="outlined"
-              component="label"
-              startIcon={<PhotoCamera />}
-            >
-              Upload Images
-              <input
-                hidden
-                multiple
-                accept="image/*"
-                type="file"
-                onChange={handleImageUpload}
-              />
-            </Button>
-          </Stack>
-
-          <Stack direction="row" spacing={2} flexWrap="wrap">
-            {formData.images.map((img, index) => (
-              <Box
-                key={index}
-                sx={{
-                  width: 100,
-                  height: 100,
-                  borderRadius: 2,
-                  overflow: "hidden",
-                }}
-              >
-                <img
-                  src={img}
-                  alt={`img-${index}`}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-              </Box>
-            ))}
-          </Stack>
-        </Box>
+        <Card>
+          <CardContent>
+            <EstateImagesGrid estateId={estate._id} images={estate.images} />
+          </CardContent>
+        </Card>
       )}
 
       {tab === 2 && (
-        <Box>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={formData.petFriendly}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    petFriendly: e.target.checked,
-                  }))
-                }
-              />
-            }
-            label="Pet Friendly"
-          />
-
-          <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
-            Amenities:
-          </Typography>
-          <Stack direction="row" spacing={1} flexWrap="wrap">
-            {amenitiesList.map((amenity) => (
-              <Chip
-                key={amenity}
-                label={amenity}
-                clickable
-                color={
-                  formData.amenities.includes(amenity) ? "primary" : "default"
-                }
-                onClick={() => handleAmenityToggle(amenity)}
-              />
-            ))}
-          </Stack>
-        </Box>
+        <EstateSettingsTab
+          estateId={estate._id}
+          hidden={estate.hidden}
+          rentalType={estate.rentalType}
+          blockedDates={blockedDates}
+        />
       )}
 
-      <Box sx={{ display: "flex", gap: 2, mt: 4 }}>
-        <Button variant="contained" color="primary" onClick={handleSubmit}>
-          Save Changes
-        </Button>
-        <Button variant="outlined" color="error">
-          Delete Estate
-        </Button>
-      </Box>
+      {tab === 0 && (
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSave}
+            disabled={
+              (estate.estateType === "ResidentialEstate"
+                ? !residentialForm.formState.isDirty &&
+                  !residentialForm.formState.isValid
+                : !businessForm.formState.isDirty &&
+                  !businessForm.formState.isValid) || isUpdatingEstate
+            }
+          >
+            Sačuvaj promjene
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 }

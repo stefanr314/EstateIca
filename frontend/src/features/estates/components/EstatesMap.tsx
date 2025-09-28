@@ -27,8 +27,8 @@ export default function EstateMap({ coordinates }: Props) {
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            bgcolor: "primary.main", // koristi tvoj primary main
-            color: "mint.main", // kontrastna mint boja
+            bgcolor: "primary.main",
+            color: "mint.main",
             borderRadius: 2,
             px: 1.5,
             py: 1,

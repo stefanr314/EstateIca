@@ -49,6 +49,10 @@ function EstateDetails() {
   if (isError) {
     return <QueryErrorHandler error={error} />;
   }
+  if (estate.hidden)
+    return (
+      <AppError message="Oglas nije dostupan, vratite se na listu nekretnina." />
+    );
   return (
     <Grid container spacing={2} width="100%">
       <Grid display={"inline-block"} width={"100%"}>

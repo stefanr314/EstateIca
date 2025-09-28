@@ -24,6 +24,7 @@ export default function ForgotPassword({
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    e.stopPropagation();
     if (email.length === 0)
       return dispatch(
         pushNotification({ type: "warning", message: "Unesite email adresu." })

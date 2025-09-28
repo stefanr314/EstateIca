@@ -12,8 +12,8 @@ const upload = multer(); // memory storage
 const router = Router();
 
 router.post(
-  "/:estateId/images",
-  upload.array("images"),
+  "/images/:estateId",
+  upload.array("images", 30),
   validateObjectId("estateId"),
   isAuth,
   isActiveUser,
@@ -23,7 +23,7 @@ router.post(
 );
 
 router.delete(
-  "/:estateId/images/:fileId",
+  "/image-delete/:estateId/:fileId",
   validateObjectId("estateId"),
   isAuth,
   isActiveUser,

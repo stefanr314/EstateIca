@@ -12,11 +12,12 @@ export const addressSchema = z.object({
   street: z.string(),
   suburb: z.string().optional(),
   countryCode: z.string(),
+  placeId: z.string(),
   location: z.object({
     type: z.literal("Point"),
     coordinates: z.tuple([
-      z.number().min(-180).max(180),
-      z.number().min(-90).max(90),
+      z.coerce.number().min(-180).max(180),
+      z.coerce.number().min(-90).max(90),
     ]), // [lng, lat]
   }),
 });
@@ -24,7 +25,7 @@ export const addressSchema = z.object({
 export const baseEstateDto = z.object({
   title: z.string().min(3).max(100),
   description: z.string().min(1),
-  hidden: z.boolean().default(false),
+  hidden: z.coerce.boolean().default(false),
   neighborhoodOverview: z.string().optional(),
   notes: z.string().optional(),
   houseRules: z.string().optional(),
@@ -32,27 +33,33 @@ export const baseEstateDto = z.object({
   access: z.string().optional(),
   cancellationPolicy: z.enum(CancellationPolicy).optional(),
   rentalType: z.enum(RentalType),
-  securityDeposit: z.number().nonnegative().optional(),
-  address: addressSchema,
+  securityDeposit: z.coerce.number().nonnegative().optional(),
+  address: z.preprocess((val) => {
+    if (typeof val === "string") return JSON.parse(val);
+    return val;
+  }, addressSchema),
 });
 
 export const createResidentialEstateDto = baseEstateDto
   .extend({
-    bedrooms: z.number().int().positive().optional(),
-    bathrooms: z.number().int().positive().optional(),
-    beds: z.number().int().positive(),
-    minimumStay: z.number().int().positive(),
-    maximumStay: z.number().int().positive().optional(),
-    pricePerNight: z.number().positive().optional(),
-    pricePerMonth: z.number().positive().optional(),
-    area: z.number().positive().optional(),
-    amenities: z.enum(Amenities).array().optional(),
+    bedrooms: z.coerce.number().int().positive().optional(),
+    bathrooms: z.coerce.number().int().positive().optional(),
+    beds: z.coerce.number().int().positive(),
+    minimumStay: z.coerce.number().int().positive(),
+    maximumStay: z.coerce.number().int().positive().optional(),
+    pricePerNight: z.coerce.number().positive().optional(),
+    pricePerMonth: z.coerce.number().positive().optional(),
+    area: z.coerce.number().positive().optional(),
+    amenities: z.preprocess((val) => {
+      if (typeof val === "string") return JSON.parse(val);
+      return val;
+    }, z.enum(Amenities).array().optional()),
     residentialType: z.enum(ResidentialType),
     roomType: z.enum(RoomType).optional(),
-    guestIncluded: z.number().int().nonnegative(),
-    extraPeople: z.number().int().nonnegative().optional(),
-    petAllowance: z.boolean().optional(),
-    unitsAvailable: z.number().int().positive().optional(),
+    guestIncluded: z.coerce.number().int().nonnegative(),
+    extraPeople: z.coerce.number().int().nonnegative().optional(),
+    petAllowance: z.coerce.boolean().optional(),
+    unitsAvailable: z.coerce.number().int().positive().optional(),
   })
   .check((ctx) => {
     if (
@@ -96,10 +103,10 @@ export const createResidentialEstateDto = baseEstateDto
   });
 
 export const createBusinessEstateDto = baseEstateDto.extend({
-  pricePerMonth: z.number().positive(),
+  pricePerMonth: z.coerce.number().positive(),
   rentalType: z.literal(RentalType.LONG_TERM), // Only long-term rental for business estates
-  unitsAvailable: z.number().int().positive().default(1).optional(),
-  area: z.number().positive(),
+  unitsAvailable: z.coerce.number().int().positive().default(1).optional(),
+  area: z.coerce.number().positive(),
   intentedUse: z.enum([
     "retail",
     "office",
@@ -107,18 +114,21 @@ export const createBusinessEstateDto = baseEstateDto.extend({
     "hospitality",
     "other",
   ]),
-  floor: z.number().int().optional(),
-  hasElevator: z.boolean().optional(),
-  isGroundFloor: z.boolean().optional(),
-  ceilingHeight: z.number().positive().optional(),
-  hasParking: z.boolean().optional(),
-  parkingSpaces: z.number().int().positive().optional(),
-  hasRestroom: z.boolean().optional(),
-  minimumLeaseMonths: z.number().int().positive().optional(),
-  maximumLeaseMonths: z.number().int().positive().optional(),
-  airConditioning: z.boolean().optional(),
-  internetReady: z.boolean().optional(),
-  amenities: z.enum(Amenities).array().optional(),
+  floor: z.coerce.number().int().optional(),
+  hasElevator: z.coerce.boolean().optional(),
+  isGroundFloor: z.coerce.boolean().optional(),
+  ceilingHeight: z.coerce.number().positive().optional(),
+  hasParking: z.coerce.boolean().optional(),
+  parkingSpaces: z.coerce.number().int().positive().optional(),
+  hasRestroom: z.coerce.boolean().optional(),
+  minimumLeaseMonths: z.coerce.number().int().positive().optional(),
+  maximumLeaseMonths: z.coerce.number().int().positive().optional(),
+  airConditioning: z.coerce.boolean().optional(),
+  internetReady: z.coerce.boolean().optional(),
+  amenities: z.preprocess((val) => {
+    if (typeof val === "string") return JSON.parse(val);
+    return val;
+  }, z.enum(Amenities).array().optional()),
 });
 
 export type CreateResidentialEstateDto = z.infer<

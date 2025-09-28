@@ -26,7 +26,7 @@ function EstateDetailsFooter({ estate }: EstateDetailsFooterProps) {
         />
       )}
 
-      {/* <Grid
+      <Grid
         container
         spacing={2}
         width="100%"
@@ -38,7 +38,7 @@ function EstateDetailsFooter({ estate }: EstateDetailsFooterProps) {
             address.location.coordinates[1],
           ]}
         />
-      </Grid> */}
+      </Grid>
 
       <HostInfo
         host={host}

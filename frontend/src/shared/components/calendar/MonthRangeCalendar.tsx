@@ -6,6 +6,7 @@ import {
   useTheme,
   IconButton,
   Typography,
+  Tooltip,
 } from "@mui/material";
 import { isAfter, isBefore, setMonth, setYear, startOfMonth } from "date-fns";
 import {
@@ -24,6 +25,7 @@ type MonthRangeCalendarProps = {
   minDate?: Date;
   blockedDates?: {
     type: "RESERVATION" | "LOCK";
+    status?: "pending" | "confirmed";
     startDate: Date;
     endDate: Date;
   }[];
@@ -138,7 +140,7 @@ const MonthRangeCalendarDual: React.FC<MonthRangeCalendarProps> = ({
       >
         {months.map((label, idx) => {
           const date = setMonth(setYear(new Date(), year), idx);
-          const type = blockedDates
+          const blocked = blockedDates
             ? getBlockedMonthType(date, blockedDates)
             : null;
           const isBeforeMin = isBefore(
@@ -146,23 +148,40 @@ const MonthRangeCalendarDual: React.FC<MonthRangeCalendarProps> = ({
             startOfMonth(minDate)
           );
 
-          return (
+          let tooltip = "";
+          if (blocked?.type === "LOCK") {
+            tooltip = "Zaključano od strane domaćina";
+          } else if (blocked?.type === "RESERVATION") {
+            tooltip =
+              blocked.status === "confirmed"
+                ? "Rezervisano (potvrđeno)"
+                : "Rezervacija na čekanju";
+          }
+
+          const boxEl = (
             <Box
               key={`${year}-${idx}`}
-              onClick={() => !type && !isBeforeMin && handleMonthClick(date)}
+              onClick={() =>
+                !blocked?.type && !isBeforeMin && handleMonthClick(date)
+              }
               sx={{
                 px: 2,
                 py: 1,
                 textAlign: "center",
                 borderRadius: 2,
-                cursor: type || isBeforeMin ? "not-allowed" : "pointer",
+                cursor:
+                  blocked?.type || isBeforeMin ? "not-allowed" : "pointer",
                 bgcolor: isStartOrEnd(date)
                   ? theme.palette.primary.main
                   : isInRange(date)
                   ? theme.palette.primary.light
-                  : type === "LOCK"
+                  : blocked?.type === "LOCK"
+                  ? theme.palette.info.light
+                  : blocked?.type === "RESERVATION" &&
+                    blocked?.status === "confirmed"
                   ? theme.palette.error.light
-                  : type === "RESERVATION"
+                  : blocked?.type === "RESERVATION" &&
+                    blocked?.status === "pending"
                   ? theme.palette.warning.light
                   : isBeforeMin
                   ? "action.disabledBackground"
@@ -175,9 +194,9 @@ const MonthRangeCalendarDual: React.FC<MonthRangeCalendarProps> = ({
                 position: "relative",
                 "&::after": {
                   content:
-                    type === "LOCK"
+                    blocked?.type === "LOCK"
                       ? '"🔒"'
-                      : type === "RESERVATION"
+                      : blocked?.type === "RESERVATION"
                       ? '"🏠"'
                       : '""',
                   position: "absolute",
@@ -185,10 +204,22 @@ const MonthRangeCalendarDual: React.FC<MonthRangeCalendarProps> = ({
                   bottom: 2,
                   right: 4,
                 },
+                "&:hover": {
+                  outline: "2px solid",
+                  outlineColor: theme.palette.primary.main,
+                },
               }}
             >
               {label}
             </Box>
+          );
+
+          return tooltip ? (
+            <Tooltip key={`${year}-${idx}`} title={tooltip}>
+              {boxEl}
+            </Tooltip>
+          ) : (
+            boxEl
           );
         })}
       </Box>

@@ -15,6 +15,7 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect }) => {
   const [inputValue, setInputValue] = useState<string>("");
   const [options, setOptions] = useState<PlacePrediction[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+
   useEffect(() => {
     const fetchSuggestions = async () => {
       if (!inputValue) return;
@@ -24,12 +25,7 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect }) => {
         const data = await agent.Location.search(inputValue);
 
         console.log(data);
-        if (data.length !== 0) {
-          setOptions(data);
-        } else {
-          setOptions([]);
-          console.warn("Google Places API error:", data.status);
-        }
+        setOptions(data.length ? data : []);
       } catch (err) {
         console.error("Failed to fetch places", err);
         setOptions([]);
@@ -60,8 +56,8 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect }) => {
       renderInput={(params) => (
         <TextField
           {...params}
-          label="Pretraži lokaciju"
-          placeholder="Npr. Sarajevo, Zagreb, Beograd..."
+          label={"Pretraži grad"}
+          placeholder={"Npr. Sarajevo, Zagreb, Beograd..."}
           InputProps={{
             ...params.InputProps,
             endAdornment: (
