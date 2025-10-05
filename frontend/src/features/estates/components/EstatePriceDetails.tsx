@@ -5,6 +5,9 @@ import SavingsIcon from "@mui/icons-material/Savings";
 import CalculateIcon from "@mui/icons-material/Calculate";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
+import { useAppDispatch } from "@/app/store/hooks";
+import { useEffect, useMemo } from "react";
+import { setReservation } from "@/features/reservations/reservationSlice";
 
 interface EstatePriceCardProps {
   rentalType: "Short Term" | "Long Term";
@@ -30,29 +33,47 @@ export function EstatePriceCard({
   extraPeople = 0,
   childrenCount,
 }: EstatePriceCardProps) {
+  const dispatch = useAppDispatch();
   const theme = useTheme();
 
-  // izračun cijene
-  const basePrice = price * stayLength;
+  //memoizacija kako ovaj derived state ne bi izazivao previse re rendera
+  const priceDetails = useMemo(() => {
+    const basePrice = price * stayLength;
 
-  // izračun dodatnih troškova / popusta
-  const totalGuests = guestCount + childrenCount;
-  let extraFee = 0;
-  let discount = 0;
+    const totalGuests = guestCount + childrenCount;
+    let extraFee = 0;
+    let discount = 0;
 
-  if (
-    extraPeople &&
-    totalGuests > guestIncluded &&
-    totalGuests - guestIncluded <= extraPeople
-  ) {
-    extraFee = EXTRA_FEE_PER_EXTRAGUEST * (totalGuests - guestIncluded);
-  }
+    if (
+      extraPeople &&
+      totalGuests > guestIncluded &&
+      totalGuests - guestIncluded <= extraPeople
+    ) {
+      extraFee = EXTRA_FEE_PER_EXTRAGUEST * (totalGuests - guestIncluded);
+    }
 
-  if (childrenCount > 0) {
-    discount = CHILDREN_DISCOUNT;
-  }
+    if (childrenCount > 0) {
+      discount = CHILDREN_DISCOUNT;
+    }
 
-  const totalPrice = basePrice + extraFee - discount;
+    return {
+      basePrice,
+      extraFee,
+      discount,
+      totalPrice: basePrice + extraFee - discount,
+    };
+  }, [
+    price,
+    stayLength,
+    guestCount,
+    childrenCount,
+    extraPeople,
+    guestIncluded,
+  ]);
+
+  useEffect(() => {
+    dispatch(setReservation({ totalPrice: priceDetails.totalPrice }));
+  }, [dispatch, priceDetails.totalPrice]);
 
   return (
     <Item
@@ -95,24 +116,24 @@ export function EstatePriceCard({
       )}
 
       {/* Dodatni troškovi */}
-      {extraFee > 0 && (
+      {priceDetails.extraFee > 0 && (
         <Stack direction="row" spacing={1} alignItems="center">
           <AddIcon sx={{ color: theme.palette.error.main }} fontSize="small" />
           <Typography variant="body2" color="text.secondary">
-            Doplata za dodatne goste: +{extraFee} €
+            Doplata za dodatne goste: +{priceDetails.extraFee} €
           </Typography>
         </Stack>
       )}
 
       {/* Popust za djecu */}
-      {discount > 0 && (
+      {priceDetails.discount > 0 && (
         <Stack direction="row" spacing={1} alignItems="center">
           <RemoveIcon
             sx={{ color: theme.palette.info.main }}
             fontSize="small"
           />
           <Typography variant="body2" color="text.secondary">
-            Popust za djecu: −{discount} €
+            Popust za djecu: −{priceDetails.discount} €
           </Typography>
         </Stack>
       )}
@@ -125,7 +146,7 @@ export function EstatePriceCard({
           fontSize="small"
         />
         <Typography variant="body1" sx={{ fontWeight: 500 }}>
-          Ukupno: {totalPrice.toLocaleString("sr-RS")} €
+          Ukupno: {priceDetails.totalPrice.toLocaleString("sr-RS")} €
         </Typography>
       </Stack>
       <Typography variant="caption" color="text.secondary">

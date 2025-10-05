@@ -8,9 +8,12 @@ import { useEstate, useEstateUnavailableDates } from "./hooks/useEstate";
 import AppLoader from "@/shared/components/AppLoader";
 import AppError from "@/shared/components/errors/AppError";
 import QueryErrorHandler from "@/shared/components/QueryErrorHandler";
+import { useAppSelector } from "@/app/store/hooks";
+import { selectUser } from "../auth/authSlice";
 
 function EstateDetails() {
   const { id } = useParams<{ id: string }>();
+  const user = useAppSelector(selectUser);
 
   const {
     data: estate,
@@ -37,6 +40,9 @@ function EstateDetails() {
   const endDateDefault = endDateParam ? new Date(endDateParam) : null;
   const adultsCount = adultsParam ? Number(adultsParam) : null;
   const childrenCount = adultsParam ? Number(childrenParam) : null;
+
+  const isHostOfSelectedEstate =
+    !!user && !!estate && user.email === estate.host.email; //email jedinstevno opisuje korisnika takodje, iako je id bolje :)
 
   if (isPending || isUnavailableDatesPending)
     return (
@@ -66,6 +72,7 @@ function EstateDetails() {
           endDateDefault={endDateDefault}
           guestCountDefault={adultsCount}
           childrenCountDefault={childrenCount}
+          isHostOfSelectedEstate={isHostOfSelectedEstate}
         />
       </Grid>
       <Grid display={"inline-block"} width={"100%"}>

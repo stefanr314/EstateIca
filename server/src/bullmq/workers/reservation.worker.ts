@@ -25,6 +25,8 @@ const reservationWorker = new Worker(
         Date.now() >= new Date(reservation.endDate).getTime()
       ) {
         reservation.status = Status.COMPLETED;
+        reservation.pendingChange = undefined;
+        reservation.pendingContractChange = undefined;
         await reservation.save();
       }
 

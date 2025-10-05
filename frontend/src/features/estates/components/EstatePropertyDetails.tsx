@@ -24,17 +24,17 @@ interface PropertyDetailsItemProps {
 }
 
 export function PropertyDetailsItem({
-  guestCapacity = 4,
-  extraPeople = 2,
-  beds = 2,
-  bathrooms = 1,
+  guestCapacity,
+  extraPeople,
+  beds,
+  bathrooms,
 
-  roomType = "Apartment",
-  rentalType = "Short Term",
-  residentialType = "Urban",
-  area = 45,
-  petAllowance = true,
-  unitsAvailable = 5,
+  roomType,
+  rentalType,
+  residentialType,
+  area,
+  petAllowance,
+  unitsAvailable,
 }: PropertyDetailsItemProps) {
   const theme = useTheme();
 
@@ -59,7 +59,7 @@ export function PropertyDetailsItem({
         <PeopleIcon fontSize="small" sx={{ color: iconColor }} />
         <Typography variant="body2" color="text.primary">
           <strong>{guestCapacity}</strong> broj gostiju
-          {extraPeople > 0 && (
+          {extraPeople && extraPeople > 0 && (
             <span style={{ color: theme.palette.text.secondary }}>
               {" "}
               + {extraPeople} ekstra gosti

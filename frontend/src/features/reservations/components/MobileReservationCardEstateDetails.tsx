@@ -9,6 +9,7 @@ interface MobileReservationProps {
   guestCount?: number;
   childrenCount?: number;
   isDisabled: boolean;
+  unitCount?: number;
   isLongTermEstate?: boolean;
 }
 
@@ -18,6 +19,7 @@ function MobileReservation({
   guestCount,
   childrenCount,
   isDisabled = false,
+  unitCount,
   isLongTermEstate,
 }: MobileReservationProps) {
   const [open, setOpen] = useState(false);
@@ -66,6 +68,7 @@ function MobileReservation({
           isDisabled={isDisabled}
           guestCount={guestCount}
           childrenCount={childrenCount}
+          unitCount={unitCount}
           isLongTermEstate={isLongTermEstate}
         />
       </Drawer>

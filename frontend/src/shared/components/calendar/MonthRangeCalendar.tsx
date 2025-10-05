@@ -29,6 +29,7 @@ type MonthRangeCalendarProps = {
     startDate: Date;
     endDate: Date;
   }[];
+  readonly?: boolean;
 };
 
 const months = [
@@ -53,6 +54,7 @@ const MonthRangeCalendarDual: React.FC<MonthRangeCalendarProps> = ({
   setEndMonth,
   minDate = new Date(),
   blockedDates,
+  readonly,
 }) => {
   const { isRangeValid } = isValidRangeCalculator(blockedDates ?? [], "month");
   const theme = useTheme();
@@ -161,16 +163,20 @@ const MonthRangeCalendarDual: React.FC<MonthRangeCalendarProps> = ({
           const boxEl = (
             <Box
               key={`${year}-${idx}`}
-              onClick={() =>
-                !blocked?.type && !isBeforeMin && handleMonthClick(date)
-              }
+              onClick={() => {
+                if (readonly) return;
+                if (!blocked?.type && !isBeforeMin) handleMonthClick(date);
+              }}
               sx={{
                 px: 2,
                 py: 1,
                 textAlign: "center",
                 borderRadius: 2,
-                cursor:
-                  blocked?.type || isBeforeMin ? "not-allowed" : "pointer",
+                cursor: readonly
+                  ? "default"
+                  : blocked?.type || isBeforeMin
+                  ? "not-allowed"
+                  : "pointer",
                 bgcolor: isStartOrEnd(date)
                   ? theme.palette.primary.main
                   : isInRange(date)
@@ -204,10 +210,12 @@ const MonthRangeCalendarDual: React.FC<MonthRangeCalendarProps> = ({
                   bottom: 2,
                   right: 4,
                 },
-                "&:hover": {
-                  outline: "2px solid",
-                  outlineColor: theme.palette.primary.main,
-                },
+                "&:hover": readonly
+                  ? {}
+                  : {
+                      outline: "2px solid",
+                      outlineColor: theme.palette.primary.main,
+                    },
               }}
             >
               {label}

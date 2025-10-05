@@ -71,6 +71,11 @@ export async function createContractFromReservation(
     status: ContractStatus.DRAFT,
   });
 
+  // ✅ Update rezervacije sa novim contract ID-em
+  await Reservation.findByIdAndUpdate(reservation._id, {
+    $set: { lastRelatedContractId: contract._id },
+  });
+
   return contract;
 }
 
@@ -107,6 +112,11 @@ export async function createCancellationContractFromReservation(
     status: ContractStatus.CANCELLED,
   });
 
+  // Uvijek update lastRelatedContractId (da pokazuje i na cancel)
+  await Reservation.findByIdAndUpdate(reservation._id, {
+    $set: { lastRelatedContractId: contract._id },
+  });
+
   return contract;
 }
 
@@ -138,4 +148,43 @@ export async function getContractForUser(contractId: string, userId: string) {
   }
 
   return filePath;
+}
+
+export async function getContractDetailsForUser(
+  contractId: string,
+  userId: string
+) {
+  const contract = await Contract.findById(contractId).lean();
+  if (!contract) throw new NotFoundError("Ugovor nije pronađen.");
+
+  const reservation = await Reservation.findById(contract.reservationId)
+    .populate<{ estateReserved: BaseEstateDocument }>("estateReserved")
+    .lean();
+
+  if (!reservation)
+    throw new NotFoundError("Povezana rezervacija nije pronađena.");
+
+  const isGuest = reservation.userOfReservation?.toString() === userId;
+  const isHost = reservation.estateReserved?.host?.toString() === userId;
+
+  if (!isGuest && !isHost)
+    throw new ForbiddenError("Nemate pravo pristupa ovom ugovoru.");
+
+  return {
+    _id: contract._id,
+    status: contract.status,
+    signedByHost: contract.signedByHost,
+    signedByTenant: contract.signedByTenant,
+    validFrom: contract.validFrom,
+    validTo: contract.validTo,
+    contractFileUrl: contract.contractFileUrl,
+    reservation: {
+      _id: reservation._id,
+      estateName: reservation.estateTitle,
+      pricePerMonth: reservation.pricePerMonth,
+      hostName: reservation.hostName,
+      guestName: reservation.guestName,
+      lastRelatedContractId: reservation.lastRelatedContracId,
+    },
+  };
 }

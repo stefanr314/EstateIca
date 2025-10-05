@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { use, useEffect, useState } from "react";
 
 import { useTheme } from "@mui/material/styles";
-import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import Stack from "@mui/material/Stack";
 import {
@@ -13,7 +12,8 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
-import { getDesignTokens, mint } from "@/shared/ui/theme";
+import { getDesignTokens } from "@/shared/ui/theme";
+import CalendarMonth from "@mui/icons-material/CalendarMonth";
 
 import EstateTextDetailsItem from "./EstateTextDeatilsItem";
 import EstateAmenitiesItem from "./EstatesAmenitiesItem";
@@ -24,16 +24,20 @@ import { PropertyDetailsItem } from "./EstatePropertyDetails";
 import { EstatePriceCard } from "./EstatePriceDetails";
 import { IBusinessEstate, IResidentialEstate } from "../types";
 import { AmenityKey } from "@/shared/constants/amenitiesMap";
-import { differenceInDays, differenceInMonths, addMonths } from "date-fns";
+
+import { differenceInDays } from "date-fns";
+import { getSmartMonthCount } from "@/shared/helper/getSmartMonthCalculator";
 
 import {
   isResidentialEstate,
   isBusinessEstate,
 } from "@/shared/helper/determineEstateType";
-import { CalendarMonth } from "@mui/icons-material";
 import MonthRangeCalendar from "@/shared/components/calendar/MonthRangeCalendar";
 import { GuestSelector } from "./GuestSelector";
 import MobileReservation from "@/features/reservations/components/MobileReservationCardEstateDetails";
+import { useAppDispatch } from "@/app/store/hooks";
+import { useDefaultDates } from "@mui/x-date-pickers/internals";
+import { setReservation } from "@/features/reservations/reservationSlice";
 
 const darkPalette = getDesignTokens("dark");
 
@@ -61,23 +65,11 @@ interface EstateDetailsMainProps {
   endDateDefault: Date | null;
   guestCountDefault: number | null;
   childrenCountDefault: number | null;
+  isHostOfSelectedEstate?: boolean;
 }
 
 const getStayLengthInDays = (start: Date | null, end: Date | null) =>
   start && end ? differenceInDays(end, start) : 0;
-
-function getSmartMonthCount(start: Date, end: Date): number {
-  const fullMonths = differenceInMonths(end, start);
-  const monthAfterStart = addMonths(start, fullMonths);
-  const remainingDays = differenceInDays(end, monthAfterStart);
-
-  // Ako ostatak preko punih mjeseci prelazi npr. 5 dana, dodaćemo još 1 mjesec
-  const GRACE_DAYS = 5;
-
-  return remainingDays > GRACE_DAYS ? fullMonths + 1 : fullMonths;
-}
-
-export { getSmartMonthCount };
 
 function EstateDetailsMain({
   estate,
@@ -86,7 +78,10 @@ function EstateDetailsMain({
   endDateDefault,
   guestCountDefault,
   childrenCountDefault,
+  isHostOfSelectedEstate,
 }: EstateDetailsMainProps) {
+  const dispatch = useAppDispatch();
+
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up("lg"));
 
@@ -96,6 +91,9 @@ function EstateDetailsMain({
   const [endDate, setEndDate] = useState<Date | null>(endDateDefault ?? null);
   const [guestCount, setGuestCount] = useState(guestCountDefault ?? 1);
   const [childrenCount, setChildrenCount] = useState(childrenCountDefault ?? 0);
+  const [businessUnitCount, setBusinessUnitCount] = useState<
+    number | undefined
+  >(isBusinessEstate(estate) ? 1 : undefined);
 
   let isValidStay: boolean = true;
 
@@ -120,9 +118,22 @@ function EstateDetailsMain({
           estate.maximumLeaseMonths >= leaseMontsLength));
   }
 
+  useEffect(() => {
+    dispatch(
+      setReservation({
+        estateId: estate._id,
+        estateTitle: estate.title,
+        estateAddress: `${estate.address.street || "-"}, ${
+          estate.address.city
+        } ${estate.address.country}`,
+        estateType: estate.estateType,
+      })
+    );
+  }, [estate, dispatch]);
+
   return (
     <Grid container spacing={3}>
-      <Grid flex={1}>
+      <Grid size={{ xs: 12, lg: isHostOfSelectedEstate ? 12 : 8 }}>
         <Stack
           spacing={2}
           sx={{
@@ -273,6 +284,29 @@ function EstateDetailsMain({
               setChildrenCount={setChildrenCount}
             />
           )}
+
+          {isBusinessEstate(estate) && (
+            <Item elevation={4} sx={{ p: 2 }}>
+              <Typography variant="h4">Izaberite broj jedinica</Typography>
+              <Select
+                value={businessUnitCount}
+                onChange={(e) => setBusinessUnitCount(Number(e.target.value))}
+                sx={{ minWidth: 80 }}
+              >
+                {Array.from(
+                  { length: estate.unitsAvailable },
+                  (_, i) => i + 1
+                ).map((val) => (
+                  <MenuItem key={val} value={val}>
+                    {val}
+                  </MenuItem>
+                ))}
+              </Select>
+              <Typography variant="caption" color="text.secondary">
+                Podrazumijevano 1 – prilagodite ako vam treba više jedinica.
+              </Typography>
+            </Item>
+          )}
           <EstatePriceCard
             rentalType={estate.rentalType}
             price={
@@ -304,41 +338,53 @@ function EstateDetailsMain({
           )}
         </Stack>
       </Grid>
-      <Grid flex={1} sx={{ display: { xs: "none", md: "none", lg: "block" } }}>
-        <Item
-          elevation={2}
-          sx={(theme) => ({
-            position: "sticky",
-            top: "25%",
-            p: 2,
-            borderRadius: 3,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            border: "1px solid #fafafa", // stroke
-
-            ...theme.applyStyles("dark", {
-              border: `none`,
-            }),
-          })}
+      {!isHostOfSelectedEstate && (
+        <Grid
+          size={{ xs: 12, lg: 4 }}
+          sx={{ display: { xs: "none", md: "none", lg: "block" } }}
         >
-          <ReservationCard
-            defaultStartDate={startDate}
-            defaultEndDate={endDate}
-            isDisabled={!isValidStay}
-            guestCount={guestCount}
-            childrenCount={childrenCount}
-            isLongTermEstate={estate.rentalType === "Long Term"}
-          />
-        </Item>
-      </Grid>
-      {!isDesktop && (
+          <Item
+            elevation={2}
+            sx={(theme) => ({
+              position: "sticky",
+              top: "25%",
+              p: 2,
+              borderRadius: 3,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              border: "1px solid #fafafa", // stroke
+
+              ...theme.applyStyles("dark", {
+                border: `none`,
+              }),
+            })}
+          >
+            <ReservationCard
+              defaultStartDate={startDate}
+              defaultEndDate={endDate}
+              isDisabled={!isValidStay}
+              guestCount={isResidentialEstate(estate) ? guestCount : undefined}
+              childrenCount={
+                isResidentialEstate(estate) ? childrenCount : undefined
+              }
+              unitCount={businessUnitCount}
+              isLongTermEstate={estate.rentalType === "Long Term"}
+            />
+          </Item>
+        </Grid>
+      )}
+
+      {!isHostOfSelectedEstate && !isDesktop && (
         <MobileReservation
           startDate={startDate}
           endDate={endDate}
           isDisabled={!isValidStay}
-          guestCount={guestCount}
-          childrenCount={childrenCount}
+          guestCount={isResidentialEstate(estate) ? guestCount : undefined}
+          childrenCount={
+            isResidentialEstate(estate) ? childrenCount : undefined
+          }
+          unitCount={businessUnitCount}
           isLongTermEstate={estate.rentalType === "Long Term"}
         />
       )}

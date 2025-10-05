@@ -28,6 +28,10 @@ import SignedInLayout from "./layouts/SignedInLayout";
 import HostRequestsPage from "@/features/dashboard/pages/HostRequestsPage";
 import CreateEstatePage from "@/features/dashboard/components/CreateEstate";
 import GuestHostRequestDetailsPage from "@/features/host-requests/GuestHostRequestDetailsPage";
+import HostReservationDashboard from "@/features/dashboard/pages/HostReservationDashboard";
+import ContractDetails from "@/features/dashboard/components/ContractDetails";
+import UserReservationCreation from "@/features/reservations/UserReservationCreation";
+import EstateReservationsPage from "@/features/dashboard/pages/EstateReservationsPage";
 
 const router = createBrowserRouter([
   {
@@ -100,7 +104,14 @@ const router = createBrowserRouter([
 
           // Reservations
           { path: "reservations/mine", element: <ReservationsDashboard /> },
-          { path: "reservations/host", element: <ReservationsDashboard /> },
+          { path: "reservations/host", element: <HostReservationDashboard /> },
+          {
+            path: "reservations/estates/:estateId",
+            element: <EstateReservationsPage />,
+          },
+
+          //Contract Details
+          { path: "contract/:contractId", element: <ContractDetails /> },
 
           // Reviews
           { path: "reviews/mine", element: <ReviewsDashboard /> },
@@ -120,6 +131,10 @@ const router = createBrowserRouter([
       {
         element: <VerifyAccountPage />,
         path: "/verify-account",
+      },
+      {
+        element: <UserReservationCreation />,
+        path: "/finalize-your-reservation",
       },
     ],
   },

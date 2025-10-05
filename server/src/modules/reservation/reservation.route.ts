@@ -101,6 +101,7 @@ router.get(
   validateObjectId("estateId"),
   getUnavailableDatesForEstate
 );
+
 router.post(
   "/estate/:estateId/lock-dates",
   validateObjectId("estateId"),

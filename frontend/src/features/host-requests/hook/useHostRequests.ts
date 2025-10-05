@@ -6,8 +6,9 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { HostRequest, HostRequestRow, PaginatedHRResponse } from "../types";
-import { useAppDispatch } from "@/app/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { pushNotification } from "@/features/notifications/notificationSlice";
+import { selectUser } from "@/features/auth/authSlice";
 
 export const useGetAllHostRequests = (
   page: number,
@@ -41,12 +42,17 @@ export const useGetHostRequestDetails = (requestId: string) => {
 };
 
 export const useGetMyHostRequest = () => {
+  const user = useAppSelector(selectUser);
+
   return useQuery({
     queryKey: ["my-host-request"],
     queryFn: async (): Promise<HostRequest> => {
       const res = await agent.HostRequest.getMeHostRequests();
       return res.hostRequest;
     },
+    enabled: !!user && user.role === "guest" && user.isVerified,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 };
 

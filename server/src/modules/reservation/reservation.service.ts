@@ -82,11 +82,12 @@ export class ReservationService {
     }
   }
 
-  async getUnavailableDatesForEstate(estateId: string) {
+  async getUnavailableDatesForEstate(estateId: string, reservationId?: string) {
     const [reservations, locks] = await Promise.all([
       Reservation.find({
         estateReserved: estateId,
         status: { $in: [Status.PENDING, Status.CONFIRMED] },
+        ...(reservationId ? { _id: { $ne: reservationId } } : {}),
       }).select("startDate endDate status -_id"),
       LockDate.find({ estate: estateId }).select("startDate endDate -_id"),
     ]);
@@ -991,8 +992,7 @@ export class ReservationService {
           (contractToBeGenerated = true);
       } else if (reservation.pendingChange.type === "EXTEND") {
         reservation.totalPrice =
-          reservation.pendingChange.totalPrice +
-          (reservation.pendingChange.extraPrice ?? 0);
+          reservation.pendingChange.totalPrice + extraPrice;
       }
 
       reservation.endDate =
@@ -1124,7 +1124,7 @@ export class ReservationService {
 
     await reservation.save();
 
-    return { reservation, message: "Promjena je odbijena" };
+    return reservation;
   }
 
   async denyPendingReservation(currentUserId: string, reservationId: string) {
@@ -1402,14 +1402,21 @@ export class ReservationService {
   }
 
   async getReservationById(reservationId: string, userId: string) {
-    const reservation = await Reservation.findById(reservationId);
-    // .populate("estateReserved")
-    // .populate("userOfReservation");
+    const reservation = await Reservation.findById(reservationId)
+      .populate(
+        "estateReserved",
+        "_id estateType address.city address.country guestIncluded extraPeople guestIncluded minimumStay maximumStay unitCount minimumLeaseMonths maximumLeaseMonths"
+      )
+      .populate("userOfReservation", "_id firstName lastName email phoneNumber")
+      .populate(
+        "hostOfReservedEstate",
+        "_id firstName lastName email phoneNumber"
+      );
 
     if (!reservation) throw new NotFoundError("Rezervacija nije pronađena.");
     if (
-      reservation.userOfReservation.toString() !== userId &&
-      reservation.hostOfReservedEstate.toString() !== userId
+      reservation.userOfReservation._id.toString() !== userId &&
+      reservation.hostOfReservedEstate._id.toString() !== userId
     )
       throw new ForbiddenError("Nemate pravo pristupa ovoj rezervaciji.");
 
@@ -1445,7 +1452,11 @@ export class ReservationService {
         sortObject[key] = order === "desc" ? -1 : 1; // 1 for ascending, -1 for descending
       }
       query.sort(sortObject);
+    } else {
+      // po defaultu sortiraj po najnovijem createdAt
+      query.sort({ createdAt: -1 });
     }
+
     const reservations = await query
       .populate("estateReserved")
       .populate("userOfReservation")
@@ -1502,6 +1513,9 @@ export class ReservationService {
         sortObject[key] = order === "desc" ? -1 : 1; // 1 for ascending, -1 for descending
       }
       query.sort(sortObject);
+    } else {
+      // po defaultu sortiraj po najnovijem createdAt
+      query.sort({ createdAt: -1 });
     }
 
     const reservations = await query
@@ -1559,17 +1573,29 @@ export class ReservationService {
         sortObject[key] = order === "desc" ? -1 : 1; // 1 for ascending, -1 for descending
       }
       query.sort(sortObject);
+    } else {
+      // po defaultu sortiraj po najnovijem createdAt
+      query.sort({ createdAt: -1 });
     }
 
-    const reservations = await query
-      .skip(skip)
-      .limit(limit)
-      .populate("estateReserved")
-      .populate("userOfReservation");
-
+    const reservations = await query.skip(skip).limit(limit);
     const total = await Reservation.countDocuments(filter);
     return {
-      data: reservations,
+      data: reservations.map((r) => ({
+        id: r._id.toString(),
+        startDate: r.startDate,
+        endDate: r.endDate,
+        totalPrice: r.totalPrice,
+        guestCount: r.guestCount,
+        childrenCount: r.childrenCount,
+        status: r.status,
+        rentalType: r.rentalType,
+        guestName: r.guestName,
+        estateTitle: r.estateTitle,
+        note: r.note,
+        createdAt: r.createdAt,
+        updatedAt: r.updatedAt,
+      })),
       meta: {
         page,
         limit,
@@ -1602,17 +1628,30 @@ export class ReservationService {
         sortObject[key] = order === "desc" ? -1 : 1; // 1 for ascending, -1 for descending
       }
       query.sort(sortObject);
+    } else {
+      // po defaultu sortiraj po najnovijem createdAt
+      query.sort({ createdAt: -1 });
     }
 
-    const reservations = await query
-      .skip(skip)
-      .limit(limit)
-      .populate("estateReserved")
-      .populate("userOfReservation");
+    const reservations = await query.skip(skip).limit(limit);
 
     const total = await Reservation.countDocuments(filter);
     return {
-      data: reservations,
+      data: reservations.map((r) => ({
+        id: r._id.toString(),
+        startDate: r.startDate,
+        endDate: r.endDate,
+        totalPrice: r.totalPrice,
+        guestCount: r.guestCount,
+        childrenCount: r.childrenCount,
+        status: r.status,
+        rentalType: r.rentalType,
+        hostName: r.hostName,
+        estateTitle: r.estateTitle,
+        note: r.note,
+        createdAt: r.createdAt,
+        updatedAt: r.updatedAt,
+      })),
       meta: {
         page,
         limit,

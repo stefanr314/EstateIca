@@ -2,12 +2,14 @@ import { configureStore } from "@reduxjs/toolkit";
 import userReducer from "../../features/user/userSlice";
 import notificationReducer from "@/features/notifications/notificationSlice";
 import authReducer from "@/features/auth/authSlice";
+import reservationReducer from "@/features/reservations/reservationSlice";
 
 export const store = configureStore({
   reducer: {
     user: userReducer,
     notification: notificationReducer,
     auth: authReducer,
+    reservation: reservationReducer,
   },
 });
 

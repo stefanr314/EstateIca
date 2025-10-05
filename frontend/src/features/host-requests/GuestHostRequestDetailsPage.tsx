@@ -1,4 +1,4 @@
-import { useParams, Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 import {
   Box,
   Card,
@@ -8,10 +8,7 @@ import {
   Stack,
   Link,
 } from "@mui/material";
-import {
-  useGetHostRequestDetails,
-  useGetMyHostRequest,
-} from "./hook/useHostRequests";
+import { useGetMyHostRequest } from "./hook/useHostRequests";
 import QueryErrorHandler from "@/shared/components/QueryErrorHandler";
 import AppLoader from "@/shared/components/AppLoader";
 
