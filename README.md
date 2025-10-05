@@ -43,7 +43,7 @@ From a practical standpoint, it provides a real example of a booking workflow th
 ---
 
 ## 📂 Project Structure
-
+```bash
 project-root/
 │
 ├── server/ # Backend – Express, MongoDB, Redis, API routes
@@ -51,7 +51,7 @@ project-root/
 ├── frontend/ # Frontend – React, Vite, MUI, Redux, React Query
 │
 └── README.md
-
+```
 ---
 
 ## ✨ Core Features
