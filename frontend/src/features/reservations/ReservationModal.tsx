@@ -17,7 +17,6 @@ import {
   Chip,
   Card,
   CardContent,
-  Avatar,
   useTheme,
   useMediaQuery,
   IconButton,
@@ -41,35 +40,26 @@ import {
   LocationOn,
   AccessTime,
 } from "@mui/icons-material";
-import ListSubheader from "@mui/material/ListSubheader";
-
-export interface Reservation {
-  id: string;
-  status: string;
-  createdAt: string;
-  checkIn: string;
-  checkOut: string;
-  nights: number;
-  guestName: string;
-  guestEmail: string;
-  guestPhone?: string;
-  guestCount: { adults: number; children: number; infants?: number };
-  notes?: string;
-  estateTitle: string;
-  estateAddress: string;
-  estateThumbnailUrl?: string;
-  totalPrice: number;
-  cancellationPolicy?: string;
-  paymentStatus: "unpaid";
-}
+import BeenhereIcon from "@mui/icons-material/Beenhere";
+import { useGetReservationDetails } from "./hook/useReservations";
+import AppLoader from "@/shared/components/AppLoader";
+import { ReservationStatus } from "./types";
+import UserReservationActions from "./components/UserReservationActions";
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  reservation: Reservation;
+  reservationId: string;
 }
 
-const ReservationModal: React.FC<Props> = ({ open, onClose, reservation }) => {
+const UserReservationModal: React.FC<Props> = ({
+  open,
+  onClose,
+  reservationId,
+}) => {
+  const { data: reservation, isPending } =
+    useGetReservationDetails(reservationId);
+
   const [tab, setTab] = React.useState(0);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -77,43 +67,54 @@ const ReservationModal: React.FC<Props> = ({ open, onClose, reservation }) => {
 
   const handleTab = (_: React.SyntheticEvent, newVal: number) => setTab(newVal);
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: ReservationStatus) => {
     switch (status) {
-      case "confirmed":
+      case ReservationStatus.CONFIRMED:
         return <CheckCircle color="success" />;
-      case "cancelled":
+      case ReservationStatus.CANCELED:
         return <Cancel color="error" />;
-      case "pending":
+      case ReservationStatus.PENDING:
         return <Schedule color="warning" />;
+      case ReservationStatus.COMPLETED:
+        return <BeenhereIcon color="info" />;
       default:
         return <Schedule />;
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: ReservationStatus) => {
     switch (status) {
-      case "confirmed":
+      case ReservationStatus.CONFIRMED:
         return "success";
-      case "cancelled":
+      case ReservationStatus.CANCELED:
         return "error";
-      case "pending":
+      case ReservationStatus.PENDING:
         return "warning";
+      case ReservationStatus.COMPLETED:
+        return "info";
       default:
         return "default";
     }
   };
 
+  if (isPending) return <AppLoader loading={isPending} />;
+
+  if (!reservation)
+    return <Typography>Nista znacajno za prikaz. Nazad molicu...</Typography>;
+
   return (
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth={isMobile ? "xs" : isTablet ? "md" : "lg"}
+      maxWidth={isMobile ? "xs" : isTablet ? "md" : "xl"}
       fullWidth
       slotProps={{
         paper: {
           sx: {
             borderRadius: 2,
+            maxWidth: "1200px",
             maxHeight: "90vh",
+            minHeight: "80vh",
           },
         },
       }}
@@ -128,7 +129,7 @@ const ReservationModal: React.FC<Props> = ({ open, onClose, reservation }) => {
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <ConfirmationNumber color="primary" />
-          <Typography variant="h6">Rezervacija #{reservation.id}</Typography>
+          <Typography variant="h6">Rezervacija #{reservation._id}</Typography>
         </Box>
         <IconButton onClick={onClose} size="small">
           <Close />
@@ -142,12 +143,19 @@ const ReservationModal: React.FC<Props> = ({ open, onClose, reservation }) => {
         sx={{ px: 2 }}
       >
         <Tab label="Pregled" />
-        <Tab label="Istorija" />
+        <Tab label="Akcije" />
+        <Tab label="Aktivne promjene" />
       </Tabs>
 
       <Divider />
 
-      <DialogContent sx={{ p: 0 }}>
+      <DialogContent
+        sx={{
+          p: 0,
+          height: "75vh",
+          overflowY: "auto",
+        }}
+      >
         {tab === 0 && (
           <Box sx={{ p: 2 }}>
             {/* Status Card */}
@@ -179,7 +187,7 @@ const ReservationModal: React.FC<Props> = ({ open, onClose, reservation }) => {
             >
               {/* Left Column */}
               <Box>
-                {/* Guest Information */}
+                {/* Host Information */}
                 <Card sx={{ mb: 2 }}>
                   <CardContent sx={{ py: 2, "&:last-child": { pb: 2 } }}>
                     <Typography
@@ -192,7 +200,7 @@ const ReservationModal: React.FC<Props> = ({ open, onClose, reservation }) => {
                       }}
                     >
                       <Person color="primary" />
-                      Informacije o gostu
+                      Informacije o vlasniku
                     </Typography>
 
                     <List dense disablePadding>
@@ -212,46 +220,46 @@ const ReservationModal: React.FC<Props> = ({ open, onClose, reservation }) => {
                           <Email fontSize="small" color="action" />
                         </ListItemIcon>
                         <ListItemText
-                          primary={reservation.guestEmail}
+                          primary={
+                            typeof reservation.hostOfReservedEstate !==
+                              "string" && reservation.hostOfReservedEstate.email
+                          }
                           secondary="Email adresa"
                         />
                       </ListItem>
 
-                      {reservation.guestPhone && (
-                        <ListItem sx={{ px: 0 }}>
-                          <ListItemIcon sx={{ minWidth: 36 }}>
-                            <Phone fontSize="small" color="action" />
-                          </ListItemIcon>
-                          <ListItemText
-                            primary={reservation.guestPhone}
-                            secondary="Telefon"
-                          />
-                        </ListItem>
-                      )}
+                      {typeof reservation.hostOfReservedEstate !== "string" &&
+                        reservation.hostOfReservedEstate.phoneNumber && (
+                          <ListItem sx={{ px: 0 }}>
+                            <ListItemIcon sx={{ minWidth: 36 }}>
+                              <Phone fontSize="small" color="action" />
+                            </ListItemIcon>
+                            <ListItemText
+                              primary={
+                                reservation.hostOfReservedEstate.phoneNumber
+                              }
+                              secondary="Telefon"
+                            />
+                          </ListItem>
+                        )}
 
                       <ListItem sx={{ px: 0 }}>
                         <ListItemIcon sx={{ minWidth: 36 }}>
                           <Group fontSize="small" color="action" />
                         </ListItemIcon>
                         <ListItemText
-                          primary={`${
-                            reservation.guestCount.adults
-                          } odraslih, ${reservation.guestCount.children} djece${
-                            reservation.guestCount.infants
-                              ? `, ${reservation.guestCount.infants} bebe`
-                              : ""
-                          }`}
+                          primary={`${reservation.guestCount} odraslih, ${reservation.childrenCount} djece`}
                           secondary="Broj osoba"
                         />
                       </ListItem>
 
-                      {reservation.notes && (
+                      {reservation.note && (
                         <ListItem sx={{ px: 0 }}>
                           <ListItemIcon sx={{ minWidth: 36 }}>
                             <Note fontSize="small" color="action" />
                           </ListItemIcon>
                           <ListItemText
-                            primary={reservation.notes}
+                            primary={reservation.note}
                             secondary="Napomena"
                           />
                         </ListItem>
@@ -282,8 +290,12 @@ const ReservationModal: React.FC<Props> = ({ open, onClose, reservation }) => {
                           <AccessTime fontSize="small" color="action" />
                         </ListItemIcon>
                         <ListItemText
-                          primary={`${reservation.checkIn} → ${reservation.checkOut}`}
-                          secondary={`${reservation.nights} noći`}
+                          primary={`${new Date(
+                            reservation.startDate
+                          ).toLocaleDateString("sr-Latn-RS")} → ${new Date(
+                            reservation.endDate
+                          ).toLocaleDateString("sr-Latn-RS")}`}
+                          // secondary={`${reservation.nights} noći`}
                           primaryTypographyProps={{ fontWeight: 500 }}
                         />
                       </ListItem>
@@ -337,8 +349,12 @@ const ReservationModal: React.FC<Props> = ({ open, onClose, reservation }) => {
                           <LocationOn fontSize="small" color="action" />
                         </ListItemIcon>
                         <ListItemText
-                          primary={reservation.estateAddress}
-                          secondary="Adresa"
+                          primary={
+                            typeof reservation.estateReserved !== "string"
+                              ? `${reservation.estateReserved.address.city}, ${reservation.estateReserved.address.country}`
+                              : reservation.estateReserved
+                          }
+                          secondary="Grad"
                         />
                       </ListItem>
                     </List>
@@ -358,7 +374,7 @@ const ReservationModal: React.FC<Props> = ({ open, onClose, reservation }) => {
                       }}
                     >
                       <Payment color="primary" />
-                      Plaćanje
+                      Plaćanje i uslovi
                     </Typography>
 
                     <List dense disablePadding>
@@ -376,38 +392,76 @@ const ReservationModal: React.FC<Props> = ({ open, onClose, reservation }) => {
                         />
                       </ListItem>
 
-                      <ListItem sx={{ px: 0 }}>
-                        <ListItemIcon sx={{ minWidth: 36 }}>
-                          <Payment fontSize="small" color="action" />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={
-                            <Chip
-                              label={
-                                reservation.paymentStatus === "unpaid"
-                                  ? "Neplaćeno"
-                                  : "Plaćeno"
-                              }
-                              color={
-                                reservation.paymentStatus === "unpaid"
-                                  ? "warning"
-                                  : "success"
-                              }
-                              size="small"
+                      {reservation.rentalType === "Short Term" &&
+                        reservation.pricePerNight && (
+                          <ListItem sx={{ px: 0 }}>
+                            <ListItemIcon sx={{ minWidth: 36 }}>
+                              <Euro fontSize="small" color="action" />
+                            </ListItemIcon>
+                            <ListItemText
+                              primary={`${reservation.pricePerNight} €`}
+                              secondary="Cijena po noći"
                             />
-                          }
-                          secondary="Status plaćanja"
-                        />
-                      </ListItem>
+                          </ListItem>
+                        )}
 
-                      {reservation.cancellationPolicy && (
+                      {reservation.rentalType === "Long Term" &&
+                        reservation.pricePerMonth && (
+                          <ListItem sx={{ px: 0 }}>
+                            <ListItemIcon sx={{ minWidth: 36 }}>
+                              <Euro fontSize="small" color="action" />
+                            </ListItemIcon>
+                            <ListItemText
+                              primary={`${reservation.pricePerMonth} €`}
+                              secondary="Cijena po mjesecu"
+                            />
+                          </ListItem>
+                        )}
+
+                      {reservation.extraPeopleFee !== undefined && (
                         <ListItem sx={{ px: 0 }}>
                           <ListItemIcon sx={{ minWidth: 36 }}>
-                            <Cancel fontSize="small" color="action" />
+                            <Group fontSize="small" color="action" />
                           </ListItemIcon>
                           <ListItemText
-                            primary={reservation.cancellationPolicy}
-                            secondary="Politika otkazivanja"
+                            primary={`${reservation.extraPeopleFee} €`}
+                            secondary="Doplatak za dodatne osobe"
+                          />
+                        </ListItem>
+                      )}
+
+                      {reservation.childrenDiscount !== undefined && (
+                        <ListItem sx={{ px: 0 }}>
+                          <ListItemIcon sx={{ minWidth: 36 }}>
+                            <Group fontSize="small" color="action" />
+                          </ListItemIcon>
+                          <ListItemText
+                            primary={`${reservation.childrenDiscount}%`}
+                            secondary="Popust za djecu"
+                          />
+                        </ListItem>
+                      )}
+
+                      {reservation.unitCount !== undefined && (
+                        <ListItem sx={{ px: 0 }}>
+                          <ListItemIcon sx={{ minWidth: 36 }}>
+                            <Home fontSize="small" color="action" />
+                          </ListItemIcon>
+                          <ListItemText
+                            primary={reservation.unitCount}
+                            secondary="Broj jedinica"
+                          />
+                        </ListItem>
+                      )}
+
+                      {reservation.isContractRequired && (
+                        <ListItem sx={{ px: 0 }}>
+                          <ListItemIcon sx={{ minWidth: 36 }}>
+                            <BeenhereIcon fontSize="small" color="action" />
+                          </ListItemIcon>
+                          <ListItemText
+                            primary="Ugovor obavezan"
+                            secondary="Potrebno potpisivanje ugovora"
                           />
                         </ListItem>
                       )}
@@ -419,18 +473,128 @@ const ReservationModal: React.FC<Props> = ({ open, onClose, reservation }) => {
           </Box>
         )}
 
-        {tab === 1 && (
+        {tab === 1 && <UserReservationActions reservation={reservation} />}
+
+        {tab === 2 && (
           <Box sx={{ p: 2 }}>
-            <Typography
-              variant="subtitle2"
-              sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}
-            >
-              <AccessTime color="primary" />
-              Historija aktivnosti rezervacije:
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              (još nema logova u ovoj verziji)
-            </Typography>
+            {reservation.pendingChange || reservation.pendingContractChange ? (
+              <Card>
+                <CardContent>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      mb: 2,
+                    }}
+                  >
+                    <Schedule color="primary" />
+                    Aktivne promjene
+                  </Typography>
+
+                  {reservation.pendingChange && (
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="subtitle2" gutterBottom>
+                        Promjena datuma
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Tip: <b>{reservation.pendingChange.type}</b>
+                      </Typography>
+                      {reservation.pendingChange.newStartDate && (
+                        <Typography variant="body2" color="text.secondary">
+                          Novi početak:{" "}
+                          {new Date(
+                            reservation.pendingChange.newStartDate
+                          ).toLocaleDateString("sr-Latn-RS")}
+                        </Typography>
+                      )}
+                      {reservation.pendingChange.newEndDate && (
+                        <Typography variant="body2" color="text.secondary">
+                          Novi kraj:{" "}
+                          {new Date(
+                            reservation.pendingChange.newEndDate
+                          ).toLocaleDateString("sr-Latn-RS")}
+                        </Typography>
+                      )}
+
+                      <Typography variant="body2" color="text.secondary">
+                        Stari početak:{" "}
+                        {new Date(reservation.startDate).toLocaleDateString(
+                          "sr-Latn-RS"
+                        )}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Stari kraj:{" "}
+                        {new Date(reservation.endDate).toLocaleDateString(
+                          "sr-Latn-RS"
+                        )}
+                      </Typography>
+
+                      {/* Cijene */}
+                      {reservation.pendingChange.extraPrice !== undefined && (
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ mt: 1 }}
+                        >
+                          Doplata za promjenu:{" "}
+                          <b>{reservation.pendingChange.extraPrice} €</b>
+                        </Typography>
+                      )}
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mt: 0.5 }}
+                      >
+                        Ukupna cijena nakon promjene:{" "}
+                        <b>{reservation.pendingChange.totalPrice} €</b>
+                      </Typography>
+
+                      {reservation.pendingChange.note && (
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ mt: 1 }}
+                        >
+                          Napomena: {reservation.pendingChange.note}
+                        </Typography>
+                      )}
+                    </Box>
+                  )}
+
+                  {reservation.pendingContractChange && (
+                    <Box>
+                      <Typography variant="subtitle2" gutterBottom>
+                        Promjena ugovora (business estate)
+                      </Typography>
+
+                      {reservation.pendingContractChange.newUnitCount !==
+                        undefined && (
+                        <Typography variant="body2" color="text.secondary">
+                          Novi broj jedinica:{" "}
+                          {reservation.pendingContractChange.newUnitCount}
+                        </Typography>
+                      )}
+                      {reservation.unitCount !== undefined && (
+                        <Typography variant="body2" color="text.secondary">
+                          Stari broj jedinica: {reservation.unitCount}
+                        </Typography>
+                      )}
+                      {reservation.pendingContractChange.note && (
+                        <Typography variant="body2" color="text.secondary">
+                          Napomena: {reservation.pendingContractChange.note}
+                        </Typography>
+                      )}
+                    </Box>
+                  )}
+                </CardContent>
+              </Card>
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                Trenutno nema aktivnih promjena za ovu rezervaciju.
+              </Typography>
+            )}
           </Box>
         )}
       </DialogContent>
@@ -451,4 +615,4 @@ const ReservationModal: React.FC<Props> = ({ open, onClose, reservation }) => {
   );
 };
 
-export default ReservationModal;
+export default UserReservationModal;

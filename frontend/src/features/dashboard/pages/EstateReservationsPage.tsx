@@ -1,37 +1,44 @@
-import * as React from "react";
-import { DataGrid, GridPaginationModel, GridRowParams } from "@mui/x-data-grid";
+import { useGetEstateReservations } from "@/features/reservations/hook/useHostReservations";
+import { Box } from "@mui/material";
+import {
+  DataGrid,
+  GridPaginationModel,
+  GridRowParams,
+  GridSortModel,
+} from "@mui/x-data-grid";
+import { useState } from "react";
+import { useParams, useSearchParams } from "react-router";
 import { getReservationColumns } from "../internals/data/gridData";
-import UserReservationModal from "@/features/reservations/ReservationModal";
-import { useGetMyReservations } from "@/features/reservations/hook/useReservations";
-import { useSearchParams } from "react-router";
-import { GridSortModel } from "@mui/x-data-grid";
+import HostReservationModal from "@/features/reservations/HostReservationModal";
 
-export default function CustomizedDataGrid() {
-  const [paginationModel, setPaginationModel] =
-    React.useState<GridPaginationModel>({
-      page: 0, // 0 = prva stranica
-      pageSize: 10,
-    });
-  const [sortModel, setSortModel] = React.useState<GridSortModel>([
+function EstateReservationsPage() {
+  const { estateId } = useParams<{ estateId: string }>();
+  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
+    page: 0, // 0 = prva stranica
+    pageSize: 10,
+  });
+  const [sortModel, setSortModel] = useState<GridSortModel>([
     { field: "createdAt", sort: "desc" }, // default
   ]);
 
   const [searchParams, setSearchParams] = useSearchParams();
-
-  const { data: myReservations, isPending } = useGetMyReservations(
+  const { data: estateReservations, isPending } = useGetEstateReservations(
+    estateId!,
     paginationModel.page + 1,
     paginationModel.pageSize,
     searchParams,
-    sortModel
+    sortModel,
+    { refetchOnMount: false, refetchOnWindowFocus: false }
   );
 
-  const [open, setOpen] = React.useState(false);
-  const [selectedRowId, setSelectedRowId] = React.useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+  const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
-  const reservationRows = myReservations?.data || [];
-  const totalRows = myReservations?.meta.total || 0;
+  const reservationRows = estateReservations?.data || [];
+  const totalRows = estateReservations?.meta.total || 0;
 
-  const columns = getReservationColumns("user");
+  const columns = getReservationColumns("estate");
+
   const handleRowClick = (params: GridRowParams) => {
     setSelectedRowId(params.row.id);
     setOpen(true);
@@ -41,7 +48,8 @@ export default function CustomizedDataGrid() {
     setOpen(false);
     setSelectedRowId(null);
   };
-
+  if (!estateId)
+    return <Box>Neispravni podaci o nekretnini, vratite se nazad...</Box>;
   return (
     <>
       <DataGrid
@@ -98,7 +106,7 @@ export default function CustomizedDataGrid() {
       />
 
       {selectedRowId && (
-        <UserReservationModal
+        <HostReservationModal
           open={open}
           onClose={handleClose}
           reservationId={selectedRowId}
@@ -107,3 +115,5 @@ export default function CustomizedDataGrid() {
     </>
   );
 }
+
+export default EstateReservationsPage;

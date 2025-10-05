@@ -5,7 +5,6 @@ import {
   useQueryClient,
   useMutation,
   UseQueryOptions,
-  UseMutationOptions,
 } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import agent from "../../../app/api/agent";
@@ -19,8 +18,7 @@ import {
 } from "../types";
 import { useAppDispatch } from "@/app/store/hooks";
 import { pushNotification } from "@/features/notifications/notificationSlice";
-import { BusinessFormValues } from "@/features/dashboard/components/EditBusinessEstateInfo";
-import { ResidentialFormValues } from "@/features/dashboard/components/EditResidentialEstateInfo";
+import { AxiosError } from "axios";
 type EstateType = "residential" | "business";
 
 interface UseEstatesOptions {
@@ -96,10 +94,11 @@ export function useEstateUnavailableDates(
         startDate: Date;
         endDate: Date;
       }[],
-      [string, string]
+      [string, string, ...(string | undefined)[]]
     >,
     "queryKey" | "queryFn"
-  >
+  >,
+  params?: { reservationId?: string }
 ): UseQueryResult<
   {
     type: "RESERVATION" | "LOCK";
@@ -108,9 +107,9 @@ export function useEstateUnavailableDates(
   }[]
 > {
   return useQuery({
-    queryKey: ["estateBlockedDates", estateId],
+    queryKey: ["estateBlockedDates", estateId, params?.reservationId],
     queryFn: async () => {
-      const dates = await agent.Reservation.unavailableDates(estateId);
+      const dates = await agent.Reservation.unavailableDates(estateId, params);
       return dates;
     },
     ...options,
@@ -120,7 +119,16 @@ export function useEstateUnavailableDates(
 export function usePersonalEstates(
   page: number,
   limit: number = 10,
-  remainingSearchParams: URLSearchParams
+  remainingSearchParams: URLSearchParams,
+  options?: Omit<
+    UseQueryOptions<
+      PaginatedResponse<AllPersonalEstatesData>,
+      AxiosError,
+      PaginatedResponse<AllPersonalEstatesData>,
+      [string, string, Record<string, string>]
+    >,
+    "queryKey" | "queryFn"
+  >
 ) {
   const searchParams = new URLSearchParams(remainingSearchParams);
   searchParams.set("page", page.toString());
@@ -133,6 +141,7 @@ export function usePersonalEstates(
       return agent.Estates.getAllPersonalEstates(searchParams);
     },
     placeholderData: keepPreviousData,
+    ...options,
   });
 }
 

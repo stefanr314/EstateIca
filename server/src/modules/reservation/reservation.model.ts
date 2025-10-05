@@ -3,7 +3,6 @@ import { BaseEstateDocument } from "../estate/estate.model";
 import { UserDocument } from "../user/user.model";
 import { Status } from "../../shared/types/status.enum";
 import { RentalType } from "../../shared/types/rentalType.enum";
-import { required } from "zod/v4-mini";
 
 export interface IReservation {
   startDate: Date;
@@ -38,6 +37,7 @@ export interface IReservation {
   unitCount?: number; // Optional field for long-term rental unit count
   note?: string; // Optional field for additional notes
   isContractRequired?: boolean; // Optional field to indicate if a contract is required
+  lastRelatedContracId?: mongoose.Types.ObjectId | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -163,6 +163,11 @@ const reservationSchema = new mongoose.Schema<IReservation>(
       type: Boolean,
       required: false, // Optional field to indicate if a contract is required
       default: false, // Default to false for short-term rentals
+    },
+    lastRelatedContracId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Contract",
+      default: null,
     },
   },
   { timestamps: true }

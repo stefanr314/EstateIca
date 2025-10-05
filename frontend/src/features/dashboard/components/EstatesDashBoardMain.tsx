@@ -34,16 +34,6 @@ export default function YourEstatesDashboard() {
   const totalCount = response?.totalCount || 0;
   const totalPages = Math.ceil(totalCount / limit);
 
-  const handleHideToggle = (id: string) => {
-    // TODO: API poziv da sakrije/prikaže
-    console.log("Toggle visibility for estate:", id);
-  };
-
-  const handleDelete = (id: string) => {
-    // TODO: API poziv da obriše
-    console.log("Delete estate:", id);
-  };
-
   if (isLoading) return <AppLoader loading={isLoading} />;
 
   return (
@@ -54,10 +44,6 @@ export default function YourEstatesDashboard() {
         alignItems="center"
         sx={{ mb: 3 }}
       >
-        {/* <Typography variant="h5" sx={{ fontWeight: 600 }}>
-          Vaše nekretnine
-        </Typography> */}
-
         <Button
           variant="contained"
           onClick={() => navigate("/dashboard/your-estates/create")}

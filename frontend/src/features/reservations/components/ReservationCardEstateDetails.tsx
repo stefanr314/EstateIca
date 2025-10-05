@@ -8,6 +8,9 @@ import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import { CalendarMonth, Group, ChildCare } from "@mui/icons-material";
 import { DatePicker } from "@mui/x-date-pickers";
+import { useAppDispatch } from "@/app/store/hooks";
+import { useNavigate } from "react-router";
+import { setReservation } from "../reservationSlice";
 
 interface ReservationCardProps {
   defaultStartDate?: Date | null;
@@ -15,6 +18,7 @@ interface ReservationCardProps {
   isDisabled: boolean;
   guestCount?: number;
   childrenCount?: number;
+  unitCount?: number;
   isLongTermEstate?: boolean;
 }
 
@@ -24,15 +28,24 @@ export default function ReservationCard({
   isDisabled = false,
   guestCount,
   childrenCount,
+  unitCount,
   isLongTermEstate = false,
 }: ReservationCardProps) {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
   const handleReservation = () => {
-    console.log("Reservation details:", {
-      defaultStartDate,
-      defaultEndDate,
-      guestCount,
-      childrenCount,
-    });
+    dispatch(
+      setReservation({
+        startDate: defaultStartDate,
+        endDate: defaultEndDate,
+        guestCount,
+        childrenCount,
+        unitCount,
+      })
+    );
+
+    navigate("/finalize-your-reservation");
   };
 
   return (

@@ -94,8 +94,9 @@ export default function Dashboard() {
           <Stack
             spacing={2}
             sx={{
-              alignItems: "center",
-              mx: 3,
+              width: "100%",
+              maxWidth: "1400px",
+              mx: "auto",
               pb: 5,
               mt: { xs: 8, md: 0 },
             }}

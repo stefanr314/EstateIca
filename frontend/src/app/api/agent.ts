@@ -223,8 +223,16 @@ const Reservation = {
   pendingHostReservations: (params?: URLSearchParams) =>
     requests.get("/reservations/pending-host-reservations", params),
 
-  unavailableDates: (estateId: string) =>
-    requests.get(`/reservations/estate/${estateId}/unavailable-dates`),
+  unavailableDates: (estateId: string, params?: { reservationId?: string }) => {
+    const searchParams = params
+      ? new URLSearchParams(params as any)
+      : undefined;
+
+    return requests.get(
+      `/reservations/estate/${estateId}/unavailable-dates`,
+      searchParams
+    );
+  },
 
   // POST
   lockDates: (estateId: string, body: any) =>
@@ -334,9 +342,16 @@ const Reviews = {
 };
 
 const Contract = {
-  getContract: (contractId: string) => {
-    requests.get(`/contract/${contractId}`);
-  },
+  getContractDetails: (contractId: string) =>
+    requests.get(`/contract/details/${contractId}`),
+  downloadContract: (contractId: string) =>
+    axios.get(`/contract/${contractId}`, {
+      responseType: "blob",
+      withCredentials: true,
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+      },
+    }),
 };
 
 const Wishlist = {

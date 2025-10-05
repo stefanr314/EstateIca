@@ -176,6 +176,7 @@ export const extendReservation = async (
 ) => {
   try {
     if (!req.user) throw new UnauthorizedError("Korisnik nije prijavljen.");
+
     const currentUserId = req.user.id;
     const { reservationId } = req.params;
     const dto = req.body as ExtendReservationDto;
@@ -208,8 +209,9 @@ export const approvePendingReservation = async (
       currentUserId,
       reservationId
     );
+
     res.json({
-      reservation: result,
+      result,
     });
   } catch (error) {
     next(error);
@@ -231,7 +233,7 @@ export const approveBusinessUnitCountUpdate = async (
       currentUserId
     );
     res.json({
-      reservation: result,
+      result,
     });
   } catch (error) {
     next(error);
@@ -253,7 +255,7 @@ export const denyPendingReservation = async (
       reservationId
     );
     res.json({
-      reservation: result,
+      result,
     });
   } catch (error) {
     next(error);
@@ -538,8 +540,12 @@ export const getUnavailableDatesForEstate = async (
 ) => {
   try {
     const { estateId } = req.params;
+    const { reservationId } = req.query as unknown as {
+      reservationId?: string;
+    };
     const dates = await reservationService.getUnavailableDatesForEstate(
-      estateId
+      estateId,
+      reservationId
     );
     res.json(dates);
   } catch (err) {

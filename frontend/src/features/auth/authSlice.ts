@@ -4,6 +4,7 @@ import { RootState } from "@/app/store/store";
 import { BasicUserData, AuthState } from "./types";
 import { RegisterUserDto } from "./types";
 import { queryClient as localQueryClient } from "@/main";
+import { resetReservation } from "../reservations/reservationSlice";
 
 const initialState: AuthState = {
   user: null,
@@ -96,8 +97,11 @@ export const logoutUser = createAsyncThunk(
       console.warn("Logout request failed:", error);
     } finally {
       localStorage.removeItem("token");
+      localStorage.removeItem("lastContractId"); //check
       thunkAPI.dispatch(logout()); // ručno očisti state
-      localQueryClient.removeQueries({ queryKey: ["me"] });
+      thunkAPI.dispatch(resetReservation());
+      // localQueryClient.removeQueries({ queryKey: ["me"] });
+      localQueryClient.clear(); //ocisti kes
     }
   }
 );
@@ -174,7 +178,6 @@ const authSlice = createSlice({
       state.user = null;
       state.isAuthenticated = false;
       state.status = "idle";
-      localStorage.removeItem("token");
     },
     setUser: (state, action: PayloadAction<BasicUserData>) => {
       state.user = action.payload;

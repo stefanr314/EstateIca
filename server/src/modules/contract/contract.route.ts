@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getContract } from "./contract.controller";
+import { getContract, getContractDetails } from "./contract.controller";
 import { isAuth } from "../../shared/middlewares/auth.middleware";
 import { validateObjectId } from "../../shared/middlewares/validateObjectId";
 import { isActiveUser } from "../../shared/middlewares/isActiveUser";
@@ -14,6 +14,15 @@ router.get(
   isActiveUser,
   isVerifiedUser,
   getContract
+);
+
+router.get(
+  "/details/:contractId",
+  validateObjectId("contractId"),
+  isAuth,
+  isActiveUser,
+  isVerifiedUser,
+  getContractDetails
 );
 
 export default router;

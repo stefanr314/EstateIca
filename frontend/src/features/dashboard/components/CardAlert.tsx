@@ -12,11 +12,12 @@ import { useGetMyHostRequest } from "@/features/host-requests/hook/useHostReques
 
 export default function CardAlert() {
   const user = useAppSelector(selectUser);
-  const { data: myRequest } = useGetMyHostRequest();
   const [open, setOpen] = useState(false);
 
   // Ako je već host → ne prikazuj
   if (!user || user.role !== "guest" || !user.isVerified) return null;
+
+  const { data: myRequest } = useGetMyHostRequest();
   // Ako već ima podnesen zahtjev (bilo koji status) → ne prikazuj
   if (myRequest) return null;
 

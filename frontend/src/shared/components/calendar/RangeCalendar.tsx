@@ -42,6 +42,8 @@ type RangeCalendarProps = {
     startDate: Date;
     endDate: Date;
   }[];
+  readonly?: boolean;
+  lockStartDate?: boolean;
 };
 
 const changeMonth = (currentMonth: Date, direction: "next" | "prev") => {
@@ -58,6 +60,8 @@ const RangeCalendar: React.FC<RangeCalendarProps> = ({
   activeInput = null,
   minDate = new Date(),
   blockedDates,
+  readonly,
+  lockStartDate,
 }) => {
   const { isRangeValid } = isValidRangeCalculator(blockedDates ?? [], "day");
 
@@ -88,6 +92,16 @@ const RangeCalendar: React.FC<RangeCalendarProps> = ({
       } else {
         setEndDate(date);
       }
+      return;
+    }
+
+    if (lockStartDate) {
+      if (!startDate) return;
+      if (date <= startDate) {
+        // ne može unazad
+        return;
+      }
+      setEndDate(date);
       return;
     }
 
@@ -149,6 +163,7 @@ const RangeCalendar: React.FC<RangeCalendarProps> = ({
       onChange={handleDateChange}
       disableHighlightToday
       disablePast
+      readOnly={readonly}
       minDate={minDate}
       views={["day"]}
       sx={calendarStyles}
