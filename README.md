@@ -139,7 +139,7 @@ GOOGLE_PLACES_API_KEY=...
 
 ---
 
-##🧱 Database Design (conceptual)
+## 🧱 Database Design (conceptual)
 
 Key entities include:
 
@@ -152,7 +152,7 @@ Key entities include:
 
 ---
 
-##🧠 Technical Highlights
+## 🧠 Technical Highlights
 
 - Modular architecture with clear separation of concerns
 - Data consistency ensured through Mongo transactions and DTO validation
@@ -163,13 +163,13 @@ Key entities include:
 
 ---
 
-##📈 Current Status
+## 📈 Current Status
 The project is actively under development as part of the final university thesis.
 Upcoming milestones include finishing the host dashboard, real-time features, and Docker deployment.
 
 ---
 
-##👨‍💻 Author
+## 👨‍💻 Author
 Stefan R.
 Faculty of Electrical Engineering, East Sarajevo
 Field: Computer Engineering – Information Systems
