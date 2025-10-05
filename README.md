@@ -1,85 +1,131 @@
-# Web-based system for property rentals
+# 🏠 Web-based System for Property Rentals
 
-Diplomski rad – full-stack aplikacija za izdavanje i rezervaciju nekretnina (konceptualno slično Airbnb).  
-Aplikacija omogućava pregled, rezervacije i upravljanje nekretninama sa različitim tipovima (rezidencijalni i poslovni).
+**Final thesis project** – a full-stack web application for property listing, booking, and management (conceptually similar to Airbnb).  
+The system enables users to explore, reserve, and manage different types of estates (residential and business), with separate roles for guests, hosts, and admins.
 
 ---
 
-## 🛠️ Tehnologije
+## 🧩 Project Overview
+
+The system enables:
+- Property **advertisement and management** by verified hosts  
+- **Search, filtering, and booking** of available properties by guests  
+- Generation of **rental contracts** (PDF format)  
+- Validation of property **availability via interactive calendars**  
+- Handling of **short-term and long-term rental models**  
+- Secure **authentication and role-based access control**  
+- Asynchronous **background processing** with queues and workers  
+
+From an academic perspective, the project illustrates how distributed systems, asynchronous processing, and RESTful APIs can be integrated into a cohesive and scalable application.  
+From a practical standpoint, it provides a real example of a booking workflow that is modular, reusable, and easily extendable with microservice or cloud-based components.
+
+---
+
+## 🛠️ Technologies
 
 **Backend**
-- Node.js + Express
-- MongoDB (Mongoose)
-- Redis (BullMQ queue za background jobove)
-- JWT autentikacija
-- ImageKit API (upload i optimizacija slika)
-- Google Places API (adrese i lokacije)
+- **Node.js + Express** – RESTful API architecture  
+- **MongoDB (Mongoose)** – data modeling and schema validation  
+- **Redis + BullMQ** – background jobs and queue processing  
+- **JWT Authentication** – secure login and route protection  
+- **ImageKit API** – image upload and optimization  
+- **Google Places API** – address autocomplete and geolocation  
 
-**Frontend**
-- React + Vite
-- React Query
-- Axios
-- React Router
-- MUI (custom theme + responsive UI)
-
----
-
-## 📂 Struktura projekta
-
-- server --> backend (Express, MongoDB, Redis, API rute...)
-- frontend --> frontend (React + Vite + MUI + Redux + React Query...)
+### **Frontend**
+- **React + Vite** – modern SPA architecture  
+- **React Query** – server-state management
+- **React Router v6** – routing with loaders and actions   
+- **Axios** – HTTP client  
+- **React Router** – client-side routing  
+- **Material UI (MUI)** – responsive and accessible UI  
+- **Custom Theme System** – light/dark modes, custom “mint” palette  
 
 ---
 
-## ✨ Funkcionalnosti
+## 📂 Project Structure
 
-- ✅ Registracija i login korisnika (JWT)
-- ✅ Pregled detalja nekretnine (Estate details)
-- ✅ Rezervacije (kratkoročne i dugoročne)
-- ✅ Upload i prikaz slika (ImageKit)
-- ✅ Validacija dostupnosti (kroz kalendar i zauzete datume)
-- ✅ Google Places API integracija za adrese
-- ✅ Redis Cloud + BullMQ za background jobove
-
-**Planirano / u toku**
-- 🔄 Upravljanje nekretninama od strane domacina
-- 🔄 Upravljanje korisničkim profilima
-- 🔄 Wishlist (dodavanje i uklanjanje nekretnina)
-- 🔄 Recenzije i ocjene
-- 🔄 Chat sistem
-- 🔄 Docker (mongo, redis, server i frontend u docker-compose)
+project-root/
+│
+├── server/ # Backend – Express, MongoDB, Redis, API routes
+│
+├── frontend/ # Frontend – React, Vite, MUI, Redux, React Query
+│
+└── README.md
 
 ---
 
-## 🚀 Pokretanje projekta
+## ✨ Core Features
 
-### 1. Kloniranje repozitorija
+- ✅ **User registration and authentication** (JWT-based login & roles)
+- ✅ **Browsing and filtering estates** by type, location, and availability
+- ✅ **Reservation system** for short-term and long-term rentals  
+- ✅ **Contract generation** in PDF format for long-term rentals  
+- ✅ **Image upload and optimization** (via ImageKit API)
+- ✅ **Dynamic calendar validation** for booked dates
+- ✅ **Google Places API** for address search and autocomplete
+- ✅ **Redis Cloud + BullMQ** for scheduled background jobs  
+- ✅ **Data validation and DTO mapping** with Zod
+  
+### **Planned / In progress**
+- 🔄 Host dashboard (estate management)  
+- 🔄 Wishlist (save / remove estates)  
+- 🔄 Reviews and ratings  
+- 🔄 Real-time chat between users  
+- 🔄 Docker setup (Mongo, Redis, Server, Frontend)
+
+---
+
+### 🧭 Host Functionality
+- Manage owned estates (create, edit, delete)
+- View and confirm pending reservations
+- Access detailed reservation and contract dashboards
+- Handle guest reviews and ratings
+
+### 👤 Guest Functionality
+- Search and filter properties
+- Make and manage reservations
+- Request cancellation or date changes
+- View generated contracts for long-term rentals
+- Leave reviews and interact with hosts (planned)
+
+### 🔧 Admin Tools
+- User verification and host approval workflow
+- System statistics and activity logging (planned)
+- Content moderation (estates, reviews)
+
+---
+
+## 🚀 Running the Project
+
+### 1️⃣ Clone the repository
 ```bash
 git clone <repo-url>
 cd <repo-name>
 ```
 
-### 2. Pokretanje backenda
+### 2️⃣ Backend setup
 ```bash
 cd server
 npm install
 npm run dev
 ```
 
-### 3. Pokretanje frontenda
+### 3️⃣ Frontend setup
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-
+The frontend runs on http://localhost:5173
+The backend runs on http://localhost:3030 (configurable in .env)
 ---
 
 ## 🔑 Environment variables
 
-U repozitoriju se nalazi `.env.example` fajl. Potrebno je napraviti `.env` i popuniti vrijednostima.
+Each part of the project contains an .env.example file.
+Create a .env file and fill in your own values.
 
-**Primjer (`server/.env.example`):**
+**Example (`server/.env.example`):**
 ```env
 MONGO_URI=mongodb+srv://...
 REDIS_URL=...
@@ -89,9 +135,41 @@ IMAGEKIT_PRIVATE_KEY=...
 GOOGLE_PLACES_API_KEY=...
 ```
 
-> ℹ️ API ključevi nisu dio repozitorija iz sigurnosnih razloga.
+> ⚠️ API keys and secrets are excluded from the repository for security reasons.
 
 ---
 
-## 📌Status projekta
-Projekat je još u fazi izrade...
+##🧱 Database Design (conceptual)
+
+Key entities include:
+
+- User – roles: guest, host, admin
+- Estate – residential or business, linked to owner (host)
+- Reservation – tracks period, price, and contract status
+- Contract – generated PDF agreements linked to reservations
+- Review – user feedback system 
+- HostRequest – verification workflow for new hosts
+
+---
+
+##🧠 Technical Highlights
+
+- Modular architecture with clear separation of concerns
+- Data consistency ensured through Mongo transactions and DTO validation
+- Integration with cloud APIs (Google, ImageKit)
+- Background jobs for contract expiration, reminders, and data cleanup
+- React Query caching for improved frontend performance
+- Fully type-safe communication between frontend and backend using TypeScript
+
+---
+
+##📈 Current Status
+The project is actively under development as part of the final university thesis.
+Upcoming milestones include finishing the host dashboard, real-time features, and Docker deployment.
+
+---
+
+##👨‍💻 Author
+Stefan R.
+Faculty of Electrical Engineering, East Sarajevo
+Field: Computer Engineering – Information Systems
