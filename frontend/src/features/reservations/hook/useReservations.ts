@@ -3,6 +3,7 @@ import { useAppDispatch } from "@/app/store/hooks";
 import { pushNotification } from "@/features/notifications/notificationSlice";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  CompletedReservationWithReviewRow,
   CreateBusinessReservation,
   CreateResidentialReservation,
   IDetailedContract,
@@ -41,6 +42,7 @@ function useReservationMutation<TBody>(
       queryClient.invalidateQueries({
         queryKey: ["reservation-details", variables.reservationId],
       });
+      queryClient.invalidateQueries({ queryKey: ["personal-reservations"] });
 
       dispatch(
         pushNotification({
@@ -87,6 +89,17 @@ export const useGetMyReservations = (
       const res = await agent.Reservation.myReservations(searchParams);
       return res;
     },
+  });
+};
+
+export const useGetCompletedReservationsWithReviews = () => {
+  return useQuery({
+    queryKey: ["completed-reservations"],
+    queryFn: async (): Promise<CompletedReservationWithReviewRow[]> => {
+      return await agent.Reservation.completedReservationsWithReviews();
+    },
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 };
 

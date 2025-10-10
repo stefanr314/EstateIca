@@ -173,6 +173,13 @@ const reservationSchema = new mongoose.Schema<IReservation>(
   { timestamps: true }
 );
 
+reservationSchema.virtual("review", {
+  ref: "Review",
+  localField: "_id",
+  foreignField: "reservation",
+  justOne: true,
+});
+
 reservationSchema.pre("save", function (next) {
   if (this.startDate > this.endDate) {
     return next(new Error("Start date cannot be after end date"));

@@ -32,7 +32,7 @@ export default function MainHostReservationPage() {
       </Typography>
 
       {/* 📌 Lista korisnikovih estate-ova */}
-      <HostEstatesList />
+      <HostEstatesList navigateBasePath="/dashboard/reservations/estates" />
     </Paper>
   );
 }

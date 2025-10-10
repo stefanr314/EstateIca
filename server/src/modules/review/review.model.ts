@@ -26,7 +26,7 @@ const reviewSchema = new Schema<IReview>(
   {
     user: { type: Schema.Types.ObjectId, ref: "User", required: true },
     userFullName: { type: String, required: true },
-    estate: { type: Schema.Types.ObjectId, ref: "Estate", required: true },
+    estate: { type: Schema.Types.ObjectId, ref: "BaseEstate", required: true },
     reservation: {
       type: Schema.Types.ObjectId,
       ref: "Reservation",

@@ -147,6 +147,19 @@ export interface IDetailedContract extends Omit<IContract, "reservationId"> {
     lastRelatedContractId: string;
   };
 }
+export interface CompletedReservationWithReviewRow {
+  id: string;
+  estateId: string;
+  estateTitle: string;
+  estateType: "ResidentialEstate" | "BusinessEstate";
+  rentalType: "Long Term" | "Short Term";
+  totalPrice: number;
+  startDate: string;
+  endDate: string;
+  createdAt: string;
+  hasReview: boolean;
+  reviewId: string | null;
+}
 
 export interface ReservationWithContract {
   reservation: IReservation;

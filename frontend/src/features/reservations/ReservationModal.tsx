@@ -20,6 +20,8 @@ import {
   useTheme,
   useMediaQuery,
   IconButton,
+  Paper,
+  alpha,
 } from "@mui/material";
 
 import {
@@ -159,7 +161,15 @@ const UserReservationModal: React.FC<Props> = ({
         {tab === 0 && (
           <Box sx={{ p: 2 }}>
             {/* Status Card */}
-            <Card sx={{ mb: 2, bgcolor: "background.default" }}>
+            <Card
+              sx={{
+                mb: 2,
+                bgcolor: alpha(
+                  theme.palette.background.paper,
+                  theme.palette.mode === "dark" ? 0.6 : 1
+                ),
+              }}
+            >
               <CardContent sx={{ py: 2, "&:last-child": { pb: 2 } }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                   {getStatusIcon(reservation.status)}
@@ -188,7 +198,15 @@ const UserReservationModal: React.FC<Props> = ({
               {/* Left Column */}
               <Box>
                 {/* Host Information */}
-                <Card sx={{ mb: 2 }}>
+                <Card
+                  sx={{
+                    mb: 2,
+                    bgcolor: alpha(
+                      theme.palette.background.paper,
+                      theme.palette.mode === "dark" ? 0.6 : 1
+                    ),
+                  }}
+                >
                   <CardContent sx={{ py: 2, "&:last-child": { pb: 2 } }}>
                     <Typography
                       variant="h6"
@@ -269,7 +287,15 @@ const UserReservationModal: React.FC<Props> = ({
                 </Card>
 
                 {/* Dates Information */}
-                <Card>
+                <Card
+                  sx={{
+                    mb: 2,
+                    bgcolor: alpha(
+                      theme.palette.background.paper,
+                      theme.palette.mode === "dark" ? 0.6 : 1
+                    ),
+                  }}
+                >
                   <CardContent sx={{ py: 2, "&:last-child": { pb: 2 } }}>
                     <Typography
                       variant="h6"
@@ -317,7 +343,15 @@ const UserReservationModal: React.FC<Props> = ({
               {/* Right Column */}
               <Box>
                 {/* Estate Information */}
-                <Card sx={{ mb: 2 }}>
+                <Card
+                  sx={{
+                    mb: 2,
+                    bgcolor: alpha(
+                      theme.palette.background.paper,
+                      theme.palette.mode === "dark" ? 0.6 : 1
+                    ),
+                  }}
+                >
                   <CardContent sx={{ py: 2, "&:last-child": { pb: 2 } }}>
                     <Typography
                       variant="h6"
@@ -362,7 +396,15 @@ const UserReservationModal: React.FC<Props> = ({
                 </Card>
 
                 {/* Payment Information */}
-                <Card>
+                <Card
+                  sx={{
+                    mb: 2,
+                    bgcolor: alpha(
+                      theme.palette.background.paper,
+                      theme.palette.mode === "dark" ? 0.6 : 1
+                    ),
+                  }}
+                >
                   <CardContent sx={{ py: 2, "&:last-child": { pb: 2 } }}>
                     <Typography
                       variant="h6"
@@ -591,9 +633,11 @@ const UserReservationModal: React.FC<Props> = ({
                 </CardContent>
               </Card>
             ) : (
-              <Typography variant="body2" color="text.secondary">
-                Trenutno nema aktivnih promjena za ovu rezervaciju.
-              </Typography>
+              <Paper elevation={2}>
+                <Typography variant="body1" color="text.secondary">
+                  Trenutno nema aktivnih promjena za ovu rezervaciju.
+                </Typography>
+              </Paper>
             )}
           </Box>
         )}

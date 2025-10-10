@@ -28,6 +28,7 @@ import {
   getBlockedDayType,
   isValidRangeCalculator,
 } from "@/shared/helper/calculateDisabledDates";
+import { isPastCheckInCutoff } from "@/features/reservations/components/UserReservationActions";
 
 type RangeCalendarProps = {
   startDate: Date | null;
@@ -75,6 +76,9 @@ const RangeCalendar: React.FC<RangeCalendarProps> = ({
   const [nextMonth, setNextMonth] = useState<Date>(() => {
     return addMonths(currentMonth, 1);
   });
+
+  const isToday = startDate ? isSameDay(new Date(), startDate) : false;
+  const isPastCutoffToday = isToday && isPastCheckInCutoff(new Date(), 20);
 
   const handleDateChange = (date: Date | null) => {
     if (!date) return;
@@ -181,7 +185,7 @@ const RangeCalendar: React.FC<RangeCalendarProps> = ({
               day={day}
               outsideCurrentMonth={outsideCurrentMonth}
               selected={false}
-              disabled={props.disabled || !!blocked?.type} // ne može klik ako je blokiran
+              disabled={props.disabled || !!blocked?.type || isPastCutoffToday} // ne može klik ako je blokiran
               sx={{
                 ...(isStartOrEndDate(day) && {
                   backgroundColor: theme.palette.primary.main,

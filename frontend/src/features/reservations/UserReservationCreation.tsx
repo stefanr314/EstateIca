@@ -139,7 +139,14 @@ const UserReservationCreation: React.FC = () => {
   }
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        bgcolor: "background.default",
+      }}
+    >
       {/* Top AppBar */}
       <AppBar position="static" color="primary">
         <Toolbar>
@@ -154,11 +161,22 @@ const UserReservationCreation: React.FC = () => {
       </AppBar>
 
       {/* Main layout */}
-      <Grid container sx={{ p: 3 }} spacing={3}>
+      <Grid
+        container
+        sx={{ flexGrow: 1, p: 3, display: "flex", alignItems: "stretch" }}
+        spacing={3}
+      >
         {/* Sidebar */}
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Card>
-            <CardContent>
+        <Grid size={{ xs: 12, md: 4 }} sx={{ display: "flex" }}>
+          <Card
+            sx={{
+              flexGrow: 1,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+            }}
+          >
+            <CardContent sx={{ textAlign: "center" }}>
               <Typography variant="h6" gutterBottom>
                 Sažetak rezervacije
               </Typography>
@@ -208,9 +226,16 @@ const UserReservationCreation: React.FC = () => {
         </Grid>
 
         {/* Stepper + main content */}
-        <Grid size={{ xs: 12, md: 8 }}>
-          <Card>
-            <CardContent>
+        <Grid size={{ xs: 12, md: 8 }} sx={{ display: "flex" }}>
+          <Card
+            sx={{
+              flexGrow: 1,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+            }}
+          >
+            <CardContent sx={{ textAlign: "center" }}>
               <Stepper activeStep={activeStep} alternativeLabel>
                 {steps.map((label) => (
                   <Step key={label}>
@@ -341,7 +366,7 @@ const UserReservationCreation: React.FC = () => {
                     variant="contained"
                     onClick={() => {
                       setFlag(false);
-                      navigate("/dashboard/reservations");
+                      navigate("/dashboard/reservations/mine");
                     }}
                   >
                     Moje rezervacije

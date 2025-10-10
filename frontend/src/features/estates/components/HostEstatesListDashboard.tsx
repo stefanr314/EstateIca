@@ -7,7 +7,15 @@ import { useNavigate, useSearchParams } from "react-router";
 
 const limit = 10;
 
-export default function HostEstatesList() {
+interface HostEstatesListProps {
+  navigateBasePath: string; // npr. "/dashboard/reservations/estates" ili "/dashboard/reviews/estates"
+  overlayText?: string; // tekst za hover overlay
+}
+
+export default function HostEstatesList({
+  navigateBasePath,
+  overlayText = "Prikaži rezervaciju",
+}: HostEstatesListProps) {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [searchParams] = useSearchParams();
@@ -34,9 +42,8 @@ export default function HostEstatesList() {
           <EstateItem
             key={estate._id}
             estate={estate}
-            onClick={(estateId) =>
-              navigate(`/dashboard/reservations/estates/${estateId}`)
-            } //TODO
+            overlayText={overlayText}
+            onClick={(estateId) => navigate(`${navigateBasePath}/${estateId}`)}
           />
         ))}
       </Stack>
