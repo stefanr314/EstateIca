@@ -65,11 +65,11 @@ project-root/
 - ✅ **Google Places API** for address search and autocomplete
 - ✅ **Redis Cloud + BullMQ** for scheduled background jobs  
 - ✅ **Data validation and DTO mapping** with Zod
+- ✅ **Host dashboard (estate management)**
+- ✅ **Reviews and ratings**
   
 ### **Planned / In progress**
-- 🔄 Host dashboard (estate management)  
 - 🔄 Wishlist (save / remove estates)  
-- 🔄 Reviews and ratings  
 - 🔄 Real-time chat between users  
 - 🔄 Docker setup (Mongo, Redis, Server, Frontend)
 
