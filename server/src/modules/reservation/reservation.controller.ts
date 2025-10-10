@@ -574,3 +574,20 @@ export const getUserReservations = async (
     next(error);
   }
 };
+
+export const getCompletedReservationsWithReviews = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    if (!req.user) throw new UnauthorizedError("Korisnik nije prijavljen.");
+    const userId = req.user.id;
+    const reservationsWithReviews =
+      await reservationService.getCompletedReservationsWithReviews(userId);
+
+    res.json(reservationsWithReviews);
+  } catch (error) {
+    next(error);
+  }
+};

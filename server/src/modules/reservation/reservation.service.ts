@@ -10,7 +10,7 @@ import {
   UpdateResidentialReservationGuestCountDto,
 } from "./dtos/updateReservation.dto";
 import { Status } from "../../shared/types/status.enum";
-import mongoose from "mongoose";
+import mongoose, { ObjectId } from "mongoose";
 import {
   BadRequestError,
   ConflictError,
@@ -48,6 +48,8 @@ import { LockDate } from "./lockDates.model";
 import { utcMidnight } from "../../shared/utils/transformToUTCMidnight";
 import { getSmartMonthCount } from "../../shared/utils/smartMonthCount";
 import { reservationQueue } from "../../bullmq/queues/reservation.queue";
+import { IReview } from "../review/review.model";
+import { HydratedDocument } from "mongoose";
 
 const EXTRA_FEE_PER_EXTRAGUEST = 5; //dodatna cijena po extra gostu koji je izvan maksimalnog broja gostiju u smjestaju
 const CHILDREN_DISCOUNT = 4;
@@ -1659,6 +1661,38 @@ export class ReservationService {
         totalPages: Math.ceil(total / limit),
       },
     };
+  }
+
+  async getCompletedReservationsWithReviews(userId: string) {
+    const reservations = await Reservation.find({
+      userOfReservation: userId,
+      status: Status.COMPLETED,
+    })
+      .populate<{
+        estateReserved: {
+          _id: ObjectId;
+          title: string;
+          estateType: "ResidentialEstate" | "BusinessEstate";
+        };
+      }>("estateReserved", "title estateType")
+      .populate<{ review: HydratedDocument<IReview | null> }>("review", "_id") // virtuelno polje iz reservation.model.ts
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // formatiraj rezultat za frontend prikaz
+    return reservations.map((r) => ({
+      id: r._id.toString(),
+      estateId: r.estateReserved._id.toString(),
+      estateTitle: r.estateReserved.title,
+      estateType: r.estateReserved.estateType,
+      rentalType: r.rentalType,
+      totalPrice: r.totalPrice,
+      startDate: r.startDate,
+      endDate: r.endDate,
+      createdAt: r.createdAt,
+      hasReview: !!r.review,
+      reviewId: r.review?._id?.toString() ?? null,
+    }));
   }
 }
 

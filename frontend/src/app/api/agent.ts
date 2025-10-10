@@ -209,6 +209,7 @@ const Location = {
 };
 
 const Reservation = {
+  //GET
   estateReservations: (estateId: string, params?: URLSearchParams) =>
     requests.get(`/reservations/estate/${estateId}`, params),
   myReservations: (params?: URLSearchParams) =>
@@ -222,6 +223,9 @@ const Reservation = {
 
   pendingHostReservations: (params?: URLSearchParams) =>
     requests.get("/reservations/pending-host-reservations", params),
+
+  completedReservationsWithReviews: () =>
+    requests.get("/reservations/completed-reservations-reviews"),
 
   unavailableDates: (estateId: string, params?: { reservationId?: string }) => {
     const searchParams = params

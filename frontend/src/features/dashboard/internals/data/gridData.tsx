@@ -62,7 +62,7 @@ export const getReservationColumns = (variant: ColumnVariant): GridColDef[] => {
       headerName: "Smještaj",
       width: 150,
     },
-    participantColumn, // 👈 dinamična kolona
+    participantColumn,
     {
       field: "startDate",
       headerName: "Dolazak",

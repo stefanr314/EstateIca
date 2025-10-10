@@ -7,7 +7,7 @@ const MonthRangeCalendarDual = React.lazy(
   () => import("@/shared/components/calendar/MonthRangeCalendar")
 );
 
-import { differenceInDays, format } from "date-fns";
+import { differenceInDays, format, isBefore } from "date-fns";
 
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -32,11 +32,7 @@ import ExpandMore from "@mui/icons-material/ExpandMore";
 import Group from "@mui/icons-material/Group";
 import Home from "@mui/icons-material/Home";
 
-import {
-  IReservation,
-  IReservationPopulated,
-  ReservationStatus,
-} from "../types";
+import { IReservationPopulated, ReservationStatus } from "../types";
 import { getSmartMonthCount } from "@/shared/helper/getSmartMonthCalculator";
 import { GuestSelector } from "@/features/estates/components/GuestSelector";
 import { useEstateUnavailableDates } from "@/features/estates/hooks/useEstate";
@@ -54,6 +50,26 @@ import { useNavigate } from "react-router";
 interface Props {
   reservation: IReservationPopulated;
 }
+
+export function isSameDay(date1: Date, date2: Date) {
+  return (
+    date1.getFullYear() === date2.getFullYear() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getDate() === date2.getDate()
+  );
+}
+
+export function isPastCheckInCutoff(startDate: Date, cutoffHour = 20) {
+  const now = new Date();
+  if (!isSameDay(now, startDate)) return false;
+
+  const cutoff = new Date(startDate);
+  cutoff.setHours(cutoffHour, 0, 0, 0);
+
+  return now.getTime() >= cutoff.getTime();
+}
+
+const cutoffHour = 20;
 
 const getStayLengthInDays = (start: Date | null, end: Date | null) =>
   start && end ? differenceInDays(end, start) : 0;
@@ -109,7 +125,7 @@ const UserReservationActions: React.FC<Props> = ({ reservation }) => {
 
   const isPendingChangeUpdate = reservation.pendingChange !== undefined;
   const isExtension =
-    new Date(reservation.startDate) < new Date() &&
+    isBefore(new Date(reservation.startDate), new Date()) &&
     reservation.rentalType === "Short Term";
 
   const isExtendValid = useMemo(() => {
@@ -146,6 +162,11 @@ const UserReservationActions: React.FC<Props> = ({ reservation }) => {
     isExtending ||
     isCancelling ||
     isUpdatingGuests;
+
+  const isPastCutoff = isPastCheckInCutoff(
+    new Date(reservation.startDate),
+    cutoffHour
+  );
 
   const isValidStay = useMemo(() => {
     if (!estateReserved) return true; // fallback kad nije populated
@@ -235,10 +256,9 @@ const UserReservationActions: React.FC<Props> = ({ reservation }) => {
   }
 
   // 🟥 Early return ako je otkazana
-  // DODATI AKO JE LONG TERM OPCIJU DA SE PREGLEDA CONTRACT IZ LOCAL STORAGE POVUCI
   if (reservation.status === ReservationStatus.CANCELED) {
     return (
-      <Box sx={{ p: 2 }}>
+      <Paper elevation={2} sx={{ p: 2 }}>
         <Typography variant="h6" gutterBottom>
           Akcije za rezervaciju
         </Typography>
@@ -267,12 +287,121 @@ const UserReservationActions: React.FC<Props> = ({ reservation }) => {
             </Button>
           </Stack>
         )}
-      </Box>
+      </Paper>
+    );
+  }
+
+  // Early return za completed rezervacije
+  if (reservation.status === ReservationStatus.COMPLETED) {
+    return (
+      <Paper elevation={2} sx={{ p: 2 }}>
+        <Typography variant="h6" gutterBottom>
+          Akcije za rezervaciju
+        </Typography>
+        <Divider sx={{ my: 2 }} />
+
+        <Typography variant="subtitle2" color="success.main" gutterBottom>
+          Vaša rezervacija je uspješno završena.
+        </Typography>
+
+        <Typography variant="body2" color="text.secondary" gutterBottom>
+          Zahvaljujemo vam na korištenju naših usluga. Možete pogledati detalje
+          ili ostaviti recenziju za ovaj boravak.
+        </Typography>
+
+        <Stack spacing={2} sx={{ mt: 2 }}>
+          {isLongTerm && reservation.lastRelatedContractId && (
+            <Stack>
+              <Typography gutterBottom>
+                Pogledajte posljednji ugovor za ovu rezervaciju klikom na dugme
+                ispod.
+              </Typography>
+              <Button
+                variant="outlined"
+                onClick={() =>
+                  navigate(
+                    `/dashboard/contract/${reservation.lastRelatedContractId}`,
+                    { replace: true }
+                  )
+                }
+              >
+                Pregledaj ugovor
+              </Button>
+            </Stack>
+          )}
+
+          {/* Dugme za recenziju */}
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() =>
+              navigate(`/dashboard/review/create/${reservation._id}`)
+            }
+          >
+            Ostavi recenziju
+          </Button>
+        </Stack>
+      </Paper>
+    );
+  }
+
+  // Early return za pending rezervacije
+  if (reservation.status === ReservationStatus.PENDING) {
+    return (
+      <Paper elevation={2} sx={{ p: 2 }}>
+        <Typography variant="h6" gutterBottom>
+          Akcije za rezervaciju
+        </Typography>
+        <Divider sx={{ my: 2 }} />
+
+        <Typography variant="subtitle2" color="success.main" gutterBottom>
+          Vaša rezervacija je u procesu odobravanja.
+        </Typography>
+
+        <Typography variant="body2" color="text.secondary" gutterBottom>
+          Trenutno ne mozete napraviti nijednu akciju, dok vlasnik ne odobri
+          promjene. Vasa rezervacija koju ste vec napravili je i dalje vazeca{" "}
+          {"("}vazi samo za prethodno potvrdjene rezervacije.{")"}
+        </Typography>
+
+        <Stack spacing={2} sx={{ mt: 2 }}>
+          {isLongTerm && reservation.lastRelatedContractId && (
+            <Stack>
+              <Typography gutterBottom>
+                Pogledajte posljednji ugovor za ovu rezervaciju klikom na dugme
+                ispod.
+              </Typography>
+              <Button
+                variant="outlined"
+                onClick={() =>
+                  navigate(
+                    `/dashboard/contract/${reservation.lastRelatedContractId}`,
+                    { replace: true }
+                  )
+                }
+              >
+                Pregledaj ugovor
+              </Button>
+            </Stack>
+          )}
+
+          {/* Dugme za recenziju */}
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() =>
+              navigate(`/dashboard/review/create/${reservation._id}`)
+            }
+          >
+            Ostavi recenziju
+          </Button>
+        </Stack>
+      </Paper>
     );
   }
 
   return (
-    <Box sx={{ p: 2 }}>
+    <Paper elevation={2} sx={{ p: 2 }}>
       <Typography variant="h6" gutterBottom>
         Akcije za rezervaciju
       </Typography>
@@ -284,7 +413,9 @@ const UserReservationActions: React.FC<Props> = ({ reservation }) => {
             <AccordionSummary expandIcon={<ExpandMore />}>
               <Typography>
                 {isShortTerm
-                  ? "Promjena datuma / produženje"
+                  ? isExtension
+                    ? "Produzi rezervaciju"
+                    : "Promjeni datume"
                   : "Promjena datuma"}
               </Typography>
             </AccordionSummary>
@@ -401,7 +532,8 @@ const UserReservationActions: React.FC<Props> = ({ reservation }) => {
                       disabled={
                         disabledButton ||
                         !isValidStay ||
-                        (isExtension && !isExtendValid)
+                        (isExtension && !isExtendValid) ||
+                        (!isExtension && isPastCutoff)
                       }
                       onClick={isExtension ? handleExtend : handleUpdateDates}
                     >
@@ -431,7 +563,8 @@ const UserReservationActions: React.FC<Props> = ({ reservation }) => {
         {/* === PROMJENA BROJA GOSTIJU (short term only) === */}
         {isShortTerm &&
           reservation.status === ReservationStatus.CONFIRMED &&
-          isResidential && (
+          isResidential &&
+          !isExtension && (
             <Accordion>
               <AccordionSummary expandIcon={<ExpandMore />}>
                 <Typography>Promjena broja gostiju</Typography>
@@ -575,7 +708,7 @@ const UserReservationActions: React.FC<Props> = ({ reservation }) => {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </Paper>
   );
 };
 

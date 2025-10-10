@@ -22,7 +22,7 @@ export const createReview = async (
 
     const result = await reviewService.createReview(userId, reservationId, dto);
 
-    res.status(201).json(result);
+    res.status(201).json({ review: result.review });
   } catch (error) {
     next(error);
   }

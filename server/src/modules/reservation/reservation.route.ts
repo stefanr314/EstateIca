@@ -24,6 +24,7 @@ import {
   getPendingReservationsForHost,
   getReservationById,
   denyReservationByHost,
+  getCompletedReservationsWithReviews,
 } from "./reservation.controller";
 import { isAuth } from "../../shared/middlewares/auth.middleware";
 import { validateObjectId } from "../../shared/middlewares/validateObjectId";
@@ -94,6 +95,15 @@ router.get(
   isVerifiedUser,
   hasRole([Role.HOST]),
   getPendingReservationsForHost
+);
+
+router.get(
+  "/completed-reservations-reviews",
+  isAuth,
+  isActiveUser,
+  isVerifiedUser,
+  hasRole([Role.HOST, Role.GUEST]),
+  getCompletedReservationsWithReviews
 );
 
 router.get(

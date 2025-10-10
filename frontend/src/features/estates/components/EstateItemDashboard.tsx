@@ -11,9 +11,14 @@ import { AllPersonalEstatesData } from "../types";
 interface EstateItemProps {
   estate: AllPersonalEstatesData;
   onClick: (id: string) => void;
+  overlayText?: string; //
 }
 
-export default function EstateItem({ estate, onClick }: EstateItemProps) {
+export default function EstateItem({
+  estate,
+  onClick,
+  overlayText = "Prikazi rezervacije",
+}: EstateItemProps) {
   return (
     <Card
       sx={{
@@ -77,7 +82,7 @@ export default function EstateItem({ estate, onClick }: EstateItemProps) {
           fontSize: "1.2rem",
         }}
       >
-        Prikaži rezervacije
+        {overlayText}
       </Box>
     </Card>
   );

@@ -9,14 +9,13 @@ import AppNavbar from "./components/AppNavbar";
 import Header from "./components/Header";
 import SideMenu from "./components/SideMenu";
 
-import {
-  chartsCustomizations,
-  dataGridCustomizations,
-  datePickersCustomizations,
-  treeViewCustomizations,
-} from "./theme/customizations";
+// import {
+//   chartsCustomizations,
+//   dataGridCustomizations,
+//   datePickersCustomizations,
+//   treeViewCustomizations,
+// } from "./theme/customizations";
 import { Outlet } from "react-router";
-import { useSelector } from "react-redux";
 import { selectUser, verificationSender } from "../auth/authSlice";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { pushNotification } from "../notifications/notificationSlice";
@@ -30,32 +29,29 @@ import {
   DialogTitle,
 } from "@mui/material";
 
-const xThemeComponents = {
-  ...chartsCustomizations,
-  ...dataGridCustomizations,
-  ...datePickersCustomizations,
-  ...treeViewCustomizations,
-};
+// const xThemeComponents = {
+//   ...chartsCustomizations,
+//   ...dataGridCustomizations,
+//   ...datePickersCustomizations,
+//   ...treeViewCustomizations,
+// };
 
 export default function Dashboard() {
-  const currentUser = useSelector(selectUser);
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectUser);
 
   const [open, setOpen] = useState(false);
 
-  if (!user) return null;
-
   useEffect(() => {
-    if (currentUser && !currentUser.isVerified) {
+    if (user && !user.isVerified) {
       setOpen(true);
       // dispatch(pushNotification(...))
     }
-  }, [currentUser]);
+  }, [user]);
 
   const handleClick = async () => {
     try {
-      await dispatch(verificationSender({ email: user.email })).unwrap();
+      await dispatch(verificationSender({ email: user!.email })).unwrap();
       dispatch(
         pushNotification({
           type: "info",
@@ -75,6 +71,9 @@ export default function Dashboard() {
   function handleClose() {
     setOpen(false);
   }
+
+  if (!user) return null;
+
   return (
     <>
       <Box sx={{ display: "flex" }}>

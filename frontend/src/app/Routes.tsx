@@ -32,6 +32,8 @@ import HostReservationDashboard from "@/features/dashboard/pages/HostReservation
 import ContractDetails from "@/features/dashboard/components/ContractDetails";
 import UserReservationCreation from "@/features/reservations/UserReservationCreation";
 import EstateReservationsPage from "@/features/dashboard/pages/EstateReservationsPage";
+import ReservationReviewDataGridPage from "@/features/reviews/ReservationReviewDataGridPage";
+import ReviewsForEstatePage from "@/features/reviews/ReviewsForEstatePage";
 
 const router = createBrowserRouter([
   {
@@ -114,8 +116,12 @@ const router = createBrowserRouter([
           { path: "contract/:contractId", element: <ContractDetails /> },
 
           // Reviews
-          { path: "reviews/mine", element: <ReviewsDashboard /> },
+          { path: "reviews/mine", element: <ReservationReviewDataGridPage /> },
           { path: "reviews/host", element: <ReviewsDashboard /> },
+          {
+            path: "reviews/estates/:estateId",
+            element: <ReviewsForEstatePage />,
+          },
 
           // Profile
           { path: "profile", element: <UserProfileDashboard /> },

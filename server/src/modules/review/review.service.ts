@@ -7,6 +7,7 @@ import { Status } from "../../shared/types/status.enum";
 import {
   generateMongoAverageRatingUpdate,
   generateMongoAverageRatingUpdateForUpdate,
+  RatingFields,
 } from "../../shared/utils/updateAverageRating";
 import { ResidentialEstate } from "../estate/estate.model";
 import { Reservation } from "../reservation/reservation.model";
@@ -82,18 +83,26 @@ export class ReviewService {
         );
 
         // Ažuriranje prosječne ocjene nekretnine
-        const estateId = reservationToGetReviewed.estateReserved;
+        const estate = await ResidentialEstate.findById(
+          reservationToGetReviewed.estateReserved
+        ).session(session);
+        if (!estate) throw new NotFoundError("Nekretnina nije pronađena.");
 
-        const updateQuery = generateMongoAverageRatingUpdate(
-          "averageRating",
-          "reviewsCount",
-          newReview[0].rating
-        );
+        const count = estate.reviewsCount;
+        const updatedAvg = {} as RatingFields;
 
-        await ResidentialEstate.findByIdAndUpdate(estateId, [updateQuery], {
-          new: true,
-          session,
+        (Object.keys(rating) as (keyof RatingFields)[]).forEach((key) => {
+          //formula je oblika (stariAvg*brojrecenzija + noviAvg) / (brojrecenzija + 1)
+          const oldAvg = estate.averageRating[key] ?? 0;
+          updatedAvg[key] = (oldAvg * count + rating[key]) / (count + 1);
+          updatedAvg[key] =
+            Math.round(Math.max(1, Math.min(10, updatedAvg[key])) * 100) / 100;
         });
+
+        estate.averageRating = updatedAvg;
+        estate.reviewsCount = count + 1; //broj recenzija je za jedan veci
+
+        await estate.save({ session });
 
         return { review: newReview[0], userAvatar };
       });
@@ -151,8 +160,11 @@ export class ReviewService {
   }
 
   // Dohvaćanje recenzije po ID-u
-  async getReviewById(reviewId: string): Promise<IReview | null> {
-    const review = await Review.findById(reviewId);
+  async getReviewById(reviewId: string) {
+    const review = await Review.findById(reviewId)
+      .populate("user", "firstName lastName")
+      .populate("estate", "title")
+      .populate("reservation", "startDate endDate");
 
     if (!review) throw new NotFoundError("Recenzija nije pronađena");
 
@@ -160,11 +172,7 @@ export class ReviewService {
   }
 
   // Ažuriranje recenzije
-  async updateReview(
-    reviewId: string,
-    userId: string,
-    dto: UpdateReviewDto
-  ): Promise<IReview | null> {
+  async updateReview(reviewId: string, userId: string, dto: UpdateReviewDto) {
     const session = await mongoose.startSession();
 
     try {
@@ -194,19 +202,42 @@ export class ReviewService {
         logging.log(oldRating);
         logging.log(newRating);
 
-        // Ažuriranje prosječne ocjene nekretnine
-        const estateId = review.estate;
-        const updateQuery = generateMongoAverageRatingUpdateForUpdate(
-          "averageRating",
-          "reviewsCount",
-          oldRating,
-          newRating
+        const estate = await ResidentialEstate.findById(review.estate).session(
+          session
         );
+        if (!estate) throw new NotFoundError("Nekretnina nije pronađena.");
 
-        await ResidentialEstate.findByIdAndUpdate(estateId, [updateQuery], {
-          new: true,
-          session,
+        // Ovakva operacija ne bi trebal da bude CPU intensive ni kada bismo imali 10 000 izmjenjenih recenzija u minuti
+        const count = estate.reviewsCount;
+        const updatedAvg = {} as RatingFields;
+
+        (Object.keys(newRating) as (keyof RatingFields)[]).forEach((key) => {
+          //formula je oblika (stariAvg*brojrecenzija + (noviAvg - stariAvg)) / brojrecenzija
+          const oldAvg = estate.averageRating[key] ?? 0;
+          updatedAvg[key] =
+            (oldAvg * count + (newRating[key] - oldRating[key])) / count;
+
+          // Osigura da ostane u opsegu [1, 10] i zaokruzen na dvije decimale
+          updatedAvg[key] =
+            Math.round(Math.max(1, Math.min(10, updatedAvg[key])) * 100) / 100;
         });
+
+        estate.averageRating = updatedAvg;
+        await estate.save({ session });
+
+        // // Ažuriranje prosječne ocjene nekretnine
+        // const estateId = review.estate;
+        // const updateQuery = generateMongoAverageRatingUpdateForUpdate(
+        //   "averageRating",
+        //   "reviewsCount",
+        //   oldRating,
+        //   newRating
+        // );
+
+        // await ResidentialEstate.findByIdAndUpdate(estateId, [updateQuery], {
+        //   new: true,
+        //   session,
+        // });
 
         return review;
       });
