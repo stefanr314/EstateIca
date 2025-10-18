@@ -3,7 +3,14 @@ import { Box, Chip } from "@mui/material";
 import { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 
 export const columns: GridColDef<HostRequestRow>[] = [
-  { field: "user", headerName: "ID korisnika", width: 200 },
+  {
+    field: "user",
+    headerName: "ID korisnika",
+    valueFormatter: (value, row) => {
+      return row._id;
+    },
+    width: 200,
+  },
   {
     field: "requestedType",
     headerName: "Tip zahtjeva",
@@ -69,7 +76,7 @@ export const columns: GridColDef<HostRequestRow>[] = [
     field: "updatedAt",
     headerName: "Azuriran",
     valueFormatter: (params: any) =>
-      new Date(params.value as string).toLocaleString("sr-Latn"),
+      new Date(params as string).toLocaleString("sr-Latn"),
     width: 180,
   },
 ];
