@@ -1,11 +1,20 @@
 import mongoose from "mongoose";
 import { MONGODB_URL } from "../../config/config";
 
+let isConnected = false;
+
+mongoose.connection.on("disconnected", () => {
+  logging.warn("⚠️ MongoDB disconnected!");
+  isConnected = false;
+});
+
 const connectDB = async (): Promise<void> => {
+  if (isConnected) return;
+
   try {
     const conn = await mongoose.connect(MONGODB_URL);
+    isConnected = true;
     logging.log(`MongoDB Connected: ${conn.connection.host}`);
-    logging.log(`MongoDB Connected: ${conn.connection.db?.databaseName}`);
   } catch (error) {
     logging.error(
       "Error connecting to the database:",

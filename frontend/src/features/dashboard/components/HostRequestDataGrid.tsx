@@ -89,7 +89,7 @@ export default function HostRequestDataGrid() {
               color: (theme) =>
                 theme.palette.mode === "light"
                   ? theme.palette.text.disabled
-                  : theme.palette.grey[600],
+                  : theme.palette.grey[300],
             },
           },
         }}

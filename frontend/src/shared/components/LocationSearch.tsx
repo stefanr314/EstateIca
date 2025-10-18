@@ -67,6 +67,11 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect }) => {
               </>
             ),
           }}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": { border: "none" }, // uklanja border
+            },
+          }}
         />
       )}
     />

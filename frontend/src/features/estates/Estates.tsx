@@ -10,35 +10,11 @@ import {
   Skeleton,
 } from "@mui/material";
 import EstatesCard from "./components/EstatesCard";
-import FilterBar from "./components/FilterBar";
+// import FilterBar from "./components/FilterBar";
 import { fetchEstates, useEstates } from "./hooks/useEstate";
 import { useQueryClient } from "@tanstack/react-query";
 import { useParams, useSearchParams } from "react-router";
 import QueryErrorHandler from "@/shared/components/QueryErrorHandler";
-
-// // Dummy data
-// const mockEstates = Array.from({ length: 12 }, (_, i) => ({
-//   id: i,
-//   title: `Estate ${i + 1}`,
-//   image:
-//     "https://unsplash.com/photos/white-and-grey-concrete-building-near-swimming-pool-under-clear-sky-during-daytime-2d4lAQAlbDA",
-//   description: "Nice place to stay.",
-//   price: Math.floor(Math.random() * 400) + 50, // Random price between 50-450
-//   type: [
-//     "apartment",
-//     "cabin",
-//     "cottage",
-//     "house",
-//     "room",
-//     "multi_unit",
-//     "studio",
-//   ][Math.floor(Math.random() * 7)],
-//   amenities: ["wifi", "parking", "pool", "kitchen", "ac"].slice(
-//     0,
-//     Math.floor(Math.random() * 4) + 1
-//   ),
-//   petsAllowed: Math.random() > 0.5,
-// }));
 
 const Estates: React.FC = () => {
   const { type } = useParams<{ type: "residential" | "business" }>();
@@ -49,7 +25,7 @@ const Estates: React.FC = () => {
   const [stayType, setStayType] = useState<string>("any");
   const [page, setPage] = useState(1);
 
-  const limit = 1;
+  const limit = 6;
   const { data, isPending, error, isError, isPlaceholderData, isFetching } =
     useEstates({
       type: type!,
@@ -98,7 +74,7 @@ const Estates: React.FC = () => {
           fontWeight="700"
           sx={{
             mb: 1,
-            color: theme.palette.text.primary,
+            color: "text.primary",
             textAlign: isMobile ? "center" : "left",
           }}
         >
@@ -117,13 +93,13 @@ const Estates: React.FC = () => {
         </Typography>
       </Box>
 
-      {/* Simple Filter Bar */}
+      {/* Simple Filter Bar
       <FilterBar
         selectedType={selectedType}
         onTypeChange={setSelectedType}
         stayType={stayType}
         onStayTypeChange={setStayType}
-      />
+      /> */}
 
       {/* Results Summary */}
       <Box
@@ -139,13 +115,13 @@ const Estates: React.FC = () => {
         <Typography
           variant="h6"
           fontWeight="600"
-          sx={{ color: theme.palette.text.primary }}
+          sx={{ color: "text.primary" }}
         >
           {estates.length} smještaj
           {estates.length !== 1 ? "a" : ""} pronađen
           {estates.length !== 1 ? "o" : ""}
         </Typography>
-        {hasActiveFilters && (
+        {/* {hasActiveFilters && (
           <Typography
             variant="body2"
             color="text.secondary"
@@ -163,7 +139,7 @@ const Estates: React.FC = () => {
               .filter(Boolean)
               .join(", ")}
           </Typography>
-        )}
+        )} */}
       </Box>
 
       {/* Estates Grid */}

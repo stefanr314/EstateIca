@@ -22,13 +22,15 @@ import NotificationsIcon from "@mui/icons-material/Notifications";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import HomeIcon from "@mui/icons-material/Home";
 import BusinessIcon from "@mui/icons-material/Business";
+import DashboardIcon from "@mui/icons-material/Dashboard";
 
 import StyledSearchBar from "./StyledSearchBar";
 import { Link, useNavigate, useNavigation } from "react-router";
 import FilterDialog from "@/features/estates/components/filter/FilterDialog";
 import ToggleThemeColor from "./ToggleThemeColor";
-import { useAppDispatch } from "@/app/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { pushNotification } from "@/features/notifications/notificationSlice";
+import { selectUser } from "@/features/auth/authSlice";
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
   backgroundColor: "#f7f9f7",
@@ -71,11 +73,15 @@ const CustomAppBar: React.FC<{ onMenuClick: () => void }> = ({
   onMenuClick,
 }) => {
   const navigate = useNavigate();
+
+  const user = useAppSelector(selectUser);
+
   const [overrideFullAppBar, setOverrideFullAppBar] = React.useState(false);
   const [tabIndex, setTabIndex] = React.useState(0);
+
   const fullAppBarRef = React.useRef<HTMLDivElement>(null);
   const popperRef = React.useRef<HTMLDivElement>(null);
-  const dispatch = useAppDispatch();
+
   const trigger = useScrollTrigger({ disableHysteresis: true, threshold: 0 });
 
   const showFullAppBar = !trigger || overrideFullAppBar;
@@ -152,7 +158,7 @@ const CustomAppBar: React.FC<{ onMenuClick: () => void }> = ({
               </IconButtonStyled>
             </Box>
             <div>
-              <IconButtonStyled
+              {/* <IconButtonStyled
                 aria-label="notifications"
                 onClick={() =>
                   dispatch(
@@ -165,16 +171,23 @@ const CustomAppBar: React.FC<{ onMenuClick: () => void }> = ({
                 }
               >
                 <NotificationsIcon />
-              </IconButtonStyled>
-              <IconButtonStyled aria-label="account">
-                <AccountCircleIcon />
-              </IconButtonStyled>
-              <ButtonStyled
-                variant="outlined"
-                onClick={() => navigate("/sign-in")}
-              >
-                Login
-              </ButtonStyled>
+              </IconButtonStyled> */}
+
+              {user ? (
+                <IconButtonStyled
+                  aria-label="dashboard"
+                  onClick={() => navigate("/dashboard")}
+                >
+                  <DashboardIcon />
+                </IconButtonStyled>
+              ) : (
+                <ButtonStyled
+                  variant="outlined"
+                  onClick={() => navigate("/sign-in")}
+                >
+                  Prijavi se
+                </ButtonStyled>
+              )}
             </div>
             <div>
               <FilterDialog />
@@ -285,13 +298,21 @@ const CustomAppBar: React.FC<{ onMenuClick: () => void }> = ({
                 </Tabs>
 
                 <div>
-                  <IconButtonStyled aria-label="notifications">
-                    <NotificationsIcon />
-                  </IconButtonStyled>
-                  <IconButtonStyled aria-label="account">
-                    <AccountCircleIcon />
-                  </IconButtonStyled>
-                  <ButtonStyled variant="outlined">Login</ButtonStyled>
+                  {user ? (
+                    <IconButtonStyled
+                      aria-label="dashboard"
+                      onClick={() => navigate("/dashboard")}
+                    >
+                      <DashboardIcon />
+                    </IconButtonStyled>
+                  ) : (
+                    <ButtonStyled
+                      variant="outlined"
+                      onClick={() => navigate("/sign-in")}
+                    >
+                      Prijavi se
+                    </ButtonStyled>
+                  )}
                 </div>
               </Box>
             </Grid>
