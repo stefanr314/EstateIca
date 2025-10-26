@@ -56,7 +56,6 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect }) => {
       renderInput={(params) => (
         <TextField
           {...params}
-          label={"Pretraži grad"}
           placeholder={"Npr. Sarajevo, Zagreb, Beograd..."}
           InputProps={{
             ...params.InputProps,
@@ -70,6 +69,8 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect }) => {
           sx={{
             "& .MuiOutlinedInput-root": {
               "& fieldset": { border: "none" }, // uklanja border
+              marginBottom: 0, // Ukloni marginu sa dna ako se pravi previše prostora
+              paddingBottom: 0, // Ukloni padding
             },
           }}
         />

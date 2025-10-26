@@ -12,24 +12,24 @@ import {
   Grid,
   Link as MuiLink,
   Box,
+  Stack,
 } from "@mui/material";
 
 import { styled } from "@mui/material/styles";
 
 import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
-import NotificationsIcon from "@mui/icons-material/Notifications";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+
 import HomeIcon from "@mui/icons-material/Home";
 import BusinessIcon from "@mui/icons-material/Business";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 
 import StyledSearchBar from "./StyledSearchBar";
-import { Link, useNavigate, useNavigation } from "react-router";
+import { Link, useNavigate } from "react-router";
 import FilterDialog from "@/features/estates/components/filter/FilterDialog";
 import ToggleThemeColor from "./ToggleThemeColor";
-import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
-import { pushNotification } from "@/features/notifications/notificationSlice";
+import { useAppSelector } from "@/app/store/hooks";
+
 import { selectUser } from "@/features/auth/authSlice";
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
@@ -139,7 +139,7 @@ const CustomAppBar: React.FC<{ onMenuClick: () => void }> = ({
       >
         <Container maxWidth="xl">
           <ToolbarStyled>
-            <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <IconButtonStyled
                 edge="start"
                 aria-label="menu"
@@ -157,22 +157,7 @@ const CustomAppBar: React.FC<{ onMenuClick: () => void }> = ({
                 <SearchIcon />
               </IconButtonStyled>
             </Box>
-            <div>
-              {/* <IconButtonStyled
-                aria-label="notifications"
-                onClick={() =>
-                  dispatch(
-                    pushNotification({
-                      type: "warning",
-                      message:
-                        "You've entered a matrix system welcome, and take your seat please :)",
-                    })
-                  )
-                }
-              >
-                <NotificationsIcon />
-              </IconButtonStyled> */}
-
+            <Stack direction="row" spacing={2} alignItems="center">
               {user ? (
                 <IconButtonStyled
                   aria-label="dashboard"
@@ -188,11 +173,9 @@ const CustomAppBar: React.FC<{ onMenuClick: () => void }> = ({
                   Prijavi se
                 </ButtonStyled>
               )}
-            </div>
-            <div>
               <FilterDialog />
               <ToggleThemeColor />
-            </div>
+            </Stack>
           </ToolbarStyled>
         </Container>
       </AppBarScrolled>

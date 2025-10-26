@@ -3,6 +3,8 @@ import {
   endOfMonth,
   isWithinInterval,
   areIntervalsOverlapping,
+  startOfDay,
+  endOfDay,
 } from "date-fns";
 
 type BlockedDate = {
@@ -32,7 +34,10 @@ export function getBlockedDayType(
   blockedDates: BlockedDate[]
 ): { type: "RESERVATION" | "LOCK"; status?: "pending" | "confirmed" } | null {
   const found = blockedDates.find((range) =>
-    isWithinInterval(day, { start: range.startDate, end: range.endDate })
+    isWithinInterval(day, {
+      start: startOfDay(range.startDate),
+      end: endOfDay(range.endDate),
+    })
   );
   return found ? { type: found.type, status: found?.status } : null;
 }

@@ -294,7 +294,7 @@ const UserReservationActions: React.FC<Props> = ({ reservation }) => {
   // Early return za completed rezervacije
   if (reservation.status === ReservationStatus.COMPLETED) {
     return (
-      <Paper elevation={2} sx={{ p: 2 }}>
+      <Paper elevation={2} sx={{ p: 4 }}>
         <Typography variant="h6" gutterBottom>
           Akcije za rezervaciju
         </Typography>
@@ -348,7 +348,7 @@ const UserReservationActions: React.FC<Props> = ({ reservation }) => {
   // Early return za pending rezervacije
   if (reservation.status === ReservationStatus.PENDING) {
     return (
-      <Paper elevation={2} sx={{ p: 2 }}>
+      <Paper elevation={2} sx={{ p: 4 }}>
         <Typography variant="h6" gutterBottom>
           Akcije za rezervaciju
         </Typography>
@@ -384,24 +384,13 @@ const UserReservationActions: React.FC<Props> = ({ reservation }) => {
               </Button>
             </Stack>
           )}
-
-          {/* Dugme za recenziju */}
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() =>
-              navigate(`/dashboard/review/create/${reservation._id}`)
-            }
-          >
-            Ostavi recenziju
-          </Button>
         </Stack>
       </Paper>
     );
   }
 
   return (
-    <Paper elevation={2} sx={{ p: 2 }}>
+    <Paper elevation={2} sx={{ p: 4 }}>
       <Typography variant="h6" gutterBottom>
         Akcije za rezervaciju
       </Typography>

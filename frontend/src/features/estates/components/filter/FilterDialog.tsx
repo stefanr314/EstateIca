@@ -5,7 +5,7 @@ import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
+
 import DialogTitle from "@mui/material/DialogTitle";
 import { useTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
@@ -24,7 +24,7 @@ import ToggleButtonsType from "./ToggleButtonsType";
 import PriceRangeSlider from "./PriceRangeSlider";
 import BadBathCounter from "./BadBathCounter";
 import AmenitiesChipArray from "./AmenitiesChipArray";
-import { AmenityKey } from "@/shared/constants/amenitiesMap";
+
 import CancelPolicyToggleGroup from "./CancelPolicyToggleGroup";
 import ToggleButtonsStayLength from "./ToggleButtonsStayLength";
 import { Amenities } from "../../types";
@@ -64,6 +64,8 @@ export default function FilterDialog() {
     setSelectedAmenities([]);
     setCancelPolicy("any");
     setPetsAllowed(false);
+    setSearchParams(new URLSearchParams());
+    handleClose(); // zatvori dijalog
   };
 
   const handleApplyFilters = () => {
