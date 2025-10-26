@@ -56,6 +56,7 @@ export default function ReviewsForEstatePage() {
                 flexDirection: "column",
                 gap: 1,
                 height: "100%",
+                minHeight: 300,
                 cursor: "pointer",
                 transition: "transform 0.2s",
                 "&:hover": { transform: "scale(1.02)" },

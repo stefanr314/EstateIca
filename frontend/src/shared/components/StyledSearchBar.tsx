@@ -70,7 +70,7 @@ const StyledSearchBar = React.forwardRef<HTMLDivElement, {}>((_, ref) => {
   };
 
   const [activeInput, setActiveInput] = useState<"start" | "end" | null>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  // const inputRef = useRef<HTMLInputElement | null>(null);
   const openPopover = Boolean(anchorEl);
   const isOpening = useRef(false);
   const id = openPopover ? "simple-popover" : undefined;
@@ -114,27 +114,21 @@ const StyledSearchBar = React.forwardRef<HTMLDivElement, {}>((_, ref) => {
       adults,
       children,
     } = searchData;
-    if (placeId) {
-      params.set("placeId", placeId);
-    }
-    if (city) {
-      params.set("city", city);
-    }
-    if (country) {
-      params.set("country", country);
-    }
-    if (selectedStartDate) {
-      params.set("startDate", selectedStartDate.toISOString().split("T")[0]);
-    }
-    if (selectedEndDate) {
-      params.set("endDate", selectedEndDate.toISOString().split("T")[0]);
-    }
-    if (adults) {
-      params.set("adults", adults.toString());
-    }
-    if (children) {
-      params.set("children", children.toString());
-    }
+
+    placeId ? params.set("placeId", placeId) : params.delete("placeId");
+    city ? params.set("city", city) : params.delete("city");
+    country ? params.set("country", country) : params.delete("country");
+    selectedStartDate
+      ? params.set("startDate", selectedStartDate.toISOString().split("T")[0])
+      : params.delete("startDate");
+    selectedEndDate
+      ? params.set("endDate", selectedEndDate.toISOString().split("T")[0])
+      : params.delete("endDate");
+    adults ? params.set("adults", adults.toString()) : params.delete("adults");
+    children
+      ? params.set("children", children.toString())
+      : params.delete("children");
+
     setSearchParams(params);
     if (isMobile) {
       setOpenDialog(false);
@@ -187,43 +181,17 @@ const StyledSearchBar = React.forwardRef<HTMLDivElement, {}>((_, ref) => {
       ) : (
         <StyledPaper elevation={4} square={false} sx={{ maxWidth: "900px" }}>
           <StyledBox
-            sx={{ flex: 2 }}
+            sx={{
+              flex: 2,
+              display: "flex",
+              flexDirection: "column",
+              gap: "1px",
+            }}
             // onClick={(e) => handleClickPopover(e, "location")}
           >
             <Box>Gdje</Box>
             <FormControl variant="standard" size="small" fullWidth>
               <LocationSearch onSelect={handleOnSelectLocation} />
-              {/* <Input
-                  placeholder="Pretraži..."
-                  value={searchData.location}
-                  onChange={(e) =>
-                    setSearchData((prev) => ({
-                      ...prev,
-                      location: e.target.value,
-                    }))
-                  }
-                  disableUnderline
-                  inputRef={inputRef}
-                  sx={{ borderRadius: 13 }}
-                  endAdornment={
-                    searchData.location.length !== 0 && (
-                      <InputAdornment position="end">
-                        <IconButton
-                          onClick={() => {
-                            setSearchData((prev) => ({
-                              ...prev,
-                              location: "",
-                            }));
-                          }}
-                          size="small"
-                          sx={{ margin: 0, padding: 0.1 }}
-                        >
-                          <ClearIcon sx={{ fontSize: 17 }} />
-                        </IconButton>
-                      </InputAdornment>
-                    )
-                  }
-                /> */}
             </FormControl>
           </StyledBox>
 

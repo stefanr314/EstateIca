@@ -4,7 +4,7 @@ import { Box, Typography, Paper, Divider } from "@mui/material";
 export default function MainHostReservationPage() {
   return (
     <Paper sx={{ p: 4, minHeight: "80vh" }}>
-      {/* 📌 Filter sekcija (sutra dodaješ Chipove/Tabs) */}
+      {/* 📌 Filter sekcija (sutra dodaješ Chipove/Tabs)
       <Box sx={{ mb: 3 }}>
         <Typography variant="h6" gutterBottom>
           Filteri rezervacija
@@ -17,11 +17,11 @@ export default function MainHostReservationPage() {
             minHeight: "40px", // da ostane prostor i kad filtera nema
           }}
         >
-          {/* TODO: Chip filteri/Tabs ovde */}
+          //TODO: Dodaj filtere ovdje
         </Box>
       </Box>
 
-      <Divider sx={{ mb: 4 }} />
+      <Divider sx={{ mb: 4 }} /> */}
 
       {/* 📌 Naslov */}
       <Typography
