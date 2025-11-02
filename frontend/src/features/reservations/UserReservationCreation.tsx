@@ -163,7 +163,13 @@ const UserReservationCreation: React.FC = () => {
       {/* Main layout */}
       <Grid
         container
-        sx={{ flexGrow: 1, p: 3, display: "flex", alignItems: "stretch" }}
+        sx={{
+          flexGrow: 1,
+          p: 3,
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "center",
+        }}
         spacing={3}
       >
         {/* Sidebar */}
@@ -174,6 +180,8 @@ const UserReservationCreation: React.FC = () => {
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",
+              padding: 2,
+              minHeight: 300,
             }}
           >
             <CardContent sx={{ textAlign: "center" }}>
@@ -232,7 +240,9 @@ const UserReservationCreation: React.FC = () => {
               flexGrow: 1,
               display: "flex",
               flexDirection: "column",
-              justifyContent: "center",
+              justifyContent: "flex-start",
+
+              minHeight: 600,
             }}
           >
             <CardContent sx={{ textAlign: "center" }}>
@@ -248,7 +258,7 @@ const UserReservationCreation: React.FC = () => {
 
               {/* Content by step */}
               {activeStep === 0 && (
-                <Box>
+                <Box sx={{ mx: "auto", pt: 10 }}>
                   <Typography variant="h6" gutterBottom>
                     Pregledaj svoju rezervaciju
                   </Typography>
@@ -289,8 +299,6 @@ const UserReservationCreation: React.FC = () => {
                   <Typography variant="h6" gutterBottom>
                     Potvrdi rezervaciju
                   </Typography>
-
-                  <Divider />
 
                   <Typography variant="body2" gutterBottom>
                     Unesi opcionu poruku prilikom kreiranja rezervacije

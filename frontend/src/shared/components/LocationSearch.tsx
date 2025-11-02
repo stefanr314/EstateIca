@@ -70,7 +70,8 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect }) => {
             "& .MuiOutlinedInput-root": {
               "& fieldset": { border: "none" }, // uklanja border
               marginBottom: 0, // Ukloni marginu sa dna ako se pravi previše prostora
-              paddingBottom: 0, // Ukloni padding
+              padding: 0, // Ukloni padding
+              fontSize: "0.85rem", // Podesi veličinu fonta
             },
           }}
         />
