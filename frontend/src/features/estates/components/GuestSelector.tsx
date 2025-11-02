@@ -55,7 +55,7 @@ export const GuestSelector = ({
             <Select
               value={guestCount}
               onChange={(e) => handleGuestChange(Number(e.target.value))}
-              sx={{ minWidth: 80 }}
+              sx={{ minWidth: 80, border: "none" }}
             >
               {Array.from({ length: maxGuests }, (_, i) => i + 1).map((val) => (
                 <MenuItem
@@ -82,7 +82,7 @@ export const GuestSelector = ({
             <Select
               value={childrenCount}
               onChange={(e) => handleChildrenChange(Number(e.target.value))}
-              sx={{ minWidth: 80 }}
+              sx={{ minWidth: 80, border: "none" }}
             >
               {Array.from({ length: maxGuests }, (_, i) => i).map((val) => (
                 <MenuItem
